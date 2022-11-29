@@ -40,19 +40,6 @@ import android.view.ViewGroup
 
 import com.google.ar.core.TrackingState
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 internal class AndroidARView(
         val activity: Activity,
         context: Context,
