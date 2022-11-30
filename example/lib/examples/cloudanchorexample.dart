@@ -22,7 +22,6 @@ class CloudAnchorWidget extends StatefulWidget {
 }
 
 class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
-
   ARSessionManager? arSessionManager;
   ARObjectManager? arObjectManager;
   ARAnchorManager? arAnchorManager;
@@ -44,7 +43,6 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         appBar: AppBar(
           title: const Text('Cloud Anchors'),
@@ -54,7 +52,11 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
           ARView(
             onARViewCreated: onARViewCreated,
             planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
-            creationParams: {"assets":[{"id":"1234", "cod":"Codice", "ar_anchor":""}]},
+            creationParams: {
+              "assets": [
+                {"id": "1234", "cod": "Codice", "ar_anchor": ""}
+              ]
+            },
           ),
           Align(
             alignment: FractionalOffset.bottomCenter,
@@ -97,7 +99,6 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
     this.arLocationManager = arLocationManager;
 
     this.arSessionManager!.onInitialize(
-          showFeaturePoints: false,
           showPlanes: true,
           customPlaneTexturePath: "Images/triangle.png",
           showWorldOrigin: true,
@@ -109,8 +110,8 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
     this.arObjectManager!.onNodeTap = onNodeTapped;
 
     this
-        .arLocationManager
-        !.startLocationUpdates()
+        .arLocationManager!
+        .startLocationUpdates()
         .then((value) => null)
         .onError((error, stackTrace) {
       switch (error.toString()) {
@@ -185,14 +186,18 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
         this.anchors.add(newAnchor);
         // Add note to anchor
         var newNode = ARNode(
-            type: NodeType.webGLB,
-            uri: "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Duck/glTF-Binary/Duck.glb",
+            type: NodeType.asset,
+            asset: {
+              "id": '1231546',
+              "cod": "Asset nuovo più nuovo",
+              "ar_anchor": "1235896"
+            },
             scale: Vector3(0.2, 0.2, 0.2),
             position: Vector3(0.0, 0.0, 0.0),
             rotation: Vector4(1.0, 0.0, 0.0, 0.0),
             data: {"onTapText": "Ouch, that hurt!"});
         bool? didAddNodeToAnchor =
-            await this.arObjectManager!.addNode(newNode, planeAnchor: newAnchor);
+            await this.arObjectManager!.addNode(newNode, newAnchor);
         if (didAddNodeToAnchor ?? false) {
           this.nodes.add(newNode);
         } else {
@@ -204,11 +209,9 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
     }
   }
 
-  Future<void> onUploadButtonPressed() async {
-  }
+  Future<void> onUploadButtonPressed() async {}
 
-  Future<void> onDownloadButtonPressed() async {
-  }
+  Future<void> onDownloadButtonPressed() async {}
 
   void showAlertDialog(BuildContext context, String title, String content,
       String buttonText, Function buttonFunction, String cancelButtonText) {

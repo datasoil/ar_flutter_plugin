@@ -25,12 +25,6 @@ class ARObjectManager {
 
   /// Callback function that is invoked when the platform detects a tap on a node
   NodeTapResultHandler? onNodeTap;
-  NodePanStartHandler? onPanStart;
-  NodePanChangeHandler? onPanChange;
-  NodePanEndHandler? onPanEnd;
-  NodeRotationStartHandler? onRotationStart;
-  NodeRotationChangeHandler? onRotationChange;
-  NodeRotationEndHandler? onRotationEnd;
 
   ARObjectManager(int id, {this.debug = false}) {
     _channel = MethodChannel('arobjects_$id');
@@ -57,52 +51,6 @@ class ARObjectManager {
                 .toList());
           }
           break;
-        case 'onPanStart':
-          if (onPanStart != null) {
-            final tappedNode = call.arguments as String;
-            // Notify callback
-            onPanStart!(tappedNode);
-          }
-          break;
-        case 'onPanChange':
-          if (onPanChange != null) {
-            final tappedNode = call.arguments as String;
-            // Notify callback
-            onPanChange!(tappedNode);
-          }
-          break;
-        case 'onPanEnd':
-          if (onPanEnd != null) {
-            final tappedNodeName = call.arguments["name"] as String;
-            final transform =
-                MatrixConverter().fromJson(call.arguments['transform'] as List);
-
-            // Notify callback
-            onPanEnd!(tappedNodeName, transform);
-          }
-          break;
-        case 'onRotationStart':
-          if (onRotationStart != null) {
-            final tappedNode = call.arguments as String;
-            onRotationStart!(tappedNode);
-          }
-          break;
-        case 'onRotationChange':
-          if (onRotationChange != null) {
-            final tappedNode = call.arguments as String;
-            onRotationChange!(tappedNode);
-          }
-          break;
-        case 'onRotationEnd':
-          if (onRotationEnd != null) {
-            final tappedNodeName = call.arguments["name"] as String;
-            final transform =
-                MatrixConverter().fromJson(call.arguments['transform'] as List);
-
-            // Notify callback
-            onRotationEnd!(tappedNodeName, transform);
-          }
-          break;
         default:
           if (debug) {
             print('Unimplemented method ${call.method} ');
@@ -120,7 +68,7 @@ class ARObjectManager {
   }
 
   /// Add given node to the given anchor of the underlying AR scene (or to its top-level if no anchor is given) and listen to any changes made to its transformation
-  Future<bool?> addNode(ARNode node, {ARPlaneAnchor? planeAnchor}) async {
+  Future<bool?> addNode(ARNode node, ARPlaneAnchor planeAnchor) async {
     try {
       node.transformNotifier.addListener(() {
         _channel.invokeMethod<void>('transformationChanged', {
@@ -129,13 +77,9 @@ class ARObjectManager {
               MatrixValueNotifierConverter().toJson(node.transformNotifier)
         });
       });
-      if (planeAnchor != null) {
-        planeAnchor.childNodes.add(node.name);
-        return await _channel.invokeMethod<bool>('addNodeToPlaneAnchor',
-            {'node': node.toMap(), 'anchor': planeAnchor.toJson()});
-      } else {
-        return await _channel.invokeMethod<bool>('addNode', node.toMap());
-      }
+      planeAnchor.childNodes.add(node.name);
+      return await _channel.invokeMethod<bool>('addNodeToPlaneAnchor',
+          {'node': node.toMap(), 'anchor': planeAnchor.toJson()});
     } on PlatformException catch (e) {
       return false;
     }

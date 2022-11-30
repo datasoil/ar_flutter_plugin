@@ -1,6 +1,6 @@
 package io.carius.lars.ar_flutter_plugin
 
-internal class Asset(_id: String, _cod: String, _arAnchorID: String = "") {
+class Asset(_id: String, _cod: String, _arAnchorID: String = "") {
     val id: String  = _id
     val cod: String = _cod
     var arAnchorID: String = _arAnchorID

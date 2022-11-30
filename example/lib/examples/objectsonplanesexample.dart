@@ -70,7 +70,6 @@ class _ObjectsOnPlanesWidgetState extends State<ObjectsOnPlanesWidget> {
     this.arAnchorManager = arAnchorManager;
 
     this.arSessionManager!.onInitialize(
-          showFeaturePoints: false,
           showPlanes: true,
           customPlaneTexturePath: "Images/triangle.png",
           showWorldOrigin: true,
@@ -115,7 +114,7 @@ class _ObjectsOnPlanesWidgetState extends State<ObjectsOnPlanesWidget> {
             position: Vector3(0.0, 0.0, 0.0),
             rotation: Vector4(1.0, 0.0, 0.0, 0.0));
         bool? didAddNodeToAnchor =
-            await this.arObjectManager!.addNode(newNode, planeAnchor: newAnchor);
+            await this.arObjectManager!.addNode(newNode, newAnchor);
         if (didAddNodeToAnchor!) {
           this.nodes.add(newNode);
         } else {

@@ -97,7 +97,6 @@ class _DebugOptionsWidgetState extends State<DebugOptionsWidget> {
     this.arObjectManager = arObjectManager;
 
     this.arSessionManager!.onInitialize(
-          showFeaturePoints: _showFeaturePoints,
           showPlanes: _showPlanes,
           customPlaneTexturePath: _planeTexturePath,
           showWorldOrigin: _showWorldOrigin,
@@ -109,7 +108,6 @@ class _DebugOptionsWidgetState extends State<DebugOptionsWidget> {
 
   void updateSessionSettings() {
     this.arSessionManager!.onInitialize(
-          showFeaturePoints: _showFeaturePoints,
           showPlanes: _showPlanes,
           customPlaneTexturePath: _planeTexturePath,
           showWorldOrigin: _showWorldOrigin,

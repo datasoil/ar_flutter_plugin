@@ -72,7 +72,6 @@ internal class AndroidARView(
     // UI variables
     private lateinit var arSceneView: ArSceneView
     private lateinit var transformationSystem: TransformationSystem
-    private var showFeaturePoints = false
     private var showAnimatedGuide = false
     private lateinit var animatedGuide: View
     private var pointCloudNode = Node()
@@ -165,21 +164,11 @@ internal class AndroidARView(
             object : MethodChannel.MethodCallHandler {
                 override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
                     Log.d(TAG, "AndroidARView onobjectmethodcall reveived a call!")
+                    Log.d(TAG, call.method)
                     when (call.method) {
                         "init" -> {
                             // objectManagerChannel.invokeMethod("onError", listOf("ObjectTEST from
                             // Android"))
-                        }
-                        "addNode" -> {
-                            val dict_node: HashMap<String, Any>? = call.arguments as? HashMap<String, Any>
-                            dict_node?.let {
-                                addNode(it).thenAccept { status: Boolean ->
-                                    result.success(status)
-                                }.exceptionally { throwable ->
-                                    result.error("e", throwable.message, throwable.stackTrace)
-                                    null
-                                }
-                            }
                         }
                         "addNodeToPlaneAnchor" -> {
                             val dict_node: HashMap<String, Any>? = call.argument<HashMap<String, Any>>("node")
@@ -504,14 +493,11 @@ internal class AndroidARView(
 
     private fun initializeARView(call: MethodCall, result: MethodChannel.Result) {
         // Unpack call arguments
-        val argShowFeaturePoints: Boolean? = call.argument<Boolean>("showFeaturePoints")
         val argPlaneDetectionConfig: Int? = call.argument<Int>("planeDetectionConfig")
         val argShowPlanes: Boolean? = call.argument<Boolean>("showPlanes")
         val argCustomPlaneTexturePath: String? = call.argument<String>("customPlaneTexturePath")
         val argShowWorldOrigin: Boolean? = call.argument<Boolean>("showWorldOrigin")
         val argHandleTaps: Boolean? = call.argument<Boolean>("handleTaps")
-        val argHandleRotation: Boolean? = call.argument<Boolean>("handleRotation")
-        val argHandlePans: Boolean? = call.argument<Boolean>("handlePans")
         val argShowAnimatedGuide: Boolean? = call.argument<Boolean>("showAnimatedGuide")
 
 
@@ -519,10 +505,6 @@ internal class AndroidARView(
             onFrame(frameTime)
         }
         onNodeTapListener = com.google.ar.sceneform.Scene.OnPeekTouchListener { hitTestResult, motionEvent ->
-            //if (hitTestResult.node != null){
-            //transformationSystem.selectionVisualizer.applySelectionVisual(hitTestResult.node as TransformableNode)
-            //transformationSystem.selectNode(hitTestResult.node as TransformableNode)
-            //}
             if (hitTestResult.node != null && motionEvent?.action == MotionEvent.ACTION_DOWN) {
                 objectManagerChannel.invokeMethod("onNodeTap", listOf(hitTestResult.node?.name))
             }
@@ -542,20 +524,6 @@ internal class AndroidARView(
             val view = activity.findViewById(R.id.content) as ViewGroup
             animatedGuide = activity.layoutInflater.inflate(com.google.ar.sceneform.ux.R.layout.sceneform_plane_discovery_layout, null)
             view.addView(animatedGuide)
-        }
-
-        // Configure feature points
-        if (argShowFeaturePoints ==
-                true) { // explicit comparison necessary because of nullable type
-            arSceneView.scene.addChild(pointCloudNode)
-            showFeaturePoints = true
-        } else {
-            showFeaturePoints = false
-            while (pointCloudNode.children?.size
-                    ?: 0 > 0) {
-                pointCloudNode.children?.first()?.setParent(null)
-            }
-            pointCloudNode.setParent(null)
         }
 
         // Configure plane detection
@@ -625,10 +593,6 @@ internal class AndroidARView(
             arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? -> onTap(hitTestResult, motionEvent) }
         }
 
-        // Configure gestures
-        enableRotation = argHandleRotation == true
-        enablePans = argHandlePans == true
-
         result.success(null)
     }
 
@@ -648,56 +612,20 @@ internal class AndroidARView(
             }
         }
 
-        if (showFeaturePoints) {
-            // remove points from last frame
-            while (pointCloudNode.children?.size
-                    ?: 0 > 0) {
-                pointCloudNode.children?.first()?.setParent(null)
-            }
-            var pointCloud = arSceneView.arFrame?.acquirePointCloud()
-            // Access point cloud data (returns FloatBufferw with x,y,z coordinates and confidence
-            // value).
-            val points = pointCloud?.getPoints() ?: FloatBuffer.allocate(0)
-            // Check if there are any feature points
-            if (points.limit() / 4 >= 1) {
-                for (index in 0 until points.limit() / 4) {
-                    // Add feature point to scene
-                    val featurePoint =
-                            modelBuilder.makeFeaturePointNode(
-                                    viewContext,
-                                    points.get(4 * index),
-                                    points.get(4 * index + 1),
-                                    points.get(4 * index + 2))
-                    featurePoint.setParent(pointCloudNode)
-                }
-            }
-            // Release resources
-            pointCloud?.release()
-        }
         val updatedAnchors = arSceneView.arFrame!!.updatedAnchors
         // Notify the cloudManager of all the updates.
         if (this::cloudAnchorHandler.isInitialized) {
             cloudAnchorHandler.onUpdate(updatedAnchors)
         }
-
-        if (keepNodeSelected && transformationSystem.selectedNode != null && transformationSystem.selectedNode!!.isTransforming) {
-            // If the selected node is currently transforming, we want to deselect it as soon as the transformation is done
-            keepNodeSelected = false
-        }
-        if (!keepNodeSelected && transformationSystem.selectedNode != null && !transformationSystem.selectedNode!!.isTransforming) {
-            // once the transformation is done, deselect the node and allow selection of another node
-            transformationSystem.selectNode(null)
-            keepNodeSelected = true
-        }
-        if (!enablePans && !enableRotation) {
-            //unselect all nodes as we do not want the selection visualizer
-            transformationSystem.selectNode(null)
-        }
-
     }
 
-    private fun addNode(dict_node: HashMap<String, Any>, dict_anchor: HashMap<String, Any>? = null): CompletableFuture<Boolean> {
+    private fun addNode(dict_node: HashMap<String, Any>, dict_anchor: HashMap<String, Any>): CompletableFuture<Boolean> {
         val completableFutureSuccess: CompletableFuture<Boolean> = CompletableFuture()
+        Log.d(TAG, "addNode" )
+        Log.d(TAG, dict_node.keys.toString())
+        val asset = Asset(dict_node["asset"] as Map<String, Any>)
+        Log.d(TAG, dict_node["type"].toString() )
+        Log.d(TAG, asset.toString() )
 
         try {
             when (dict_node["type"] as Int) {
@@ -707,10 +635,10 @@ internal class AndroidARView(
                     val key: String = loader.getLookupKeyForAsset(dict_node["uri"] as String)
 
                     // Add object to scene
-                    modelBuilder.makeNodeFromGltf(viewContext, transformationSystem, objectManagerChannel, enablePans, enableRotation, dict_node["name"] as String, key, dict_node["transformation"] as ArrayList<Double>)
+                    modelBuilder.makeNodeFromGltf(viewContext, transformationSystem, dict_node["name"] as String, key, dict_node["transformation"] as ArrayList<Double>)
                             .thenAccept { node ->
-                                val anchorName: String? = dict_anchor?.get("name") as? String
-                                val anchorType: Int? = dict_anchor?.get("type") as? Int
+                                val anchorName: String? = dict_anchor["name"] as? String
+                                val anchorType: Int? = dict_anchor["type"] as? Int
                                 if (anchorName != null && anchorType != null) {
                                     val anchorNode = arSceneView.scene.findByName(anchorName) as AnchorNode?
                                     if (anchorNode != null) {
@@ -735,10 +663,10 @@ internal class AndroidARView(
                             }
                 }
                 1 -> { // GLB Model from the web
-                    modelBuilder.makeNodeFromGlb(viewContext, transformationSystem, objectManagerChannel, enablePans, enableRotation, dict_node["name"] as String, dict_node["uri"] as String, dict_node["transformation"] as ArrayList<Double>)
+                    modelBuilder.makeNodeFromGlb(viewContext, transformationSystem, dict_node["name"] as String, dict_node["uri"] as String, dict_node["transformation"] as ArrayList<Double>)
                             .thenAccept { node ->
-                                val anchorName: String? = dict_anchor?.get("name") as? String
-                                val anchorType: Int? = dict_anchor?.get("type") as? Int
+                                val anchorName: String? = dict_anchor["name"] as? String
+                                val anchorType: Int? = dict_anchor["type"] as? Int
                                 if (anchorName != null && anchorType != null) {
                                     val anchorNode = arSceneView.scene.findByName(anchorName) as AnchorNode?
                                     if (anchorNode != null) {
@@ -762,47 +690,11 @@ internal class AndroidARView(
                                 null // return null because java expects void return (in java, void has no instance, whereas in Kotlin, this closure returns a Unit which has one instance)
                             }
                 }
-                2 -> { // fileSystemAppFolderGLB
-                    val documentsPath = viewContext.getApplicationInfo().dataDir
-                    val assetPath = documentsPath + "/app_flutter/" + dict_node["uri"] as String
-
-                    modelBuilder.makeNodeFromGlb(viewContext, transformationSystem, objectManagerChannel, enablePans, enableRotation, dict_node["name"] as String, assetPath as String, dict_node["transformation"] as ArrayList<Double>) //
+                2 -> { // Flutter
+                    modelBuilder.makeNodeFromAsset(activity, viewContext, transformationSystem, asset, dict_node["transformation"] as ArrayList<Double>)
                             .thenAccept { node ->
-                                val anchorName: String? = dict_anchor?.get("name") as? String
-                                val anchorType: Int? = dict_anchor?.get("type") as? Int
-                                if (anchorName != null && anchorType != null) {
-                                    val anchorNode = arSceneView.scene.findByName(anchorName) as AnchorNode?
-                                    if (anchorNode != null) {
-                                        anchorNode.addChild(node)
-                                        completableFutureSuccess.complete(true)
-                                    } else {
-                                        completableFutureSuccess.complete(false)
-                                    }
-                                } else {
-                                    arSceneView.scene.addChild(node)
-                                    completableFutureSuccess.complete(true)
-                                }
-                                completableFutureSuccess.complete(false)
-                            }
-                            .exceptionally { throwable ->
-                                // Pass error to session manager (this has to be done on the main thread if this activity)
-                                val mainHandler = Handler(viewContext.mainLooper)
-                                val runnable = Runnable { sessionManagerChannel.invokeMethod("onError", listOf("Unable to load renderable " + dict_node["uri"] as String)) }
-                                mainHandler.post(runnable)
-                                completableFutureSuccess.completeExceptionally(throwable)
-                                null // return null because java expects void return (in java, void has no instance, whereas in Kotlin, this closure returns a Unit which has one instance)
-                            }
-                }
-                3 -> { //fileSystemAppFolderGLTF2
-                    // Get path to given Flutter asset
-                    val documentsPath = viewContext.getApplicationInfo().dataDir
-                    val assetPath = documentsPath + "/app_flutter/" + dict_node["uri"] as String
-
-                    // Add object to scene
-                    modelBuilder.makeNodeFromGltf(viewContext, transformationSystem, objectManagerChannel, enablePans, enableRotation, dict_node["name"] as String, assetPath, dict_node["transformation"] as ArrayList<Double>)
-                            .thenAccept { node ->
-                                val anchorName: String? = dict_anchor?.get("name") as? String
-                                val anchorType: Int? = dict_anchor?.get("type") as? Int
+                                val anchorName: String? = dict_anchor["name"] as? String
+                                val anchorType: Int? = dict_anchor["type"] as? Int
                                 if (anchorName != null && anchorType != null) {
                                     val anchorNode = arSceneView.scene.findByName(anchorName) as AnchorNode?
                                     if (anchorNode != null) {

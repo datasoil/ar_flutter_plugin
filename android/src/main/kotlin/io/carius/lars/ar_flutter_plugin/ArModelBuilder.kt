@@ -1,53 +1,25 @@
 package io.carius.lars.ar_flutter_plugin
 
-import android.R
 import android.app.Activity
 import android.content.Context
-import com.google.ar.sceneform.Node
-import com.google.ar.sceneform.math.Vector3
-import com.google.ar.sceneform.math.Quaternion
-import com.google.ar.sceneform.assets.RenderableSource
-
-import java.util.concurrent.CompletableFuture
 import android.net.Uri
-import android.view.Gravity
-import android.widget.Toast
-import com.google.ar.core.*
-import com.google.ar.sceneform.ArSceneView
-import com.google.ar.sceneform.FrameTime
-import com.google.ar.sceneform.math.MathHelper
+import android.util.Log
+import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
+import com.google.ar.sceneform.Node
+import com.google.ar.sceneform.assets.RenderableSource
+import com.google.ar.sceneform.math.Quaternion
+import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.*
-import com.google.ar.sceneform.utilities.Preconditions
-import com.google.ar.sceneform.ux.*
-
+import com.google.ar.sceneform.ux.TransformableNode
+import com.google.ar.sceneform.ux.TransformationSystem
 import io.carius.lars.ar_flutter_plugin.Serialization.*
-
-import io.flutter.FlutterInjector
-import io.flutter.embedding.engine.loader.FlutterLoader
-import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
-import java.security.AccessController
+import java.util.concurrent.CompletableFuture
 
 
 // Responsible for creating Renderables and Nodes
 class ArModelBuilder {
-
-    // Creates feature point node
-    fun makeFeaturePointNode(context: Context, xPos: Float, yPos: Float, zPos: Float): Node {
-        val featurePoint = Node()                 
-        var cubeRenderable: ModelRenderable? = null      
-        MaterialFactory.makeOpaqueWithColor(context, Color(android.graphics.Color.YELLOW))
-        .thenAccept { material ->
-            val vector3 = Vector3(0.01f, 0.01f, 0.01f)
-            cubeRenderable = ShapeFactory.makeCube(vector3, Vector3(xPos, yPos, zPos), material)
-            cubeRenderable?.isShadowCaster = false
-            cubeRenderable?.isShadowReceiver = false
-        }
-        featurePoint.renderable = cubeRenderable
-
-        return featurePoint
-    }
 
     // Creates a coordinate system model at the world origin (X-axis: red, Y-axis: green, Z-axis:blue)
     // The code for this function is adapted from Alexander's stackoverflow answer (https://stackoverflow.com/questions/48908358/arcore-how-to-display-world-origin-or-axes-in-debug-mode) 
@@ -91,10 +63,10 @@ class ArModelBuilder {
     }
 
     // Creates a node form a given gltf model path or URL. The gltf asset loading in Scenform is asynchronous, so the function returns a completable future of type Node
-    fun makeNodeFromGltf(context: Context, transformationSystem: TransformationSystem, objectManagerChannel: MethodChannel, enablePans: Boolean, enableRotation: Boolean, name: String, modelPath: String, transformation: ArrayList<Double>): CompletableFuture<CustomTransformableNode> {
-        val completableFutureNode: CompletableFuture<CustomTransformableNode> = CompletableFuture()
+    fun makeNodeFromGltf(context: Context, transformationSystem: TransformationSystem, name: String, modelPath: String, transformation: ArrayList<Double>): CompletableFuture<TransformableNode> {
+        val completableFutureNode: CompletableFuture<TransformableNode> = CompletableFuture()
 
-        val gltfNode = CustomTransformableNode(transformationSystem, objectManagerChannel, enablePans, enableRotation)
+        val gltfNode = TransformableNode(transformationSystem)
 
         ModelRenderable.builder()
                 .setSource(context, RenderableSource.builder().setSource(
@@ -122,21 +94,10 @@ class ArModelBuilder {
     }
 
     // Creates a node form a given glb model path or URL. The gltf asset loading in Sceneform is asynchronous, so the function returns a compleatable future of type Node
-    fun makeNodeFromGlb(context: Context, transformationSystem: TransformationSystem, objectManagerChannel: MethodChannel, enablePans: Boolean, enableRotation: Boolean, name: String, modelPath: String, transformation: ArrayList<Double>): CompletableFuture<CustomTransformableNode> {
-        val completableFutureNode: CompletableFuture<CustomTransformableNode> = CompletableFuture()
+    fun makeNodeFromGlb(context: Context, transformationSystem: TransformationSystem, name: String, modelPath: String, transformation: ArrayList<Double>): CompletableFuture<TransformableNode> {
+        val completableFutureNode: CompletableFuture<TransformableNode> = CompletableFuture()
 
-        val gltfNode = CustomTransformableNode(transformationSystem, objectManagerChannel, enablePans, enableRotation)
-        //gltfNode.scaleController.isEnabled = false
-        //gltfNode.translationController.isEnabled = false
-
-        /*gltfNode.removeTransformationController(translationController)
-        gltfNode.addTra
-        val customTranslationController = DragController(
-            gltfNode,
-            transformationSystem.dragRecognizer,
-            objectManagerChannel,
-            transformationSystem
-        )*/
+        val gltfNode = TransformableNode(transformationSystem)
 
         ModelRenderable.builder()
                 .setSource(context, RenderableSource.builder().setSource(
@@ -162,87 +123,39 @@ class ArModelBuilder {
 
         return completableFutureNode
     }
-}
 
-class CustomTransformableNode(transformationSystem: TransformationSystem, objectManagerChannel: MethodChannel, enablePans: Boolean, enableRotation: Boolean) :
-    TransformableNode(transformationSystem) { //
+    // Creates a node form a given asset. The gltf asset loading in Scenform is asynchronous, so the function returns a completable future of type Node
+    fun makeNodeFromAsset(activity: Activity, context: Context, transformationSystem: TransformationSystem, asset: Asset, transformation: ArrayList<Double>): CompletableFuture<TransformableNode> {
+        val completableFutureNode: CompletableFuture<TransformableNode> = CompletableFuture()
+        Log.d("ArModelBuilder", "makeNodeFromAsset")
 
-    private lateinit var customTranslationController: CustomTranslationController
+        val assetNode = TransformableNode(transformationSystem)
 
-    private lateinit var customRotationController: CustomRotationController
+        //val rootView = activity.findViewById(android.R.id.content) as ViewGroup
+        ViewRenderable.builder()
+                .setView(context, R.layout.ar_label_extended)
+                .build()
+                .thenAccept{ renderable: ViewRenderable ->
+                    val extra: View = renderable.view.findViewById(io.carius.lars.ar_flutter_plugin.R.id.extra_info)
+                    val parent: View = renderable.view
+                    val asset_cod: TextView = renderable.view.findViewById(io.carius.lars.ar_flutter_plugin.R.id.cod_label)
+                    asset_cod.text = asset.cod
+                    (parent.findViewById(io.carius.lars.ar_flutter_plugin.R.id.main_icon) as ImageView).setImageResource(io.carius.lars.ar_flutter_plugin.R.drawable.ar_alert_icon)
+                    assetNode.renderable = renderable
+                    assetNode.name = asset.id
+                    val transform = deserializeMatrix4(transformation)
+                    assetNode.worldScale = transform.first
+                    assetNode.worldPosition = transform.second
+                    assetNode.worldRotation = transform.third
+                    completableFutureNode.complete(assetNode)
+                }
+                .exceptionally { throwable ->
+                    completableFutureNode.completeExceptionally(throwable)
+                    null // return null because java expects void return (in java, void has no instance, whereas in Kotlin, this closure returns a Unit which has one instance)
+                }
 
-    init {
-        // Remove standard controllers
-        translationController.isEnabled = false
-        rotationController.isEnabled = false
-        scaleController.isEnabled = false
-        removeTransformationController(translationController)
-        removeTransformationController(rotationController)
-        removeTransformationController(scaleController)
-
-
-        // Add custom controllers if needed
-        if (enablePans) {
-            customTranslationController = CustomTranslationController(
-                this,
-                transformationSystem.dragRecognizer,
-                objectManagerChannel
-            )
-            addTransformationController(customTranslationController)
-        }
-        if (enableRotation) {
-            customRotationController = CustomRotationController(
-                this,
-                transformationSystem.twistRecognizer,
-                objectManagerChannel
-            )
-            addTransformationController(customRotationController)
-        }
+        return completableFutureNode
     }
 }
 
-class CustomTranslationController(transformableNode: BaseTransformableNode, gestureRecognizer: DragGestureRecognizer, objectManagerChannel: MethodChannel) :
-    TranslationController(transformableNode, gestureRecognizer) {
 
-    val platformChannel: MethodChannel = objectManagerChannel
-
-    override fun canStartTransformation(gesture: DragGesture): Boolean {
-        platformChannel.invokeMethod("onPanStart", transformableNode.name)
-        super.canStartTransformation(gesture)
-        return transformableNode.isSelected
-    }
-
-    override fun onContinueTransformation(gesture: DragGesture) {
-        platformChannel.invokeMethod("onPanChange", transformableNode.name)
-        super.onContinueTransformation(gesture)
-        }
-
-    override fun onEndTransformation(gesture: DragGesture) {
-        val serializedLocalTransformation = serializeLocalTransformation(transformableNode)
-        platformChannel.invokeMethod("onPanEnd", serializedLocalTransformation)
-        super.onEndTransformation(gesture)
-     }
-}
-
-class CustomRotationController(transformableNode: BaseTransformableNode, gestureRecognizer: TwistGestureRecognizer, objectManagerChannel: MethodChannel) :
-    RotationController(transformableNode, gestureRecognizer) {
-
-    val platformChannel: MethodChannel = objectManagerChannel
-
-    override fun canStartTransformation(gesture: TwistGesture): Boolean {
-        platformChannel.invokeMethod("onRotationStart", transformableNode.name)
-        super.canStartTransformation(gesture)
-        return transformableNode.isSelected
-    }
-
-    override fun onContinueTransformation(gesture: TwistGesture) {
-        platformChannel.invokeMethod("onRotationChange", transformableNode.name)
-        super.onContinueTransformation(gesture)
-    }
-
-    override fun onEndTransformation(gesture: TwistGesture) {
-        val serializedLocalTransformation = serializeLocalTransformation(transformableNode)
-        platformChannel.invokeMethod("onRotationEnd", serializedLocalTransformation)
-        super.onEndTransformation(gesture)
-     }
-}

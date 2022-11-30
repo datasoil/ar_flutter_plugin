@@ -70,22 +70,11 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
     this.arAnchorManager = arAnchorManager;
 
     this.arSessionManager!.onInitialize(
-          showFeaturePoints: false,
           showPlanes: true,
           customPlaneTexturePath: "Images/triangle.png",
           showWorldOrigin: true,
-          handlePans: true,
-          handleRotation: true,
         );
     this.arObjectManager!.onInitialize();
-
-    this.arSessionManager!.onPlaneOrPointTap = onPlaneOrPointTapped;
-    this.arObjectManager!.onPanStart = onPanStarted;
-    this.arObjectManager!.onPanChange = onPanChanged;
-    this.arObjectManager!.onPanEnd = onPanEnded;
-    this.arObjectManager!.onRotationStart = onRotationStarted;
-    this.arObjectManager!.onRotationChange = onRotationChanged;
-    this.arObjectManager!.onRotationEnd = onRotationEnded;
   }
 
   Future<void> onRemoveEverything() async {
@@ -117,7 +106,7 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
             position: Vector3(0.0, 0.0, 0.0),
             rotation: Vector4(1.0, 0.0, 0.0, 0.0));
         bool? didAddNodeToAnchor =
-            await this.arObjectManager!.addNode(newNode, planeAnchor: newAnchor);
+            await this.arObjectManager!.addNode(newNode, newAnchor);
         if (didAddNodeToAnchor!) {
           this.nodes.add(newNode);
         } else {
@@ -127,45 +116,5 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
         this.arSessionManager!.onError("Adding Anchor failed");
       }
     }
-  }
-
-  onPanStarted(String nodeName) {
-    print("Started panning node " + nodeName);
-  }
-
-  onPanChanged(String nodeName) {
-    print("Continued panning node " + nodeName);
-  }
-
-  onPanEnded(String nodeName, Matrix4 newTransform) {
-    print("Ended panning node " + nodeName);
-    final pannedNode =
-        this.nodes.firstWhere((element) => element.name == nodeName);
-
-    /*
-    * Uncomment the following command if you want to keep the transformations of the Flutter representations of the nodes up to date
-    * (e.g. if you intend to share the nodes through the cloud)
-    */
-    //pannedNode.transform = newTransform;
-  }
-
-  onRotationStarted(String nodeName) {
-    print("Started rotating node " + nodeName);
-  }
-
-  onRotationChanged(String nodeName) {
-    print("Continued rotating node " + nodeName);
-  }
-
-  onRotationEnded(String nodeName, Matrix4 newTransform) {
-    print("Ended rotating node " + nodeName);
-    final rotatedNode =
-        this.nodes.firstWhere((element) => element.name == nodeName);
-
-    /*
-    * Uncomment the following command if you want to keep the transformations of the Flutter representations of the nodes up to date
-    * (e.g. if you intend to share the nodes through the cloud)
-    */
-    //rotatedNode.transform = newTransform;
   }
 }

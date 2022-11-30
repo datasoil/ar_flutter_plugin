@@ -24,7 +24,7 @@ import com.google.ar.sceneform.ux.ArFragment
 import com.microsoft.azure.spatialanchors.CloudSpatialAnchor
 import java.math.RoundingMode
 
-internal class AnchorVisualAsset(val node: AnchorNode, val asset: Asset, val plane: Plane?) {
+internal class AnchorVisualAsset(val node: AnchorNode, val asset: Asset) {
     var cloudAnchor: CloudSpatialAnchor? = null
     private val color: Material? = null
     private var nodeRenderable: Renderable? = null

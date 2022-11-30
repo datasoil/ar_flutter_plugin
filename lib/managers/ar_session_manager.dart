@@ -147,24 +147,18 @@ class ARSessionManager {
   /// the assets are correctly registered in the pubspec.yaml of the parent app (e.g. the ./example app in this plugin's repo)
   onInitialize({
     bool showAnimatedGuide = true,
-    bool showFeaturePoints = false,
     bool showPlanes = true,
     String? customPlaneTexturePath,
     bool showWorldOrigin = false,
     bool handleTaps = true,
-    bool handlePans = false, // nodes are not draggable by default
-    bool handleRotation = false, // nodes can not be rotated by default
   }) {
     _channel.invokeMethod<void>('init', {
       'showAnimatedGuide': showAnimatedGuide,
-      'showFeaturePoints': showFeaturePoints,
       'planeDetectionConfig': planeDetectionConfig.index,
       'showPlanes': showPlanes,
       'customPlaneTexturePath': customPlaneTexturePath,
       'showWorldOrigin': showWorldOrigin,
       'handleTaps': handleTaps,
-      'handlePans': handlePans,
-      'handleRotation': handleRotation,
     });
   }
 
