@@ -45,6 +45,7 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
           ARView(
             onARViewCreated: onARViewCreated,
             planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
+            creationParams: {},
           ),
           Align(
             alignment: FractionalOffset.bottomCenter,

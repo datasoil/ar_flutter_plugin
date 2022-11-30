@@ -45,6 +45,7 @@ class _ObjectsOnPlanesWidgetState extends State<ObjectsOnPlanesWidget> {
           ARView(
             onARViewCreated: onARViewCreated,
             planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
+            creationParams: {},
           ),
           Align(
             alignment: FractionalOffset.bottomCenter,

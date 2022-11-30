@@ -54,6 +54,7 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
           ARView(
             onARViewCreated: onARViewCreated,
             planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
+            creationParams: {"assets":[{"id":"1234", "cod":"Codice", "ar_anchor":""}]},
           ),
           Align(
             alignment: FractionalOffset.bottomCenter,

@@ -45,6 +45,7 @@ class _ScreenshotWidgetState extends State<ScreenshotWidget> {
           ARView(
             onARViewCreated: onARViewCreated,
             planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
+            creationParams: {},
           ),
           Align(
             alignment: FractionalOffset.bottomCenter,
