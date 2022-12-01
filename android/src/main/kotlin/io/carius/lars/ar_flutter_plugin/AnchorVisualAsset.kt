@@ -4,40 +4,46 @@ package io.carius.lars.ar_flutter_plugin
 
 import android.content.Context
 import android.util.Log
-import android.view.MotionEvent
 import android.view.View
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import com.google.ar.core.Anchor
-import com.google.ar.core.Plane
 import com.google.ar.sceneform.AnchorNode
-import com.google.ar.sceneform.HitTestResult
-import com.google.ar.sceneform.Node
-import com.google.ar.sceneform.collision.Box
-import com.google.ar.sceneform.math.Vector3
+import com.google.ar.sceneform.Scene
 import com.google.ar.sceneform.rendering.Material
 import com.google.ar.sceneform.rendering.Renderable
 import com.google.ar.sceneform.rendering.ViewRenderable
-import com.google.ar.sceneform.ux.ArFragment
+import com.google.ar.sceneform.ux.TransformableNode
+import com.google.ar.sceneform.ux.TransformationSystem
 import com.microsoft.azure.spatialanchors.CloudSpatialAnchor
-import java.math.RoundingMode
+import io.carius.lars.ar_flutter_plugin.Serialization.deserializeMatrix4
+import java.util.concurrent.CompletableFuture
 
-internal class AnchorVisualAsset(val node: AnchorNode, val asset: Asset) {
+internal class AnchorVisualAsset(_localAnchor: Anchor, val asset: Asset, val name: String) {
     var cloudAnchor: CloudSpatialAnchor? = null
-    private val color: Material? = null
-    private var nodeRenderable: Renderable? = null
-    private var ctx: Context? = null
+    private val node = AnchorNode(_localAnchor)
+    val localAnchor = _localAnchor
 
-    val localAnchor: Anchor?
-        get() = node.anchor
-
-
-
-    fun destroy() {
-        this.node.renderable = null
-        this.node.setParent(null)
+    fun render(context: Context, scene: Scene, transformationSystem: TransformationSystem){
+        Log.d("ArModelBuilder", "makeNodeFromAsset")
+        val assetNode = TransformableNode(transformationSystem)
+        ViewRenderable.builder()
+            .setView(context, R.layout.ar_label_extended)
+            .build()
+            .thenAccept{ renderable: ViewRenderable ->
+                val extra: View = renderable.view.findViewById(io.carius.lars.ar_flutter_plugin.R.id.extra_info)
+                val parent: View = renderable.view
+                val asset_cod: TextView = renderable.view.findViewById(io.carius.lars.ar_flutter_plugin.R.id.cod_label)
+                renderable.isShadowReceiver=false
+                renderable.isShadowCaster=false
+                asset_cod.text = asset.cod
+                (parent.findViewById(io.carius.lars.ar_flutter_plugin.R.id.main_icon) as ImageView).setImageResource(io.carius.lars.ar_flutter_plugin.R.drawable.ar_alert_icon)
+                assetNode.renderable = renderable
+                this.node.addChild(assetNode)
+                this.node.setParent(scene)
+            }
     }
+
+
 
 }

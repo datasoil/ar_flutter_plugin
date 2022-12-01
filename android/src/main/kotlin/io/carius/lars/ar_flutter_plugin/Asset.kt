@@ -8,7 +8,9 @@ class Asset(_id: String, _cod: String, _arAnchorID: String = "") {
     val cod: String = _cod
     var arAnchorID: String = _arAnchorID
 
+    constructor(json: Map<String, Any>):this(json["id"].toString(), json["cod"].toString(), json["ar_anchor"].toString()) {}
 
+}
 
 
 //some fields have default values to mimic behavior in Asset.java
@@ -81,7 +83,7 @@ internal class SynEvent (_id: String = "",
     }
 }
 
-internal class Asset(_id: String,
+internal class RealAsset(_id: String,
                      _cod: String,
                      _arAnchorID: String,
                      _function: BaseFunctionCategory = BaseFunctionCategory(),
@@ -111,10 +113,10 @@ internal class Asset(_id: String,
             if(map.containsKey("function") && map.containsKey("function_cat"))
                 BaseFunctionCategory(map["function_cat"] as Map<String, Any>)
             else BaseFunctionCategory(),
-            if(map.containsKey("tickets")) {
+            // if(map.containsKey("tickets")) {
                 
-            } else mutableListOf<SynTicket>(),
-            if(map.containsKey("events")) {} else mutableListOf<SynEvent>()
+            // } else mutableListOf<SynTicket>(),
+            // if(map.containsKey("events")) {} else mutableListOf<SynEvent>()
         ) {}
 
     private fun createFromMap(map: Map<String, Any>) {
@@ -126,9 +128,9 @@ internal class Asset(_id: String,
 
     @Override
     override fun toString(): String {
-        return if (arAnchorID.isNotEmpty()) {
-            "$cod (Already placed)"
-        } else cod!!
+        return if (ARanchorID.isNotEmpty()) {
+            "$Cod (Already placed)"
+        } else Cod!!
     }
 
 }

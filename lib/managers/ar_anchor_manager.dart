@@ -1,6 +1,5 @@
 import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
 
 // Type definitions to enforce a consistent use of the API
 typedef AnchorUploadedHandler = void Function(ARAnchor arAnchor);
@@ -33,8 +32,8 @@ class ARAnchorManager {
   }
 
   /// Activates collaborative AR mode (using Google Cloud Anchors)
-  initGoogleCloudAnchorMode() async {
-    _channel.invokeMethod<bool>('initGoogleCloudAnchorMode', {});
+  initAzureCloudAnchorMode() async {
+    _channel.invokeMethod<bool>('initAzureCloudAnchorMode', {});
   }
 
   Future<dynamic> _platformCallHandler(MethodCall call) async {
@@ -47,14 +46,14 @@ class ARAnchorManager {
           print(call.arguments);
           break;
         case 'onCloudAnchorUploaded':
-          final name = call.arguments["name"];
-          final cloudanchorid = call.arguments["cloudanchorid"];
+          final name = call.arguments["id"];
+          final cloudanchorid = call.arguments["ar_anchor"];
           print(
               "UPLOADED ANCHOR WITH ID: " + cloudanchorid + ", NAME: " + name);
           final currentAnchor =
               pendingAnchors.where((element) => element.name == name).first;
           // Update anchor with cloud anchor ID
-          (currentAnchor as ARPlaneAnchor).cloudanchorid = cloudanchorid;
+          // (currentAnchor as ARAnchor).cloudanchorid = cloudanchorid;
           // Remove anchor from list of pending anchors
           pendingAnchors.remove(currentAnchor);
           // Notify callback
@@ -83,10 +82,11 @@ class ARAnchorManager {
   }
 
   /// Add given anchor to the underlying AR scene
-  Future<bool?> addAnchor(ARAnchor anchor) async {
+  Future<bool?> addAnchor(ARAnchor anchor, Map<String, String> asset) async {
     try {
-      return await _channel.invokeMethod<bool>('addAnchor', anchor.toJson());
-    } on PlatformException catch (e) {
+      return await _channel.invokeMethod<bool>(
+          'addAnchor', {"anchor": anchor.toJson(), "asset": asset});
+    } on PlatformException catch (_) {
       return false;
     }
   }
@@ -103,15 +103,8 @@ class ARAnchorManager {
           await _channel.invokeMethod<bool>('uploadAnchor', anchor.toJson());
       pendingAnchors.add(anchor);
       return response;
-    } on PlatformException catch (e) {
+    } on PlatformException catch (_) {
       return false;
     }
-  }
-
-  /// Try to download anchor with the given ID from the Google Cloud Anchor API and add it to the scene
-  Future<bool?> downloadAnchor(String cloudanchorid) async {
-    print("TRYING TO DOWNLOAD ANCHOR WITH ID " + cloudanchorid);
-    _channel
-        .invokeMethod<bool>('downloadAnchor', {"cloudanchorid": cloudanchorid});
   }
 }

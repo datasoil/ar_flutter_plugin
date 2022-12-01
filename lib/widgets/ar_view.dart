@@ -27,18 +27,19 @@ abstract class PlatformARView {
     }
   }
 
-  Widget build({@required BuildContext context,
-    @required ARViewCreatedCallback arViewCreatedCallback,
-    @required PlaneDetectionConfig planeDetectionConfig, @required Map<
-        String,
-        dynamic> creationParams});
+  Widget build(
+      {@required BuildContext context,
+      @required ARViewCreatedCallback arViewCreatedCallback,
+      @required PlaneDetectionConfig planeDetectionConfig,
+      @required Map<String, dynamic> creationParams});
 
   /// Callback function that is executed once the view is established
   void onPlatformViewCreated(int id);
 }
 
 /// Instantiates [ARSessionManager], [ARObjectManager] and returns them to the widget instantiating the [ARView] using the [arViewCreatedCallback]
-createManagers(int id,
+createManagers(
+    int id,
     BuildContext? context,
     ARViewCreatedCallback? arViewCreatedCallback,
     PlaneDetectionConfig? planeDetectionConfig) {
@@ -65,10 +66,11 @@ class AndroidARView implements PlatformARView {
   }
 
   @override
-  Widget build({BuildContext? context,
-    ARViewCreatedCallback? arViewCreatedCallback,
-    PlaneDetectionConfig? planeDetectionConfig,
-    Map<String, dynamic>? creationParams}) {
+  Widget build(
+      {BuildContext? context,
+      ARViewCreatedCallback? arViewCreatedCallback,
+      PlaneDetectionConfig? planeDetectionConfig,
+      Map<String, dynamic>? creationParams}) {
     _context = context;
     _arViewCreatedCallback = arViewCreatedCallback;
     _planeDetectionConfig = planeDetectionConfig;
@@ -98,10 +100,11 @@ class IosARView implements PlatformARView {
   }
 
   @override
-  Widget build({BuildContext? context,
-    ARViewCreatedCallback? arViewCreatedCallback,
-    PlaneDetectionConfig? planeDetectionConfig,
-    Map<String, dynamic>? creationParams}) {
+  Widget build(
+      {BuildContext? context,
+      ARViewCreatedCallback? arViewCreatedCallback,
+      PlaneDetectionConfig? planeDetectionConfig,
+      Map<String, dynamic>? creationParams}) {
     _context = context;
     _arViewCreatedCallback = arViewCreatedCallback;
     _planeDetectionConfig = planeDetectionConfig;
@@ -135,44 +138,38 @@ class ARView extends StatefulWidget {
   /// Configures the type of planes ARCore and ARKit should track. defaults to none
   final PlaneDetectionConfig planeDetectionConfig;
 
-  /// Configures whether or not to display the device's platform type above the AR view. Defaults to false
-  final bool showPlatformType;
-
   final Map<String, dynamic> creationParams;
 
-  ARView({Key? key,
-    required this.onARViewCreated,
-    required this.creationParams,
-    this.planeDetectionConfig = PlaneDetectionConfig.none,
-    this.showPlatformType = false,
-    this.permissionPromptDescription =
-    "Camera permission must be given to the app for AR functions to work",
-    this.permissionPromptButtonText = "Grant Permission",
-    this.permissionPromptParentalRestriction =
-    "Camera permission is restriced by the OS, please check parental control settings"})
+  ARView(
+      {Key? key,
+      required this.onARViewCreated,
+      required this.creationParams,
+      this.planeDetectionConfig = PlaneDetectionConfig.none,
+      this.permissionPromptDescription =
+          "Camera permission must be given to the app for AR functions to work",
+      this.permissionPromptButtonText = "Grant Permission",
+      this.permissionPromptParentalRestriction =
+          "Camera permission is restriced by the OS, please check parental control settings"})
       : super(key: key);
 
   @override
-  _ARViewState createState() =>
-      _ARViewState(
-          showPlatformType: this.showPlatformType,
-          permissionPromptDescription: this.permissionPromptDescription,
-          permissionPromptButtonText: this.permissionPromptButtonText,
-          permissionPromptParentalRestriction:
+  _ARViewState createState() => _ARViewState(
+      permissionPromptDescription: this.permissionPromptDescription,
+      permissionPromptButtonText: this.permissionPromptButtonText,
+      permissionPromptParentalRestriction:
           this.permissionPromptParentalRestriction);
 }
 
 class _ARViewState extends State<ARView> {
   PermissionStatus _cameraPermission = PermissionStatus.denied;
-  bool showPlatformType;
   String permissionPromptDescription;
   String permissionPromptButtonText;
   String permissionPromptParentalRestriction;
 
-  _ARViewState({required this.showPlatformType,
-    required this.permissionPromptDescription,
-    required this.permissionPromptButtonText,
-    required this.permissionPromptParentalRestriction});
+  _ARViewState(
+      {required this.permissionPromptDescription,
+      required this.permissionPromptButtonText,
+      required this.permissionPromptParentalRestriction});
 
   @override
   void initState() {
@@ -208,47 +205,37 @@ class _ARViewState extends State<ARView> {
           .limited): //iOS-specific: permissions granted for this specific application
       case (PermissionStatus.granted):
         {
-          return Column(children: [
-            if (showPlatformType) Text(Theme
-                .of(context)
-                .platform
-                .toString()),
-            Expanded(
-                child: PlatformARView(Theme
-                    .of(context)
-                    .platform).build(
-                    context: context,
-                    arViewCreatedCallback: widget.onARViewCreated,
-                    planeDetectionConfig: widget.planeDetectionConfig,
-                    creationParams: widget.creationParams
-                )),
-          ]);
+          return PlatformARView(Theme.of(context).platform).build(
+              context: context,
+              arViewCreatedCallback: widget.onARViewCreated,
+              planeDetectionConfig: widget.planeDetectionConfig,
+              creationParams: widget.creationParams);
         }
       case (PermissionStatus.denied):
         {
           return Center(
               child: Column(
-                children: [
-                  Text(permissionPromptDescription),
-                  ElevatedButton(
-                      child: Text(permissionPromptButtonText),
-                      onPressed: () async => {await requestCameraPermission()})
-                ],
-              ));
+            children: [
+              Text(permissionPromptDescription),
+              ElevatedButton(
+                  child: Text(permissionPromptButtonText),
+                  onPressed: () async => {await requestCameraPermission()})
+            ],
+          ));
         }
       case (PermissionStatus
           .permanentlyDenied): //Android-specific: User needs to open Settings to give permissions
         {
           return Center(
               child: Column(
-                children: [
-                  Text(permissionPromptDescription),
-                  ElevatedButton(
-                      child: Text(permissionPromptButtonText),
-                      onPressed: () async =>
+            children: [
+              Text(permissionPromptDescription),
+              ElevatedButton(
+                  child: Text(permissionPromptButtonText),
+                  onPressed: () async =>
                       {await requestCameraPermissionFromSettings()})
-                ],
-              ));
+            ],
+          ));
         }
       case (PermissionStatus.restricted):
         {

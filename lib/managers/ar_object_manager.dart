@@ -1,19 +1,9 @@
-import 'dart:typed_data';
-
 import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:ar_flutter_plugin/models/ar_node.dart';
-import 'package:ar_flutter_plugin/utils/json_converters.dart';
 import 'package:flutter/services.dart';
-import 'package:vector_math/vector_math_64.dart';
 
 // Type definitions to enforce a consistent use of the API
-typedef NodeTapResultHandler = void Function(List<String> nodes);
-typedef NodePanStartHandler = void Function(String node);
-typedef NodePanChangeHandler = void Function(String node);
-typedef NodePanEndHandler = void Function(String node, Matrix4 transform);
-typedef NodeRotationStartHandler = void Function(String node);
-typedef NodeRotationChangeHandler = void Function(String node);
-typedef NodeRotationEndHandler = void Function(String node, Matrix4 transform);
+typedef NodeTapResultHandler = void Function(String node);
 
 /// Manages the all node-related actions of an [ARView]
 class ARObjectManager {
@@ -45,10 +35,8 @@ class ARObjectManager {
           break;
         case 'onNodeTap':
           if (onNodeTap != null) {
-            final tappedNodes = call.arguments as List<dynamic>;
-            onNodeTap!(tappedNodes
-                .map((tappedNode) => tappedNode.toString())
-                .toList());
+            final tappedNode = call.arguments as String;
+            onNodeTap!(tappedNode);
           }
           break;
         default:
@@ -68,7 +56,7 @@ class ARObjectManager {
   }
 
   /// Add given node to the given anchor of the underlying AR scene (or to its top-level if no anchor is given) and listen to any changes made to its transformation
-  Future<bool?> addNode(ARNode node, ARPlaneAnchor planeAnchor) async {
+  Future<bool?> addNode(ARNode node, ARAnchor anchor) async {
     try {
       node.transformNotifier.addListener(() {
         _channel.invokeMethod<void>('transformationChanged', {
@@ -77,10 +65,10 @@ class ARObjectManager {
               MatrixValueNotifierConverter().toJson(node.transformNotifier)
         });
       });
-      planeAnchor.childNodes.add(node.name);
-      return await _channel.invokeMethod<bool>('addNodeToPlaneAnchor',
-          {'node': node.toMap(), 'anchor': planeAnchor.toJson()});
-    } on PlatformException catch (e) {
+      // anchor.childNodes.add(node.name);
+      return await _channel.invokeMethod<bool>(
+          'addNodeToAnchor', {'node': node.toMap(), 'anchor': anchor.toJson()});
+    } on PlatformException catch (_) {
       return false;
     }
   }

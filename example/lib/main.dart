@@ -1,4 +1,3 @@
-import 'package:ar_flutter_plugin_example/examples/objectsonplanesexample.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -6,10 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:ar_flutter_plugin/ar_flutter_plugin.dart';
 
 import 'package:ar_flutter_plugin_example/examples/cloudanchorexample.dart';
-import 'package:ar_flutter_plugin_example/examples/debugoptionsexample.dart';
-
-import 'examples/objectgesturesexample.dart';
-import 'examples/screenshotexample.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,12 +53,7 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text(_title),
         ),
-        body: Column(children: [
-          Text('Running on: $_platformVersion\n'),
-          Expanded(
-            child: ExampleList(),
-          ),
-        ]),
+        body: ExampleList(),
       ),
     );
   }
@@ -75,28 +65,6 @@ class ExampleList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final examples = [
-      Example(
-          'Debug Options',
-          'Visualize feature points, planes and world coordinate system',
-          () => Navigator.push(context,
-              MaterialPageRoute(builder: (context) => DebugOptionsWidget()))),
-      Example(
-          'Anchors & Objects on Planes',
-          'Place 3D objects on detected planes using anchors',
-          () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => ObjectsOnPlanesWidget()))),
-      Example(
-          'Object Transformation Gestures',
-          'Rotate and Pan Objects',
-          () => Navigator.push(context,
-              MaterialPageRoute(builder: (context) => ObjectGesturesWidget()))),
-      Example(
-          'Screenshots',
-          'Place 3D objects on planes and take screenshots',
-          () => Navigator.push(context,
-              MaterialPageRoute(builder: (context) => ScreenshotWidget()))),
       Example(
           'Cloud Anchors',
           'Place and retrieve 3D objects using the Google Cloud Anchor API',

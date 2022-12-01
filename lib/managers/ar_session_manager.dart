@@ -38,71 +38,6 @@ class ARSessionManager {
     }
   }
 
-  /// Returns the camera pose in Matrix4 format with respect to the world coordinate system of the [ARView]
-  Future<Matrix4?> getCameraPose() async {
-    try {
-      final serializedCameraPose =
-          await _channel.invokeMethod<List<dynamic>>('getCameraPose', {});
-      return MatrixConverter().fromJson(serializedCameraPose!);
-    } catch (e) {
-      print('Error caught: ' + e.toString());
-      return null;
-    }
-  }
-
-  /// Returns the given anchor pose in Matrix4 format with respect to the world coordinate system of the [ARView]
-  Future<Matrix4?> getPose(ARAnchor anchor) async {
-    try {
-      if (anchor.name.isEmpty) {
-        throw Exception("Anchor can not be resolved. Anchor name is empty.");
-      }
-      final serializedCameraPose =
-          await _channel.invokeMethod<List<dynamic>>('getAnchorPose', {
-        "anchorId": anchor.name,
-      });
-      return MatrixConverter().fromJson(serializedCameraPose!);
-    } catch (e) {
-      print('Error caught: ' + e.toString());
-      return null;
-    }
-  }
-
-  /// Returns the distance in meters between @anchor1 and @anchor2.
-  Future<double?> getDistanceBetweenAnchors(
-      ARAnchor anchor1, ARAnchor anchor2) async {
-    var anchor1Pose = await getPose(anchor1);
-    var anchor2Pose = await getPose(anchor2);
-    var anchor1Translation = anchor1Pose?.getTranslation();
-    var anchor2Translation = anchor2Pose?.getTranslation();
-    if (anchor1Translation != null && anchor2Translation != null) {
-      return getDistanceBetweenVectors(anchor1Translation, anchor2Translation);
-    } else {
-      return null;
-    }
-  }
-
-  /// Returns the distance in meters between @anchor and device's camera.
-  Future<double?> getDistanceFromAnchor(ARAnchor anchor) async {
-    Matrix4? cameraPose = await getCameraPose();
-    Matrix4? anchorPose = await getPose(anchor);
-    Vector3? cameraTranslation = cameraPose?.getTranslation();
-    Vector3? anchorTranslation = anchorPose?.getTranslation();
-    if (anchorTranslation != null && cameraTranslation != null) {
-      return getDistanceBetweenVectors(anchorTranslation, cameraTranslation);
-    } else {
-      return null;
-    }
-  }
-
-  /// Returns the distance in meters between @vector1 and @vector2.
-  double getDistanceBetweenVectors(Vector3 vector1, Vector3 vector2) {
-    num dx = vector1.x - vector2.x;
-    num dy = vector1.y - vector2.y;
-    num dz = vector1.z - vector2.z;
-    double distance = sqrt(dx * dx + dy * dy + dz * dz);
-    return distance;
-  }
-
   Future<void> _platformCallHandler(MethodCall call) {
     if (debug) {
       print('_platformCallHandler call ${call.method} ${call.arguments}');
@@ -110,23 +45,18 @@ class ARSessionManager {
     try {
       switch (call.method) {
         case 'onError':
-          if (onError != null) {
-            onError(call.arguments[0]);
-            print(call.arguments);
-          }
+          onError(call.arguments[0]);
+          print(call.arguments);
           break;
         case 'onPlaneOrPointTap':
-          if (onPlaneOrPointTap != null) {
-            final rawHitTestResults = call.arguments as List<dynamic>;
-            final serializedHitTestResults = rawHitTestResults
-                .map(
-                    (hitTestResult) => Map<String, dynamic>.from(hitTestResult))
-                .toList();
-            final hitTestResults = serializedHitTestResults.map((e) {
-              return ARHitTestResult.fromJson(e);
-            }).toList();
-            onPlaneOrPointTap(hitTestResults);
-          }
+          final rawHitTestResults = call.arguments as List<dynamic>;
+          final serializedHitTestResults = rawHitTestResults
+              .map((hitTestResult) => Map<String, dynamic>.from(hitTestResult))
+              .toList();
+          final hitTestResults = serializedHitTestResults.map((e) {
+            return ARHitTestResult.fromJson(e);
+          }).toList();
+          onPlaneOrPointTap(hitTestResults);
           break;
         case 'dispose':
           _channel.invokeMethod<void>("dispose");
@@ -149,7 +79,6 @@ class ARSessionManager {
     bool showAnimatedGuide = true,
     bool showPlanes = true,
     String? customPlaneTexturePath,
-    bool showWorldOrigin = false,
     bool handleTaps = true,
   }) {
     _channel.invokeMethod<void>('init', {
@@ -157,7 +86,6 @@ class ARSessionManager {
       'planeDetectionConfig': planeDetectionConfig.index,
       'showPlanes': showPlanes,
       'customPlaneTexturePath': customPlaneTexturePath,
-      'showWorldOrigin': showWorldOrigin,
       'handleTaps': handleTaps,
     });
   }

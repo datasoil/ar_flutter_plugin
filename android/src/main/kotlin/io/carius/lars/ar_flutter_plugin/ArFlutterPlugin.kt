@@ -10,6 +10,8 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
+import com.microsoft.CloudServices;
+
 /** ArFlutterPlugin */
 class ArFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
   /// The MethodChannel that will the communication between Flutter and native Android
@@ -49,6 +51,7 @@ class ArFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+    CloudServices.initialize(binding.getActivity());
     this.flutterPluginBinding.platformViewRegistry.registerViewFactory(
         "ar_flutter_plugin", AndroidARViewFactory(binding.activity, flutterPluginBinding.binaryMessenger))
   }

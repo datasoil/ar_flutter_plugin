@@ -5,15 +5,12 @@ import 'package:flutter/widgets.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'dart:math' as math;
-import 'package:ar_flutter_plugin/datatypes/node_types.dart';
 
 /// ARNode is the model class for node-tree objects.
 /// It encapsulates the position, rotations, and other transforms of a node, which define a coordinate system.
 /// The coordinate systems of all the sub-nodes are relative to the one of their parent node.
 class ARNode {
   ARNode({
-    required this.type,
-    String? uri,
     String? name,
     Vector3? position,
     Vector3? scale,
@@ -27,9 +24,6 @@ class ARNode {
             transformation, position, scale, rotation, eulerAngles)),
         asset = asset ?? null,
         data = data ?? null;
-
-  /// Specifies the receiver's [NodeType]
-  NodeType type;
 
   /// Specifies the path to the 3D model used for the [ARNode]. Depending on the [type], this is either a relative path or an URL to an online asset
   String? uri;
@@ -100,7 +94,6 @@ class ARNode {
   static const _matrixValueNotifierConverter = MatrixValueNotifierConverter();
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-        'type': type.index,
         'uri': uri,
         'transformation':
             _matrixValueNotifierConverter.toJson(transformNotifier),
@@ -111,8 +104,6 @@ class ARNode {
 
   static ARNode fromMap(Map<String, dynamic> map) {
     return ARNode(
-        type: NodeType.values[map["type"]],
-        uri: map["uri"] as String,
         name: map["name"] as String,
         transformation: MatrixConverter().fromJson(map["transformation"]),
         asset: Map<String, dynamic>.from(map["asset"]),

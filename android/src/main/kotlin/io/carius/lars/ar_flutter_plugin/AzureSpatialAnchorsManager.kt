@@ -79,13 +79,13 @@ internal class AzureSpatialAnchorsManager(arCoreSession: Session?) {
 
     //endregion
     fun setLocationProvider(locationProvider: PlatformLocationProvider?) {
-        spatialAnchorsSession.setLocationProvider(locationProvider)
+        spatialAnchorsSession.locationProvider = locationProvider
     }
 
 
-    fun createAnchorAsync(anchor: CloudSpatialAnchor?): CompletableFuture<CloudSpatialAnchor>? {
+    fun createAnchorAsync(anchor: CloudSpatialAnchor): CompletableFuture<CloudSpatialAnchor>? {
         return toEmptyCompletableFuture(spatialAnchorsSession.createAnchorAsync(anchor))
-                ?.thenApply { ignore -> anchor }
+                .thenApply { anchor }
     }
 
     fun deleteAnchorAsync(anchor: CloudSpatialAnchor?): CompletableFuture<*>? {
@@ -134,7 +134,7 @@ internal class AzureSpatialAnchorsManager(arCoreSession: Session?) {
         spatialAnchorsSession.processFrame(frame)
     }
 
-    private fun toEmptyCompletableFuture(future: Future<*>): CompletableFuture<*>? {
+    private fun toEmptyCompletableFuture(future: Future<*>): CompletableFuture<*> {
         return CompletableFuture.runAsync(Runnable {
             try {
                 future.get()
