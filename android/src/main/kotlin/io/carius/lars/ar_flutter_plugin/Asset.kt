@@ -12,7 +12,6 @@ class Asset(_id: String, _cod: String, _arAnchorID: String = "") {
 
 }
 
-
 //some fields have default values to mimic behavior in Asset.java
 
 internal class BaseFunctionCategory (_id: String = "", _cod: String = "", _name: String = "", _color: String = "") {
@@ -100,8 +99,9 @@ internal class RealAsset(_id: String,
     var Events = _events
     //"In Kotlin, the default implementation of MutableList is ArrayList
     // which you can think of as a resizable array."
+    //List must have initialization size
 
-    //TODO rendere costruttore from map
+
     constructor(map: Map<String, Any>) :
         this(
             map["id"].toString(), 
@@ -113,11 +113,19 @@ internal class RealAsset(_id: String,
             if(map.containsKey("function") && map.containsKey("function_cat"))
                 BaseFunctionCategory(map["function_cat"] as Map<String, Any>)
             else BaseFunctionCategory(),
-            // if(map.containsKey("tickets")) {
-                
-            // } else mutableListOf<SynTicket>(),
-            // if(map.containsKey("events")) {} else mutableListOf<SynEvent>()
+            if(map.containsKey("tickets")) (map["tickets"] as MutableList<SynTicket>) else mutableListOf<SynTicket>(),
+            if(map.containsKey("events")) (map["events"] as MutableList<SynEvent>) else mutableListOf<SynEvent>()
         ) {}
+
+    fun fromMapToListToMapAgain (map: Map<String, Any>) {
+        //can be deleted after testing
+        //depending on what Assets.java.Assets -> Tickets = tt; actually does
+        var listOfTickets : List<SynTicket> = (map["tickets"] as MutableList<SynTicket>).toList();
+        //listOfTickets should be == [ticket1, ticket2, ticket3, ... , ticket n-1]
+        // list -> map{"$i : $listOfTickets[i]"}
+        val mapOfTickets = listOfTickets.mapIndexed { index: Int, s: SynTicket -> index + 1 to s }.toMap()
+    }
+}
 
     private fun createFromMap(map: Map<String, Any>) {
 
