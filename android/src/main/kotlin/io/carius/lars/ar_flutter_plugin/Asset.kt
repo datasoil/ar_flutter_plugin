@@ -125,20 +125,11 @@ internal class RealAsset(_id: String,
         // list -> map{"$i : $listOfTickets[i]"}
         val mapOfTickets = listOfTickets.mapIndexed { index: Int, s: SynTicket -> index + 1 to s }.toMap()
     }
-}
-
-    private fun createFromMap(map: Map<String, Any>) {
-
-    }
-    
-
-
 
     @Override
     override fun toString(): String {
         return if (ARanchorID.isNotEmpty()) {
             "$Cod (Already placed)"
-        } else Cod!!
+        } else Cod
     }
-
 }
