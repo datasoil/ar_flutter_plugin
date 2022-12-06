@@ -31,11 +31,6 @@ class ARAnchorManager {
     }
   }
 
-  /// Activates collaborative AR mode (using Google Cloud Anchors)
-  initAzureCloudAnchorMode() async {
-    _channel.invokeMethod<bool>('initAzureCloudAnchorMode', {});
-  }
-
   Future<dynamic> _platformCallHandler(MethodCall call) async {
     if (debug) {
       print('_platformCallHandler call ${call.method} ${call.arguments}');
@@ -45,31 +40,6 @@ class ARAnchorManager {
         case 'onError':
           print(call.arguments);
           break;
-        case 'onCloudAnchorUploaded':
-          final name = call.arguments["id"];
-          final cloudanchorid = call.arguments["ar_anchor"];
-          print(
-              "UPLOADED ANCHOR WITH ID: " + cloudanchorid + ", NAME: " + name);
-          final currentAnchor =
-              pendingAnchors.where((element) => element.name == name).first;
-          // Update anchor with cloud anchor ID
-          // (currentAnchor as ARAnchor).cloudanchorid = cloudanchorid;
-          // Remove anchor from list of pending anchors
-          pendingAnchors.remove(currentAnchor);
-          // Notify callback
-          if (onAnchorUploaded != null) {
-            onAnchorUploaded!(currentAnchor);
-          }
-          break;
-        case "onAnchorDownloadSuccess":
-          final serializedAnchor = call.arguments;
-          if (onAnchorDownloaded != null) {
-            ARAnchor anchor = onAnchorDownloaded!(
-                Map<String, dynamic>.from(serializedAnchor));
-            return anchor.name;
-          } else {
-            return serializedAnchor["name"];
-          }
         default:
           if (debug) {
             print('Unimplemented method ${call.method} ');
@@ -81,8 +51,19 @@ class ARAnchorManager {
     return Future.value();
   }
 
+  /// Activates collaborative AR mode (using Google Cloud Anchors)
+  Future<bool?> initAzureCloudAnchorMode() async {
+    return await _channel.invokeMethod<bool>('initAzureCloudAnchorMode');
+  }
+
+  /// Start search for anchors ids
+  Future<bool?> startLocateAnchors(List<Map<String, dynamic>> assets) async {
+    return await _channel
+        .invokeMethod<bool>('startLocateAnchors', {"assets": assets});
+  }
+
   /// Add given anchor to the underlying AR scene
-  Future<bool?> addAnchor(ARAnchor anchor, Map<String, String> asset) async {
+  Future<bool?> addAnchor(ARAnchor anchor, Map<String, dynamic> asset) async {
     try {
       return await _channel.invokeMethod<bool>(
           'addAnchor', {"anchor": anchor.toJson(), "asset": asset});
@@ -92,19 +73,18 @@ class ARAnchorManager {
   }
 
   /// Remove given anchor and all its children from the AR Scene
-  removeAnchor(ARAnchor anchor) {
-    _channel.invokeMethod<String>('removeAnchor', {'name': anchor.name});
+  Future<bool?> removeAnchor(String anchorId) async {
+    return await _channel
+        .invokeMethod<bool>('removeAnchor', {'name': anchorId});
   }
 
   /// Upload given anchor from the underlying AR scene to the Google Cloud Anchor API
-  Future<bool?> uploadAnchor(ARAnchor anchor) async {
+  Future<String?> uploadAnchor(String anchorId) async {
     try {
-      final response =
-          await _channel.invokeMethod<bool>('uploadAnchor', anchor.toJson());
-      pendingAnchors.add(anchor);
-      return response;
+      return await _channel
+          .invokeMethod<String?>('uploadAnchor', {'name': anchorId});
     } on PlatformException catch (_) {
-      return false;
+      return null;
     }
   }
 }

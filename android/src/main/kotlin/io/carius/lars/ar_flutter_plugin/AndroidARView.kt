@@ -11,7 +11,6 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
@@ -19,9 +18,7 @@ import com.google.ar.sceneform.*
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.*
 import com.google.ar.sceneform.ux.*
-import com.microsoft.azure.spatialanchors.AnchorLocateCriteria
-import com.microsoft.azure.spatialanchors.CloudSpatialAnchor
-import com.microsoft.azure.spatialanchors.CloudSpatialException
+import com.microsoft.azure.spatialanchors.*
 import io.carius.lars.ar_flutter_plugin.Serialization.deserializeMatrix4
 import io.carius.lars.ar_flutter_plugin.Serialization.serializeHitResult
 import io.flutter.FlutterInjector
@@ -32,7 +29,6 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.HashMap
 import kotlin.collections.set
 
 
@@ -41,7 +37,7 @@ internal class AndroidARView(
     context: Context,
     messenger: BinaryMessenger,
     id: Int,
-    creationParams: Map<String, Any>?
+    creationParams: Map<String?, Any?>?
 ) : PlatformView {
     // constants
     private val TAG: String = AndroidARView::class.java.name
@@ -58,12 +54,8 @@ internal class AndroidARView(
 
     // UI variables
     private lateinit var arSceneView: ArSceneView
-    private lateinit var transformationSystem: TransformationSystem
-    private var showAnimatedGuide = false
-    private lateinit var animatedGuide: View
 
     // Setting defaults
-    private var keepNodeSelected = true;
     private var footprintSelectionVisualizer = FootprintSelectionVisualizer()
 
 
@@ -120,10 +112,8 @@ internal class AndroidARView(
                         }
                     }
                     "removeAnchor" -> {
-                        val anchorName: String? = call.argument<String>("name")
-                        anchorName?.let { name ->
-                            removeAnchor(name)
-                        }
+                        val anchorName: String = call.argument<String>("name") as String
+                        removeAnchor(anchorName, result) //assetId
                     }
                     "initAzureCloudAnchorMode" -> {
                         if (arSceneView.session != null) {
@@ -135,48 +125,36 @@ internal class AndroidARView(
 
                             azureSpatialAnchorsManager =
                                 AzureSpatialAnchorsManager(arSceneView.session!!)
+
+                            azureSpatialAnchorsManager.addAnchorLocatedListener(
+                                AnchorLocatedListener { event ->
+                                    onAnchorLocated(event)
+                                })
                             azureSpatialAnchorsManager.start();
-                            startLocatingNearbyAssets();
+                            result.success(true);
                         } else {
                             sessionManagerChannel.invokeMethod(
                                 "onError",
                                 listOf("Error initializing cloud anchor mode: Session is null")
                             )
+                            result.success(false);
+                        }
+                    }
+                    "startLocateAnchors" -> {
+                        val assets: List<Map<String, Any>>? = call.argument<List<Map<String, Any>>>("assets")
+                        if(assets!=null){
+                            for (map in assets.toTypedArray()){
+                                nearbyAssets.add(Asset(map))
+                            }
+                            var ids = nearbyAssets.filter { a -> a.arAnchorID.length>1 }.map { a -> a.arAnchorID }
+                            startLocatingNearbyAssets(ids, result)
+                        }else{
+                            result.success(false)
                         }
                     }
                     "uploadAnchor" -> {
                         val anchorName: String = call.argument<String>("name") as String
-                        val visual: AnchorVisualAsset =
-                            anchorVisuals[anchorName] as AnchorVisualAsset
-                        val cloudAnchor = CloudSpatialAnchor()
-                        cloudAnchor.localAnchor = visual.localAnchor
-                        visual.cloudAnchor = cloudAnchor
-
-                        // In this sample app we delete the cloud anchor explicitly, but you can also set it to expire automatically
-                        val now = Date()
-                        val cal = Calendar.getInstance()
-                        cal.time = now
-                        cal.add(Calendar.DATE, 7)
-                        val oneWeekFromNow = cal.time
-                        cloudAnchor.expiration = oneWeekFromNow
-                        var anchorSaveResult =
-                            azureSpatialAnchorsManager.createAnchorAsync(visual.cloudAnchor!!)
-                        if (anchorSaveResult == null) {
-                            sessionManagerChannel.invokeMethod(
-                                "onError",
-                                listOf("Error initializing cloud anchor mode: Session is null")
-                            )
-                            result.success(false)
-                        } else {
-                            anchorSaveResult.thenAccept { csa: CloudSpatialAnchor ->
-                                //save to syn the association
-                                val data: HashMap<String, String> = HashMap()
-                                data["id"] = anchorName
-                                data["ar_anchor"] = csa.identifier
-                                result.success(true);
-                                anchorManagerChannel.invokeMethod("onCloudAnchorUploaded", data)
-                            }
-                        }
+                        uploadAnchor(anchorName, result)
                     }
                     else -> {
                     }
@@ -220,20 +198,6 @@ internal class AndroidARView(
                 footprintSelectionVisualizer.footprintRenderable =
                     ShapeFactory.makeCylinder(0.7f, 0.05f, Vector3(0f, 0f, 0f), mat)
             }
-
-        transformationSystem =
-            TransformationSystem(
-                activity.resources.displayMetrics,
-                footprintSelectionVisualizer
-            )
-
-        //set nerby assets
-        if (creationParams!!.containsKey("assets")) {
-            var list = creationParams!!["assets"] as (ArrayList<Map<String, Any>>)
-            for (json: Map<String, Any> in list) {
-                nearbyAssets.add(Asset(json))
-            }
-        }
 
         onResume() // call onResume once to setup initial session
         // TODO: find out why this does not happen automatically
@@ -349,12 +313,6 @@ internal class AndroidARView(
     }
 
     fun onPause() {
-        // hide instructions view if no longer required
-        if (showAnimatedGuide) {
-            val view = activity.findViewById(R.id.content) as ViewGroup
-            view.removeView(animatedGuide)
-            showAnimatedGuide = false
-        }
         arSceneView.pause()
     }
 
@@ -377,40 +335,23 @@ internal class AndroidARView(
         // Unpack call arguments
         val argPlaneDetectionConfig: Int? = call.argument<Int>("planeDetectionConfig")
         val argShowPlanes: Boolean? = call.argument<Boolean>("showPlanes")
-        val argCustomPlaneTexturePath: String? = call.argument<String>("customPlaneTexturePath")
-        val argHandleTaps: Boolean? = call.argument<Boolean>("handleTaps")
-        val argShowAnimatedGuide: Boolean? = call.argument<Boolean>("showAnimatedGuide")
 
 
         sceneUpdateListener =
             com.google.ar.sceneform.Scene.OnUpdateListener { frameTime: FrameTime ->
-                onFrame(frameTime)
+                if (this::azureSpatialAnchorsManager.isInitialized) {
+                    azureSpatialAnchorsManager.update(arSceneView.arFrame)
+                }
             }
         onNodeTapListener =
             com.google.ar.sceneform.Scene.OnPeekTouchListener { hitTestResult, motionEvent ->
                 if (hitTestResult.node != null && motionEvent?.action == MotionEvent.ACTION_DOWN) {
                     objectManagerChannel.invokeMethod("onNodeTap", listOf(hitTestResult.node?.name))
                 }
-                transformationSystem.onTouch(
-                    hitTestResult,
-                    motionEvent
-                )
             }
 
         arSceneView.scene?.addOnUpdateListener(sceneUpdateListener)
         arSceneView.scene?.addOnPeekTouchListener(onNodeTapListener)
-
-
-        // Configure Plane scanning guide
-        if (argShowAnimatedGuide == true) { // explicit comparison necessary because of nullable type
-            showAnimatedGuide = true
-            val view = activity.findViewById(R.id.content) as ViewGroup
-            animatedGuide = activity.layoutInflater.inflate(
-                com.google.ar.sceneform.ux.R.layout.sceneform_plane_discovery_layout,
-                null
-            )
-            view.addView(animatedGuide)
-        }
 
         // Configure plane detection
         val config = arSceneView.session?.config
@@ -435,66 +376,14 @@ internal class AndroidARView(
 
         // Configure whether or not detected planes should be shown
         arSceneView.planeRenderer.isVisible = argShowPlanes == true
-        // Create custom plane renderer (use supplied texture & increase radius)
-        argCustomPlaneTexturePath?.let {
-            val loader: FlutterLoader = FlutterInjector.instance().flutterLoader()
-            val key: String = loader.getLookupKeyForAsset(it)
 
-            val sampler =
-                Texture.Sampler.builder()
-                    .setMinFilter(Texture.Sampler.MinFilter.LINEAR)
-                    .setWrapMode(Texture.Sampler.WrapMode.REPEAT)
-                    .build()
-            Texture.builder()
-                .setSource(viewContext, Uri.parse(key))
-                .setSampler(sampler)
-                .build()
-                .thenAccept { texture: Texture? ->
-                    arSceneView.planeRenderer.material.thenAccept { material: Material ->
-                        material.setTexture(PlaneRenderer.MATERIAL_TEXTURE, texture)
-                        material.setFloat(PlaneRenderer.MATERIAL_SPOTLIGHT_RADIUS, 10f)
-                    }
-                }
-            // Set radius to render planes in
-            arSceneView.scene.addOnUpdateListener { frameTime: FrameTime? ->
-                val planeRenderer = arSceneView.planeRenderer
-                planeRenderer.material.thenAccept { material: Material ->
-                    material.setFloat(
-                        PlaneRenderer.MATERIAL_SPOTLIGHT_RADIUS,
-                        10f
-                    ) // Sets the radius in which to visualize planes
-                }
-            }
+        arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
+            onTap(
+                hitTestResult,
+                motionEvent
+            )
         }
-
-        // Configure Tap handling
-        if (argHandleTaps == true) { // explicit comparison necessary because of nullable type
-            arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
-                onTap(
-                    hitTestResult,
-                    motionEvent
-                )
-            }
-        }
-
         result.success(null)
-    }
-
-    private fun onFrame(frameTime: FrameTime) {
-        if (this::azureSpatialAnchorsManager.isInitialized) {
-            azureSpatialAnchorsManager.update(arSceneView.arFrame)
-        }
-        // hide instructions view if no longer required
-        if (showAnimatedGuide && arSceneView.arFrame != null) {
-            for (plane in arSceneView.arFrame!!.getUpdatedTrackables(Plane::class.java)) {
-                if (plane.trackingState === TrackingState.TRACKING) {
-                    val view = activity.findViewById(R.id.content) as ViewGroup
-                    view.removeView(animatedGuide)
-                    showAnimatedGuide = false
-                    break
-                }
-            }
-        }
     }
 
     private fun onTap(hitTestResult: HitTestResult, motionEvent: MotionEvent?): Boolean {
@@ -505,7 +394,7 @@ internal class AndroidARView(
             objectManagerChannel.invokeMethod("onNodeTap", hitTestResult.node!!.name)
             return true
         }
-        if (motionEvent != null && motionEvent.action == MotionEvent.ACTION_DOWN && transformationSystem.selectedNode == null) {
+        if (motionEvent != null && motionEvent.action == MotionEvent.ACTION_DOWN) {
             Log.d(TAG, "onTapSurface")
             val allHitResults = frame?.hitTest(motionEvent) ?: listOf<HitResult>()
             val planeAndPointHitResults =
@@ -537,7 +426,7 @@ internal class AndroidARView(
             )
             var anchor = arSceneView.session!!.createAnchor(Pose(position, rotation))
             val visual = AnchorVisualAsset(anchor, asset, anchorName)
-            visual.render(viewContext, arSceneView.scene, transformationSystem)
+            visual.render(viewContext, arSceneView.scene)
             anchorVisuals[visual.name] = visual
             true
         } catch (e: Exception) {
@@ -545,40 +434,94 @@ internal class AndroidARView(
         }
     }
 
-    private fun removeAnchor(name: String) {
-        val anchorNode = arSceneView.scene.findByName(name) as AnchorNode?
-        anchorNode?.let {
-            // Remove corresponding anchor from tracking
-            anchorNode.anchor?.detach()
-            // Remove children
-            for (node in anchorNode.children) {
-                if (transformationSystem.selectedNode?.name == node.name) {
-                    transformationSystem.selectNode(null)
-                    keepNodeSelected = true
-                }
+    private fun removeAnchor(name: String, result: MethodChannel.Result) {
+        try {
+            val visual: AnchorVisualAsset =
+                anchorVisuals[name] as AnchorVisualAsset
+            visual.localAnchor.detach()
+            for (node in visual.node.children) {
                 node.setParent(null)
             }
-            // Remove anchor node
-            anchorNode.setParent(null)
+            visual.node.setParent(null)
+            anchorVisuals.remove(name)
+            result.success(true)
+        } catch (e: Exception) {
+            result.success(false)
+        }
+
+    }
+
+    private fun uploadAnchor(name: String, result: MethodChannel.Result) {
+        val visual: AnchorVisualAsset =
+            anchorVisuals[name] as AnchorVisualAsset
+        val cloudAnchor = CloudSpatialAnchor()
+        cloudAnchor.localAnchor = visual.localAnchor
+        visual.cloudAnchor = cloudAnchor
+
+        // In this sample app we delete the cloud anchor explicitly, but you can also set it to expire automatically
+        val now = Date()
+        val cal = Calendar.getInstance()
+        cal.time = now
+        cal.add(Calendar.DATE, 7)
+        val oneWeekFromNow = cal.time
+        cloudAnchor.expiration = oneWeekFromNow
+        try {
+            var anchorSaveResult =
+                azureSpatialAnchorsManager.createAnchorAsync(visual.cloudAnchor!!)
+            if (anchorSaveResult == null) {
+                sessionManagerChannel.invokeMethod(
+                    "onError",
+                    listOf("Error initializing cloud anchor mode: Session is null")
+                )
+                result.success(null)
+            } else {
+                anchorSaveResult.thenAccept { csa: CloudSpatialAnchor ->
+                    result.success(csa.identifier);
+                }
+            }
+        } catch (e: Exception) {
+            result.success(null)
+        }
+
+    }
+
+    private fun startLocatingNearbyAssets(ids: List<String>, result: MethodChannel.Result) {
+        val criteria = AnchorLocateCriteria()
+        criteria.identifiers = ids.toTypedArray<String>()
+        try {
+            if (this::azureSpatialAnchorsManager.isInitialized) {
+                azureSpatialAnchorsManager.stopLocating()
+                azureSpatialAnchorsManager.startLocating(criteria)
+            }
+            result.success(true)
+        } catch (e: Exception) {
+            result.success(false)
         }
     }
 
-    private fun startLocatingNearbyAssets() {
-        val criteria = AnchorLocateCriteria()
-
-        //filter out nearby assets with no anchor_id
-        val toLocate: ArrayList<String> = ArrayList()
-        synchronized(nearbyAssets) {
-            nearbyAssets.forEach { a ->
-                if (a.arAnchorID !== "") {
-                    toLocate.add(a.arAnchorID)
+    private fun onAnchorLocated(event: AnchorLocatedEvent) {
+        val status = event.status
+        if (status == LocateAnchorStatus.Located) {
+            Log.d(TAG, "renderLocatedAnchor: rendering located anchor" + event.anchor.identifier)
+            var cloudAnchor = event.anchor
+            //get the asset name to print
+            //get the asset name to print
+            var theAsset = Asset("porcodio", "PORCODIO", cloudAnchor.identifier)
+            synchronized(nearbyAssets) {
+                for (asset in nearbyAssets) {
+                    if (asset.arAnchorID.equals(cloudAnchor.identifier)) {
+                        theAsset = asset
+                        break
+                    }
                 }
             }
-        }
-        criteria.identifiers = toLocate.toArray(arrayOfNulls<String>(toLocate.size))
-        if (this::azureSpatialAnchorsManager.isInitialized) {
-            azureSpatialAnchorsManager.stopLocating()
-            azureSpatialAnchorsManager.startLocating(criteria)
+            activity.runOnUiThread {
+                val foundVisual = AnchorVisualAsset(cloudAnchor.localAnchor, theAsset, theAsset.id)
+                foundVisual.cloudAnchor = cloudAnchor
+                foundVisual.render(viewContext, arSceneView.scene)
+                anchorVisuals[foundVisual.name] = foundVisual
+            }
+
         }
     }
 }
