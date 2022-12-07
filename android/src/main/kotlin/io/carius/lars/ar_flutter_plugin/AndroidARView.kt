@@ -123,7 +123,7 @@ internal class AndroidARView(
                             }
                             var ids: ArrayList<String> = ArrayList()
                             for (a: Asset in nearbyAssets){
-                                if(!a.arAnchorID.equals("")){
+                                if(a.arAnchorID != "" && a.arAnchorID!=null){
                                     ids.add(a.arAnchorID)
                                 }
                             }
@@ -502,22 +502,16 @@ internal class AndroidARView(
 
     private fun onAnchorLocated(event: AnchorLocatedEvent) {
         val status = event.status
-        sessionManagerChannel.invokeMethod("log", "onAnchorLocated")
         if (status == LocateAnchorStatus.Located) {
-            sessionManagerChannel.invokeMethod("log", "real Located")
             Log.d(TAG, "renderLocatedAnchor: rendering located anchor" + event.anchor.identifier)
             var cloudAnchor = event.anchor
-            //get the asset name to print
-            //get the asset name to print
-            var theAsset = Asset("porcodio", "PORCODIO", cloudAnchor.identifier)
-            //synchronized(nearbyAssets) {
-            //    for (asset in nearbyAssets) {
-            //        if (asset.arAnchorID.equals(cloudAnchor.identifier)) {
-            //            theAsset = asset
-            //            break
-            //        }
-            //    }
-            //}
+            var theAsset = Asset("Unknown", "Unknown", cloudAnchor.identifier)
+            for (asset in nearbyAssets) {
+                if (asset.arAnchorID == cloudAnchor.identifier) {
+                    theAsset = asset
+                    break
+                }
+            }
             activity.runOnUiThread {
                 val foundVisual = AnchorVisualAsset(cloudAnchor.localAnchor, theAsset, theAsset.id)
                 foundVisual.cloudAnchor = cloudAnchor
