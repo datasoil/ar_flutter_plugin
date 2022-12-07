@@ -21,12 +21,11 @@ import java.util.concurrent.CompletableFuture
 
 internal class AnchorVisualAsset(_localAnchor: Anchor, val asset: Asset, val name: String) {
     var cloudAnchor: CloudSpatialAnchor? = null
-    private val node = AnchorNode(_localAnchor)
+    val node = AnchorNode(_localAnchor)
     val localAnchor = _localAnchor
 
-    fun render(context: Context, scene: Scene, transformationSystem: TransformationSystem){
+    fun render(context: Context, scene: Scene){
         Log.d("ArModelBuilder", "makeNodeFromAsset")
-        val assetNode = TransformableNode(transformationSystem)
         ViewRenderable.builder()
             .setView(context, R.layout.ar_label_extended)
             .build()
@@ -38,8 +37,7 @@ internal class AnchorVisualAsset(_localAnchor: Anchor, val asset: Asset, val nam
                 renderable.isShadowCaster=false
                 asset_cod.text = asset.cod
                 (parent.findViewById(io.carius.lars.ar_flutter_plugin.R.id.main_icon) as ImageView).setImageResource(io.carius.lars.ar_flutter_plugin.R.drawable.ar_alert_icon)
-                assetNode.renderable = renderable
-                this.node.addChild(assetNode)
+                this.node.renderable = renderable
                 this.node.setParent(scene)
             }
     }

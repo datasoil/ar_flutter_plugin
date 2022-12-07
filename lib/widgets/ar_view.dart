@@ -31,8 +31,7 @@ abstract class PlatformARView {
   Widget build(
       {@required BuildContext context,
       @required ARViewCreatedCallback arViewCreatedCallback,
-      @required PlaneDetectionConfig planeDetectionConfig,
-      @required Map<String, dynamic> creationParams});
+      @required PlaneDetectionConfig planeDetectionConfig});
 
   /// Callback function that is executed once the view is established
   void onPlatformViewCreated(int id);
@@ -71,21 +70,20 @@ class AndroidARView implements PlatformARView {
   Widget build(
       {BuildContext? context,
       ARViewCreatedCallback? arViewCreatedCallback,
-      PlaneDetectionConfig? planeDetectionConfig,
-      Map<String, dynamic>? creationParams}) {
+      PlaneDetectionConfig? planeDetectionConfig}) {
     _context = context;
     _arViewCreatedCallback = arViewCreatedCallback;
     _planeDetectionConfig = planeDetectionConfig;
     // This is used in the platform side to register the view.
-    final String viewType = 'ar_flutter_plugin';
-
+    final String viewType = 'ar_flutter_plugin_view';
+    final Map<String, dynamic> creationParams = <String, dynamic>{};
     return AndroidView(
-      viewType: viewType,
-      layoutDirection: TextDirection.ltr,
-      creationParams: creationParams ?? {},
-      creationParamsCodec: const StandardMessageCodec(),
-      onPlatformViewCreated: onPlatformViewCreated,
-    );
+        viewType: viewType,
+        layoutDirection: TextDirection.ltr,
+        creationParams: creationParams,
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: onPlatformViewCreated //onPlatformViewCreated,
+        );
   }
 }
 
@@ -140,12 +138,9 @@ class ARView extends StatefulWidget {
   /// Configures the type of planes ARCore and ARKit should track. defaults to none
   final PlaneDetectionConfig planeDetectionConfig;
 
-  final Map<String, dynamic> creationParams;
-
   ARView(
       {Key? key,
       required this.onARViewCreated,
-      required this.creationParams,
       this.planeDetectionConfig = PlaneDetectionConfig.none,
       this.permissionPromptDescription =
           "Camera permission must be given to the app for AR functions to work",
@@ -210,8 +205,7 @@ class _ARViewState extends State<ARView> {
           return PlatformARView(Theme.of(context).platform).build(
               context: context,
               arViewCreatedCallback: widget.onARViewCreated,
-              planeDetectionConfig: widget.planeDetectionConfig,
-              creationParams: widget.creationParams);
+              planeDetectionConfig: widget.planeDetectionConfig);
         }
       case (PermissionStatus.denied):
         {
