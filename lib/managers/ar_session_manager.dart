@@ -1,13 +1,6 @@
-import 'dart:math' show sqrt;
-import 'dart:typed_data';
-
-import 'package:ar_flutter_plugin/datatypes/config_planedetection.dart';
-import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:ar_flutter_plugin/models/ar_hittest_result.dart';
-import 'package:ar_flutter_plugin/utils/json_converters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:vector_math/vector_math_64.dart';
 
 // Type definitions to enforce a consistent use of the API
 typedef ARHitResultHandler = void Function(List<ARHitTestResult> hits);
@@ -23,14 +16,10 @@ class ARSessionManager {
   /// Context of the [ARView] widget that this manager is attributed to
   final BuildContext buildContext;
 
-  /// Determines the types of planes ARCore and ARKit should show
-  final PlaneDetectionConfig planeDetectionConfig;
-
   /// Receives hit results from user taps with tracked planes or feature points
   late ARHitResultHandler onPlaneOrPointTap;
 
-  ARSessionManager(int id, this.buildContext, this.planeDetectionConfig,
-      {this.debug = false}) {
+  ARSessionManager(int id, this.buildContext, {this.debug = false}) {
     _channel = MethodChannel('arsession_$id');
     _channel.setMethodCallHandler(_platformCallHandler);
     if (debug) {
@@ -60,7 +49,7 @@ class ARSessionManager {
           break;
         case 'log':
           final msg = call.arguments as String;
-          debugPrint("Native LOG: "+ msg);
+          debugPrint("Native LOG: " + msg);
           break;
         case 'dispose':
           _channel.invokeMethod<void>("dispose");
@@ -79,12 +68,8 @@ class ARSessionManager {
   /// Function to initialize the platform-specific AR view. Can be used to initially set or update session settings.
   /// [customPlaneTexturePath] refers to flutter assets from the app that is calling this function, NOT to assets within this plugin. Make sure
   /// the assets are correctly registered in the pubspec.yaml of the parent app (e.g. the ./example app in this plugin's repo)
-  onInitialize({
-    bool showPlanes = true,
-    String? customPlaneTexturePath
-  }) {
+  onInitialize({bool showPlanes = true, String? customPlaneTexturePath}) {
     _channel.invokeMethod<void>('init', {
-      'planeDetectionConfig': planeDetectionConfig.index,
       'showPlanes': showPlanes,
     });
   }
@@ -107,11 +92,5 @@ class ARSessionManager {
     } catch (e) {
       print(e);
     }
-  }
-
-  /// Returns a future ImageProvider that contains a screenshot of the current AR Scene
-  Future<ImageProvider> snapshot() async {
-    final result = await _channel.invokeMethod<Uint8List>('snapshot');
-    return MemoryImage(result!);
   }
 }

@@ -4,7 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 
 
-class Asset(_id: String, _cod: String, _arAnchorID: String = "") {
+class FakeAsset(_id: String, _cod: String, _arAnchorID: String = "") {
     val id: String = _id
     val cod: String = _cod
     var arAnchorID: String = _arAnchorID
@@ -104,20 +104,20 @@ internal class SynEvent(
     }
 }
 
-internal class RealAsset(
+internal class Asset(
     _id: String,
     _cod: String,
     _arAnchorID: String,
-    _function: BaseFunctionCategory = BaseFunctionCategory(),
-    _funcCategory: BaseFunctionCategory = BaseFunctionCategory(),
+    _function: BaseFunctionCategory? = null,
+    _funcCategory: BaseFunctionCategory? = null,
     _tickets: MutableList<SynTicket> = mutableListOf(),
     _events: MutableList<SynEvent> = mutableListOf()
 ) {
     val ID: String = _id
     val Cod: String = _cod
     var ARanchorID: String = _arAnchorID
-    var Function: BaseFunctionCategory = _function
-    var FuncCategory: BaseFunctionCategory = _funcCategory
+    var Function: BaseFunctionCategory? = _function
+    var FuncCategory: BaseFunctionCategory? = _funcCategory
     var Tickets = _tickets
     var Events = _events
     //"In Kotlin, the default implementation of MutableList is ArrayList
@@ -129,15 +129,15 @@ internal class RealAsset(
             this(
                 map["id"].toString(),
                 map["cod"].toString(),
-                if (map.containsKey("ar_anchor")) map["ar_anchor"].toString() else "",
-                if (map.containsKey("function"))
+                if (map.containsKey("ar_anchor") && map["ar_anchor"]!=null) map["ar_anchor"].toString() else "",
+                if (map.containsKey("function") && map["function"]!=null)
                     BaseFunctionCategory(map["function"] as Map<String, Any>)
-                else BaseFunctionCategory(),
-                if (map.containsKey("function") && map.containsKey("function_cat"))
+                else null,
+                if (map.containsKey("function") && map.containsKey("function_cat") && map["function"]!=null && map["function_cat"]!=null)
                     BaseFunctionCategory(map["function_cat"] as Map<String, Any>)
-                else BaseFunctionCategory(),
-                if (map.containsKey("tickets")) (map["tickets"] as MutableList<SynTicket>) else mutableListOf<SynTicket>(),
-                if (map.containsKey("events")) (map["events"] as MutableList<SynEvent>) else mutableListOf<SynEvent>()
+                else null,
+                if (map.containsKey("tickets") && map["tickets"]!=null) (map["tickets"] as MutableList<SynTicket>) else mutableListOf<SynTicket>(),
+                if (map.containsKey("events") && map["events"]!=null) (map["events"] as MutableList<SynEvent>) else mutableListOf<SynEvent>()
             ) {
     }
 
