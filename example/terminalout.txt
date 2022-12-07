@@ -1,0 +1,605 @@
+Launching lib\main.dart on SM A528B in debug mode...
+Running Gradle task 'assembleDebug'...                             13,9s
+√  Built build\app\outputs\flutter-apk\app-debug.apk.
+D/FlutterGeolocator(20942): Attaching Geolocator to activity
+W/FlutterActivityAndFragmentDelegate(20942): A splash screen was provided to Flutter, but this is deprecated. See flutter.dev/go/android-splash-migration for migration steps.
+D/FlutterGeolocator(20942): Creating service.
+D/FlutterGeolocator(20942): Binding to location service.
+D/FlutterGeolocator(20942): Geolocator foreground service connected
+D/FlutterGeolocator(20942): Initializing Geolocator services
+D/FlutterGeolocator(20942): Flutter engine connected. Connected engine count 1
+Syncing files to device SM A528B...                                114ms
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+ Running with sound null safety 
+
+An Observatory debugger and profiler on SM A528B is available at: http://127.0.0.1:62901/E8hudR0gyCI=/
+The Flutter DevTools debugger and profiler on SM A528B is available at: http://127.0.0.1:9103?uri=http://127.0.0.1:62901/E8hudR0gyCI=/
+D/BLASTBufferQueue(20942): [SurfaceView[io.carius.lars.ar_flutter_plugin_example/io.carius.lars.ar_flutter_plugin_example.MainActivity]@0#1](f:0,a:0) onFrameAvailable the first frame is available
+D/SurfaceView@79addd7(20942):  setAlpha: mUseAlpha = false alpha=1.0
+D/SurfaceView@79addd7(20942):  updateSurfaceAlpha: setUseAlpha() is not called, ignored.
+I/_plugin_example(20942): Compiler allocated 6075KB to compile void android.view.ViewRootImpl.performTraversals()
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 0
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 1
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): Initializing AndroidARView
+D/SurfaceView@80a06d9(20942): setFixedSize -1x-1 -> 0x0
+I/Filament(20942): Filament library loaded.
+E/Filament(20942): Error opening trace file: No such file or directory (2)
+I/Filament(20942): FEngine (64 bits) created at 0xb400007021485c00 (threading is enabled)
+D/Filament(20942): Using ASurfaceTexture
+D/Filament(20942): FEngine resolved backend: OpenGL
+I/SceneView(20942): Optional library com.google.ar.sceneform.animation not present. Sceneform animation disabled
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): ARSceneView session is null. Trying to initialize
+I/third_party/arcore/ar/core/android/sdk/session_create.cc(20942): Entering ArSession_createWithFeatures
+I/third_party/arcore/ar/core/android/sdk/session_create.cc(20942): ARCore Version: SDK build name: 1.22
+I/third_party/arcore/ar/core/android/sdk/session_create.cc(20942): ARCore Version: APK version code: 222640233
+W/_plugin_example(20942): Loading /data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/oat/arm64/base.odex non-executable as it requires an image which we failed to load
+W/ziparchive(20942): Unable to open '/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/split_config.en.dm': No such file or directory
+W/ziparchive(20942): Unable to open '/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/split_config.en.dm': No such file or directory
+W/_plugin_example(20942): Entry not found
+W/ziparchive(20942): Unable to open '/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/split_config.xxhdpi.dm': No such file or directory
+W/ziparchive(20942): Unable to open '/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/split_config.xxhdpi.dm': No such file or directory
+W/_plugin_example(20942): Entry not found
+D/nativeloader(20942): Configuring classloader-namespace for other apk /data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/base.apk:/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/split_config.en.apk:/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/split_config.xxhdpi.apk. target_sdk_version=33, uses_libraries=, library_path=/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/lib/arm64:/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/base.apk!/lib/arm64-v8a:/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/split_config.en.apk!/lib/arm64-v8a:/data/app/~~JwGD6GRwdlimY2YAI2s7KA==/com.google.ar.core-2vQdiO9WWZOUtl3gv-LT3Q==/split_config.xxhdpi.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand
+I/third_party/arcore/ar/core/android/sdk/session_create.cc(20942): Dynamite load ok.
+I/third_party/arcore/java/com/google/vr/dynamite/client/native/dynamite_client.cc(20942): Attempting to load native library arcore_c from package com.google.ar.core
+I/third_party/arcore/java/com/google/vr/dynamite/client/native/dynamite_client.cc(20942): Dynamite::LoadNativeRemoteLibrary handle=3183581721975744091
+I/third_party/arcore/ar/core/android/sdk/session_create.cc(20942): ARCore SDK: dynamite number_of_symbols_loaded=226
+I/native  (20942): I0000 00:00:1670407729.441544   20942 session_create_implementation.cc:247] Entering createImplementationWithFeaturesAndSettings. ARCore SDK version: [1.22.202940000].
+I/native  (20942): I0000 00:00:1670407729.450420   20942 session_create_implementation.cc:211] AugmentedRegion downsample mode from Phenotype: true
+V/third_party/redwood/infrastructure/jni_common/jni_helper.cc(20942): JniHelper: attached thread (Called from line 366).
+I/native  (20942): I0000 00:00:1670407729.476067   20942 session_create_implementation_shared.cc:2275] min_apk_version_code is: 202940000, phenotype flag of enable_dual_camera_support is: false, phenotype flag of unified_data_source_status is: 2, is_dual_camera_supported based on device profile is: false
+I/native  (20942): I0000 00:00:1670407729.476432   20942 session_create_implementation_shared.cc:2286] Settings.camera_stack_option is not specified
+I/native  (20942): I0000 00:00:1670407729.476450   20942 session_create_implementation_shared.cc:2338] Datasource will be created with camera_stack_option = kNdk
+I/native  (20942): I0000 00:00:1670407729.476520   20942 session_create_implementation_shared.cc:2457] Persistent online recalibration is enabled by Phenotype.
+I/tflite  (20942): Initialized TensorFlow Lite runtime.
+W/libc    (20942): Access denied finding property "ro.mediatek.platform"
+W/libc    (20942): Access denied finding property "ro.chipname"
+I/tflite  (20942): Created TensorFlow Lite XNNPACK delegate for CPU.
+I/tflite  (20942): Replacing 2 node(s) with delegate (TfLiteXNNPackDelegate) node, yielding 1 partitions.
+I/native  (20942): I0000 00:00:1670407729.493761   20942 online_calibration_manager.cc:108] OnlineCalibrationManager: Read online recalibration file successfully.
+W/ARCore-ContextUtils(20942): The API key for use with the Google AR service could not be obtained!
+I/native  (20942): I0000 00:00:1670407729.531273   20942 session_create_implementation_shared.cc:1162] Datasource will be created with timeout = 4s, should_wait = false, should_use_greedy_recovery = true
+I/native  (20942): I0000 00:00:1670407729.531360   20942 android_camera.cc:168] Camera start operation timeout set to 4000 ms.
+I/native  (20942): I0000 00:00:1670407729.533270   20942 android_camera.cc:1826] Initializing camera manager.
+D/VendorTagDescriptor(20942): addVendorDescriptor: vendor tag id 14172875900359437128 added
+I/native  (20942): I0000 00:00:1670407729.549034   20942 android_camera.cc:1852] Camera manager initialized successfully with 4 cameras.
+I/native  (20942): I0000 00:00:1670407729.549761   20942 imagereader_ndk_wrapper.cc:46] Loading Android NDK 26 symbols from libmediandk.so
+I/native  (20942): I0000 00:00:1670407729.550374   20942 imagereader_ndk_wrapper.cc:69] Successfully loaded Android NDK 26 libmediandk.so symbols.
+I/native  (20942): I0000 00:00:1670407729.550408   20942 cameras.cc:121] Number of hardware buffers is 16. sdk_version=33, is_hardware_buffer_supported=true
+I/native  (20942): I0000 00:00:1670407729.555737   20942 android_sensors.cc:134] Using uncalibrated accelerometer.
+I/native  (20942): I0000 00:00:1670407729.555931   20942 android_sensors.cc:173] Uncalibrated magnetometer available.
+I/native  (20942): I0000 00:00:1670407729.556246   20942 android_sensors.cc:177] Calibrated magnetometer available.
+I/native  (20942): I0000 00:00:1670407729.556821   20942 android_sensors.cc:190] Using SENSOR_TYPE_LIGHT
+I/native  (20942): I0000 00:00:1670407729.556926   20942 android_sensors.cc:193] Could not find SENSOR_TYPE_PRESSURE
+I/native  (20942): I0000 00:00:1670407729.557002   20942 android_sensors.cc:190] Using SENSOR_TYPE_PROXIMITY
+I/native  (20942): I0000 00:00:1670407729.557105   20942 android_sensors.cc:190] Using SENSOR_TYPE_GRAVITY
+I/native  (20942): I0000 00:00:1670407729.557213   20942 android_sensors.cc:190] Using SENSOR_TYPE_ROTATION_VECTOR
+I/native  (20942): I0000 00:00:1670407729.557282   20942 android_sensors.cc:190] Using SENSOR_TYPE_GAME_ROTATION_VECTOR
+I/native  (20942): I0000 00:00:1670407729.557361   20942 android_sensors.cc:193] Could not find SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR
+I/native  (20942): I0000 00:00:1670407729.557456   20942 android_sensors.cc:190] Using SENSOR_TYPE_STEP_DETECTOR
+I/native  (20942): I0000 00:00:1670407729.560131   20942 android_platform_checks.cc:206] IsZeroRotationLandscape = false
+I/native  (20942): I0000 00:00:1670407729.560588   20942 app_version_util.cc:50] Package name: com.google.ar.core App version: 1.34.222640233
+I/native  (20942): I0000 00:00:1670407729.560852   20942 logger.h:28] DataSourceMetrics: CamerasInit: 35.208us
+I/native  (20942): I0000 00:00:1670407729.560882   20942 session_create_implementation_shared.cc:1480] CPU Image enable frame delay to compensate delay: true
+I/native  (20942): I0000 00:00:1670407729.570021   20942 config_helpers.cc:424] Legacy IMU sigma values are used
+I/native  (20942): I0000 00:00:1670407729.572773   20942 feature_matcher_and_filter.cc:88] Enabled the robustification to large-sized and fast-moving objects on this mono-camera device.
+I/tflite  (20942): Replacing 3 node(s) with delegate (TfLiteXNNPackDelegate) node, yielding 1 partitions.
+I/native  (20942): I0000 00:00:1670407729.576724   20942 pose_confidence_estimator.cc:231] Pose confidence model loaded successfully
+I/native  (20942): I0000 00:00:1670407729.672301   20942 asset_manager_util.cc:59] Created global reference to asset manager.
+I/native  (20942): I0000 00:00:1670407729.672375   20942 session_create_implementation_shared.cc:1508] Normal detector created.
+I/native  (20942): I0000 00:00:1670407729.680843   20942 planar_target_tracking_manager.h:116] Config of PlanarTargetTrackingManager:
+I/native  (20942): -pose_refinement_with_detection_interval_ns: 0
+I/native  (20942): -min_interval_between_detections_ns: 500000000
+I/native  (20942): -filter_parallax: false
+I/native  (20942): -filter_result: true
+I/native  (20942): -multiple_targets: true
+I/native  (20942): -mini_detection: true
+I/native  (20942): -tracking_mode: 1
+I/native  (20942): -camera_id: 0
+I/native  (20942): I0000 00:00:1670407729.686895   20942 camera_config_manager.cc:719] UpdateBugFixes on CameraConfigManager is unimplemented!
+I/third_party/arcore/ar/core/android/sdk/arimage_jni.cc(20942): Loading AImage symbols
+I/native  (20942): I0000 00:00:1670407729.688318   20942 session.cc:560] New session config:
+I/native  (20942): ArConfig
+I/native  (20942):  augmented_face_mode:           AR_AUGMENTED_FACE_MODE_DISABLED
+I/native  (20942):  augmented_image_database:      <null>
+I/native  (20942):  cloud_anchor_mode:             AR_CLOUD_ANCHOR_MODE_DISABLED
+I/native  (20942):  depth_mode:                    AR_DEPTH_MODE_DISABLED
+I/native  (20942):  semantics_mode:                AR_SEMANTICS_MODE_DISABLED
+I/native  (20942):  focus_mode:                    AR_FOCUS_MODE_AUTO
+I/native  (20942):  geospatial_mode:               AR_GEOSPATIAL_MODE_DISABLED
+I/native  (20942):  instant_placement_mode:        AR_INSTANT_PLACEMENT_MODE_DISABLED
+I/native  (20942):  light_estimation_mode:         AR_LIGHT_ESTIMATION_MODE_AMBIENT_INTENSITY
+I/native  (20942):  plane_finding_mode:            AR_PLANE_FINDING_MODE_HORIZONTAL_AND_VERTICAL
+I/native  (20942):  update_mode:                   AR_UPDATE_MODE_LATEST_CAMERA_IMAGE
+I/native  (20942): 
+I/native  (20942): I0000 00:00:1670407729.688448   20942 session.cc:553] Session::CheckAndWriteCurrentConfig returning OK.
+I/native  (20942): I0000 00:00:1670407729.690780   20942 camera_config_manager.cc:719] UpdateBugFixes on CameraConfigManager is unimplemented!
+I/native  (20942): I0000 00:00:1670407729.690861   20942 session.cc:1226] Entering Session::Resume.
+I/native  (20942): I0000 00:00:1670407729.691206   20942 camera_config_manager.cc:719] UpdateBugFixes on CameraConfigManager is unimplemented!
+I/CameraManagerGlobal(20942): Connecting to camera service
+D/VendorTagDescriptor(20942): addVendorDescriptor: vendor tag id 14172875900359437128 added
+I/CameraManagerGlobal(20942): Camera 0 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client io.carius.lars.ar_flutter_plugin_example API Level 2
+I/CameraManagerGlobal(20942): Camera 1 facing CAMERA_FACING_FRONT state now CAMERA_STATE_CLOSED for client com.instagram.android API Level 2
+I/CameraManagerGlobal(20942): Camera 2 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client com.sec.android.app.camera API Level 2
+I/CameraManagerGlobal(20942): Camera 20 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2
+I/CameraManagerGlobal(20942): Camera 21 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2
+I/CameraManagerGlobal(20942): Camera 23 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2
+I/CameraManagerGlobal(20942): Camera 3 facing CAMERA_FACING_FRONT state now CAMERA_STATE_CLOSED for client android.system API Level 2
+I/CameraManagerGlobal(20942): Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_CLOSED for client android.system API Level 2
+I/CameraManagerGlobal(20942): Camera 52 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2
+I/CameraManagerGlobal(20942): Camera 54 facing CAMERA_FACING_BACK state now CAMERA_STATE_CLOSED for client android.system API Level 2
+I/native  (20942): I0000 00:00:1670407729.721382   20942 eis_manager.cc:84] EIS turned off.
+I/native  (20942): I0000 00:00:1670407729.721471   20942 eis_manager.cc:93] current_eis_metadata_.frame_size 1920 x 1080
+I/native  (20942): I0000 00:00:1670407729.721492   20942 android_camera.cc:168] Camera start operation timeout set to 4000 ms.
+I/native  (20942): I0000 00:00:1670407729.721506   20942 android_camera.cc:1826] Initializing camera manager.
+I/native  (20942): I0000 00:00:1670407729.726200   20942 android_camera.cc:1852] Camera manager initialized successfully with 4 cameras.
+I/native  (20942): I0000 00:00:1670407729.726300   20942 android_camera.cc:762] [Camera=0; State=CLOSED] Reset cleanly got to CLOSED state.
+I/native  (20942): I0000 00:00:1670407729.726528   20942 android_camera.cc:762] [Camera=3; State=CLOSED] Reset cleanly got to CLOSED state.
+I/native  (20942): I0000 00:00:1670407729.726720   20942 android_camera.cc:762] [Camera=2; State=CLOSED] Reset cleanly got to CLOSED state.
+I/native  (20942): I0000 00:00:1670407729.726946   20942 android_camera.cc:762] [Camera=1; State=CLOSED] Reset cleanly got to CLOSED state.
+I/native  (20942): I0000 00:00:1670407729.727310   20942 session.cc:3465] Update Frame Delay to 0 frames.
+I/native  (20942): I0000 00:00:1670407729.727586   21068 android_camera.cc:762] [Camera=0; State=CLOSED] Reset cleanly got to CLOSED state.
+I/native  (20942): I0000 00:00:1670407729.728174   20942 android_sensors.cc:212] Starting thread.
+I/native  (20942): I0000 00:00:1670407729.728334   20942 cameras.cc:1199] Included camera stream {camera_id = "0", stream_index = 0} as feature extraction streams.
+I/native  (20942): I0000 00:00:1670407729.728404   20942 logger.h:28] DataSourceMetrics: kStartImageSubSystem: 79.115us
+I/native  (20942): I0000 00:00:1670407729.728429   20942 session.cc:1414] Session::ResumeWithAnalytics returning OK.
+I/PlatformViewsController(20942): Hosting view in a virtual display for platform view: 0
+I/native  (20942): I0000 00:00:1670407729.759534   21106 android_sensors.cc:51] Gyro min delay 5ms requesting 5ms
+I/native  (20942): I0000 00:00:1670407729.773341   21106 android_sensors.cc:51] Accel min delay 5ms requesting 5ms
+I/Dialog  (20942): mIsDeviceDefault = false, mIsSamsungBasicInteraction = false, isMetaDataInActivity = false
+I/DecorView(20942): [INFO] isPopOver=false config=false
+I/DecorView(20942): updateCaptionType: isFloating=false isApplication=false hasWindowDecorCaption=false this=DecorView@17f1be7[]
+D/DecorView(20942): setCaptionType = 0, this = DecorView@17f1be7[]
+I/DecorView(20942): setWindowBackground: isPopOver=false color=0 d=android.graphics.drawable.ColorDrawable@df57e3d
+D/NativeCustomFrequencyManager(20942): [NativeCFMS] BpCustomFrequencyManager::BpCustomFrequencyManager()
+I/DecorView(20942): onImmersiveModeChanged: isStatusBarHidden=true
+I/native  (20942): I0000 00:00:1670407729.869229   21068 logger.h:28] CameraMetrics: OpenCamera: 139.966615ms
+I/CameraManagerGlobal(20942): Camera 0 facing CAMERA_FACING_BACK state now CAMERA_STATE_OPEN for client io.carius.lars.ar_flutter_plugin_example API Level 2
+I/native  (20942): I0000 00:00:1670407729.871793   21068 camera_ndk_wrapper.cc:27] Loading Android NDK 28 symbols from libcamera2ndk.so
+I/native  (20942): I0000 00:00:1670407729.872632   21068 camera_ndk_wrapper.cc:47] Successfully loaded Android NDK 28 libcamera2ndk.so symbols.
+D/InsetsController(20942): onStateChanged: InsetsState: {mDisplayFrame=Rect(0, 0 - 1080, 2155), mDisplayCutout=DisplayCutout{insets=Rect(0, 0 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=0 displayHeight=0 physicalDisplayWidth=0 physicalDisplayHeight=0 density={0.0} cutoutSpec={} rotation={0} scale={0.0} physicalPixelDisplaySizeRatio={0.0}}}}, mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=0, center=Point(0, 0)}, RoundedCorner{position=TopRight, radius=0, center=Point(0, 0)}, RoundedCorner{position=BottomRight, radius=0, center=Point(0, 0)}, RoundedCorner{position=BottomLeft, radius=0, center=Point(0, 0)}]}  mRoundedCornerFrame=Rect(0, 0 - 0, 0), mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=null rotation=0}, mSources= {  } host= from=android.view.ViewRootImpl.setView:1700
+I/ViewRootImpl@2143500[](20942): setView = com.android.internal.policy.DecorView@17f1be7 TM=true
+I/flutter (20942): Android platform view created!
+I/native  (20942): I0000 00:00:1670407729.931742   20942 session.cc:3465] Update Frame Delay to 0 frames.
+E/native  (20942): E0000 00:00:1670407729.944796   20942 session.cc:2582] Invalid ray produced by view data!
+I/SurfaceView@80a06d9(20942): onWindowVisibilityChanged(0) true com.google.ar.sceneform.ArSceneView{80a06d9 V.E...... ......I. 0,0-0,0} of ViewRootImpl@2143500[]
+D/SurfaceView@80a06d9(20942): updateSurface: has no frame
+D/ViewRootImpl@2143500[](20942): performTraversals params={(0,0)(fillxfill) gr=FILL CENTER sim={adjust=pan forwardNavigation} ty=PRIVATE_PRESENTATION fmt=TRANSPARENT wanim=0x1030309
+D/ViewRootImpl@2143500[](20942):   fl=81810508
+D/ViewRootImpl@2143500[](20942):   pfl=12020040
+D/ViewRootImpl@2143500[](20942):   bhv=SHOW_TRANSIENT_BARS_BY_SWIPE
+D/ViewRootImpl@2143500[](20942):   fitSides= naviIconColor=0}
+D/ViewRootImpl@2143500[](20942): performTraversals mFirst=true windowShouldResize=true viewVisibilityChanged=false mForceNextWindowRelayout=false params={(0,0)(fillxfill) gr=FILL CENTER sim={adjust=pan forwardNavigation} ty=PRIVATE_PRESENTATION fmt=TRANSPARENT wanim=0x1030309
+D/ViewRootImpl@2143500[](20942):   fl=81810508
+D/ViewRootImpl@2143500[](20942):   pfl=12020040
+D/ViewRootImpl@2143500[](20942):   bhv=SHOW_TRANSIENT_BARS_BY_SWIPE
+D/ViewRootImpl@2143500[](20942):   fitSides= naviIconColor=0}
+D/BLASTBufferQueue(20942): new BLASTBufferQueue, mNativeObject= 0xb40000712b8e7310 name= ViewRootImpl@2143500[] sc.mNativeObject= 0xb4000070bb915860 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2789 android.view.ViewRootImpl.relayoutWindow:9635 android.view.ViewRootImpl.performTraversals:3759 android.view.ViewRootImpl.doTraversal:2991 android.view.ViewRootImpl$TraversalRunnable.run:10665 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 android.view.Choreographer.doCallbacks:923 android.view.Choreographer.doFrame:852 android.view.Choreographer$FrameDisplayEventReceiver.run:1283 
+D/BLASTBufferQueue(20942): update, w= 1080 h= 2155 mNativeObject= 0xb40000712b8e7310 sc.mNativeObject= 0xb4000070bb915860 format= -2 caller= android.graphics.BLASTBufferQueue.<init>:76 android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2789 android.view.ViewRootImpl.relayoutWindow:9635 android.view.ViewRootImpl.performTraversals:3759 android.view.ViewRootImpl.doTraversal:2991 android.view.ViewRootImpl$TraversalRunnable.run:10665 
+I/ViewRootImpl@2143500[](20942): Relayout returned: old=(0,0,1080,2155) new=(0,0,1080,2155) req=(1080,2155)0 dur=8 res=0x3 s={true 0xb4000071bb8ddbe0} ch=true seqId=0
+D/OpenGLRenderer(20942): eglCreateWindowSurface
+D/ViewRootImpl@2143500[](20942): mThreadedRenderer.initialize() mSurface={isValid=true 0xb4000071bb8ddbe0} hwInitialized=true
+D/SurfaceView@80a06d9(20942): updateSurface: has no frame
+D/SurfaceView@80a06d9(20942): setFixedSize 0x0 -> 1080x2155
+I/SurfaceView@80a06d9(20942): windowStopped(false) true com.google.ar.sceneform.ArSceneView{80a06d9 V.E...... ......ID 0,0-1080,2155} of ViewRootImpl@2143500[]
+D/SurfaceView@80a06d9(20942): updateSurface: has no frame
+D/ViewRootImpl@2143500[](20942): reportNextDraw android.view.ViewRootImpl.performTraversals:4313 android.view.ViewRootImpl.doTraversal:2991 android.view.ViewRootImpl$TraversalRunnable.run:10665 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 
+I/SurfaceView@80a06d9(20942): Changes: creating=true format=true size=true visible=true alpha=false hint=false mUseAlpha=false visible=true left=true top=true
+D/BLASTBufferQueue(20942): update, w= 1080 h= 2155 mNativeObject= 0xb40000712b8e9bb0 sc.mNativeObject= 0xb4000070bb917490 format= 4 caller= android.view.SurfaceView.createBlastSurfaceControls:1384 android.view.SurfaceView.updateSurface:1080 android.view.SurfaceView.lambda$new$0$android-view-SurfaceView:200 android.view.SurfaceView$$ExternalSyntheticLambda5.onPreDraw:2 android.view.ViewTreeObserver.dispatchOnPreDraw:1121 android.view.ViewRootImpl.performTraversals:4317 
+I/SurfaceView@80a06d9(20942): 134874841 Cur surface: Surface(name=null)/@0xf46e8de
+I/SurfaceView@80a06d9(20942): pST: sr = Rect(0, 0 - 1080, 2155) sw = 1080 sh = 2155
+D/SurfaceView@80a06d9(20942): performSurfaceTransaction RenderWorker position = [0, 0, 1080, 2155] surfaceSize = 1080x2155
+I/SurfaceView@80a06d9(20942): applyTransactionOnVriDraw: vri = ViewRootImpl@2143500[] fRS = false t = 0xb4000070eb8f2770 android.view.SurfaceView.performSurfaceTransaction:959 android.view.SurfaceView.updateSurface:1106 android.view.SurfaceView.lambda$new$0$android-view-SurfaceView:200 
+I/ViewRootImpl@2143500[](20942): applyTransactionOnDraw: mRemoved = false isHardwareEnabled = true t = 0xb4000070eb8f2770android.view.SurfaceView.applyTransactionOnVriDraw:2049 android.view.SurfaceView.performSurfaceTransaction:959 android.view.SurfaceView.updateSurface:1106 android.view.SurfaceView.lambda$new$0$android-view-SurfaceView:200 android.view.SurfaceView$$ExternalSyntheticLambda5.onPreDraw:2 
+I/SurfaceView@80a06d9(20942): updateSurface: mVisible = true mSurface.isValid() = true
+I/SurfaceView@80a06d9(20942): updateSurface: mSurfaceCreated = false surfaceChanged = true visibleChanged = true
+I/SurfaceView@80a06d9(20942): visibleChanged -- surfaceCreated
+I/SurfaceView@80a06d9(20942): surfaceCreated 1 #8 com.google.ar.sceneform.ArSceneView{80a06d9 V.E...... ......ID 0,0-1080,2155}
+I/SurfaceView@80a06d9(20942): surfaceChanged -- format=4 w=1080 h=2155
+I/SurfaceView@80a06d9(20942): surfaceChanged (1080,2155) 1 #8 com.google.ar.sceneform.ArSceneView{80a06d9 V.E...... ......ID 0,0-1080,2155}
+I/SurfaceView@80a06d9(20942): surfaceRedrawNeeded
+V/SurfaceView@80a06d9(20942): Layout: x=0 y=0 w=1080 h=2155, frame=Rect(0, 0 - 1080, 2155)
+D/ViewRootImpl@2143500[](20942): Setup new sync id=0
+D/ViewRootImpl@2143500[](20942): Setting syncFrameCallback
+E/SurfaceSyncer(20942): Failed to find sync for id=0
+D/ViewRootImpl@2143500[](20942): registerCallbacksForSync syncBuffer=false
+I/ViewRootImpl@2143500[](20942): mWNT: t=0xb4000070eb8f2770 mBlastBufferQueue=0xb40000712b8e7310 fn= 1 caller= android.view.ViewRootImpl.lambda$applyTransactionOnDraw$11$android-view-ViewRootImpl:12629 android.view.ViewRootImpl$$ExternalSyntheticLambda1.onFrameDraw:4 android.graphics.HardwareRenderer$FrameDrawingCallback.onFrameDraw:924 
+D/SurfaceView@80a06d9(20942): updateSurfacePosition RenderWorker, frameNr = 1, position = [0, 0, 1080, 2155] surfaceSize = 1080x2155
+D/BLASTBufferQueue(20942): mergeWithNextTransaction, mNativeObject= 0xb40000712b8e7310 t.mNativeObject= 0xb4000070eb8f2770 frameNumber= 1 caller= android.view.ViewRootImpl.mergeWithNextTransaction:12594 android.view.ViewRootImpl.lambda$applyTransactionOnDraw$11$android-view-ViewRootImpl:12629 android.view.ViewRootImpl$$ExternalSyntheticLambda1.onFrameDraw:4 android.graphics.HardwareRenderer$FrameDrawingCallback.onFrameDraw:924 android.view.ViewRootImpl$6.onFrameDraw:2053 android.view.ThreadedRenderer$1.onFrameDraw:777 
+I/SurfaceView@80a06d9(20942): uSP: rtp = Rect(0, 0 - 1080, 2155) rtsw = 1080 rtsh = 2155
+D/ViewRootImpl@2143500[](20942): Received frameDrawingCallback syncResult=0 frameNum=1.
+D/ViewRootImpl@2143500[](20942): Setting up sync and frameCommitCallback
+I/SurfaceView@80a06d9(20942): onSSPAndSRT: pl = 0 pt = 0 sx = 1.0 sy = 1.0
+I/SurfaceView@80a06d9(20942): aOrMT: ViewRootImpl@2143500[] t = android.view.SurfaceControl$Transaction@ac83db fN = 1 android.view.SurfaceView.-$$Nest$mapplyOrMergeTransaction:0 android.view.SurfaceView$SurfaceViewPositionUpdateListener.positionChanged:1538 android.graphics.RenderNode$CompositePositionUpdateListener.positionChanged:373 
+I/ViewRootImpl@2143500[](20942): mWNT: t=0xb4000070eb8f19f0 mBlastBufferQueue=0xb40000712b8e7310 fn= 1 caller= android.view.SurfaceView.applyOrMergeTransaction:1456 android.view.SurfaceView.-$$Nest$mapplyOrMergeTransaction:0 android.view.SurfaceView$SurfaceViewPositionUpdateListener.positionChanged:1538 
+D/BLASTBufferQueue(20942): mergeWithNextTransaction, mNativeObject= 0xb40000712b8e7310 t.mNativeObject= 0xb4000070eb8f19f0 frameNumber= 1 caller= android.view.ViewRootImpl.mergeWithNextTransaction:12594 android.view.SurfaceView.applyOrMergeTransaction:1456 android.view.SurfaceView.-$$Nest$mapplyOrMergeTransaction:0 android.view.SurfaceView$SurfaceViewPositionUpdateListener.positionChanged:1538 android.graphics.RenderNode$CompositePositionUpdateListener.positionChanged:373 android.graphics.RenderNode$PositionUpdateListener.callPositionChanged:286 
+D/BLASTBufferQueue(20942): [ViewRootImpl@2143500[]#2](f:0,a:0) onFrameAvailable the first frame is available
+D/ViewRootImpl@2143500[](20942): Received frameCommittedCallback lastAttemptedDrawFrameNum=1 didProduceBuffer=true
+D/OpenGLRenderer(20942): CFMS:: SetUp Pid : 20942    Tid : 20967
+W/Parcel  (20942): Expecting binder but got null!
+D/ViewRootImpl@2143500[](20942): onSyncComplete
+D/ViewRootImpl@2143500[](20942): setupSync seqId=0 mSyncId=0 fn=1 caller=android.view.ViewRootImpl$$ExternalSyntheticLambda11.accept:6 android.window.SurfaceSyncer.lambda$setupSync$1$android-window-SurfaceSyncer:128 android.window.SurfaceSyncer$$ExternalSyntheticLambda1.accept:8 android.window.SurfaceSyncer$SyncSet.checkIfSyncIsComplete:382 android.window.SurfaceSyncer$SyncSet.markSyncReady:359 android.window.SurfaceSyncer.markSyncReady:151 android.view.ViewRootImpl.performTraversals:4373 
+D/ViewRootImpl@2143500[](20942): reportDrawFinished seqId=0 mSyncId=-1 fn=1 mSurfaceChangedTransaction=0xb4000070eb8e7490
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): AndroidARView onsessionmethodcall reveived a call!
+E/ThemeUtils(20942): View class com.google.ar.sceneform.ux.HandMotionView is an AppCompat widget that can only be used with a Theme.AppCompat theme (or descendant).
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): AndroidARView onobjectmethodcall reveived a call!
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): init
+I/native  (20942): I0000 00:00:1670407729.992506   20942 session.cc:560] New session config:
+I/native  (20942): ArConfig
+I/native  (20942):  augmented_face_mode:           AR_AUGMENTED_FACE_MODE_DISABLED
+I/native  (20942):  augmented_image_database:      <null>
+I/native  (20942):  cloud_anchor_mode:             AR_CLOUD_ANCHOR_MODE_ENABLED
+I/native  (20942):  depth_mode:                    AR_DEPTH_MODE_DISABLED
+I/native  (20942):  semantics_mode:                AR_SEMANTICS_MODE_DISABLED
+I/native  (20942):  focus_mode:                    AR_FOCUS_MODE_AUTO
+I/native  (20942):  geospatial_mode:               AR_GEOSPATIAL_MODE_DISABLED
+I/native  (20942):  instant_placement_mode:        AR_INSTANT_PLACEMENT_MODE_DISABLED
+I/native  (20942):  light_estimation_mode:         AR_LIGHT_ESTIMATION_MODE_AMBIENT_INTENSITY
+I/native  (20942):  plane_finding_mode:            AR_PLANE_FINDING_MODE_HORIZONTAL_AND_VERTICAL
+I/native  (20942):  update_mode:                   AR_UPDATE_MODE_LATEST_CAMERA_IMAGE
+I/native  (20942): 
+I/native  (20942): I0000 00:00:1670407729.993324   20942 session.cc:553] Session::CheckAndWriteCurrentConfig returning OK.
+D/ASACloud(20942): AzureSpatialAnchors - Session Identifier: aa9d3bad-2fbe-476c-8b18-0085fdc9b9b1
+D/ASACloud(20942): AzureSpatialAnchors - AnchorServiceUrl: https://manage.sa.westeurope.mixedreality.azure.com/
+D/ASACloud(20942): AzureSpatialAnchors - AuthServiceUrl: https://sts.westeurope.mixedreality.azure.com/
+D/ASACloud(20942): AzureSpatialAnchors - AccountId: dd0d9d8a-b72c-41ba-9075-36071c430b17
+D/ASACloud(20942): AzureSpatialAnchors - DeviceOsVersion: 13
+D/ASACloud(20942): AzureSpatialAnchors - SdkPackageType: 
+D/ASACloud(20942): AzureSpatialAnchors - SdkVersion: 2.13.0
+D/ASACloud(20942): AzureSpatialAnchors - ArPlatformVersion: 13
+D/ASACloud(20942): AzureSpatialAnchors - MiddlewareVersions: 
+D/ASACloud(20942): [MobileNeighborhoodManager::MobileNeighborhoodManager] Initialized the mobile neighborhood manager.
+D/ASACloud(20942): EstablishPoseQueryProcessorStream - Creating new stream
+W/_plugin_example(20942): Accessing hidden method Ldalvik/system/CloseGuard;->get()Ldalvik/system/CloseGuard; (unsupported,core-platform-api, reflection, allowed)
+W/_plugin_example(20942): Accessing hidden method Ldalvik/system/CloseGuard;->open(Ljava/lang/String;)V (unsupported,core-platform-api, reflection, allowed)
+W/_plugin_example(20942): Accessing hidden method Ldalvik/system/CloseGuard;->warnIfOpen()V (unsupported,core-platform-api, reflection, allowed)
+D/TrafficStats(20942): tagSocket(211) with statsTag=0xffffffff, statsUid=-1
+D/ASACloud(20942): OnError - An anchor identifier set on AnchorLocateCriteria was invalid
+E/ASACloud(20942): An anchor identifier set on AnchorLocateCriteria was invalid
+D/NativeCustomFrequencyManager(20942): [NativeCFMS] BpCustomFrequencyManager::BpCustomFrequencyManager()
+D/InsetsController(20942): onStateChanged: InsetsState: {mDisplayFrame=Rect(0, 0 - 1080, 2400), mDisplayCutout=DisplayCutout{insets=Rect(0, 88 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(512, 0 - 568, 88), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2400 physicalDisplayWidth=1080 physicalDisplayHeight=2400 density={2.8125} cutoutSpec={M 0,0 M 0,11.43427858034597 a 9.899054752987353,9.899054752987353 0 1,0 0,19.79810950597471 a 9.899054752987353,9.899054752987353 0 1,0 0,-19.79810950597471 Z @dp} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={1.0}}}}, mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=90, center=Point(90, 90)}, RoundedCorner{position=TopRight, radius=90, center=Point(990, 90)}, RoundedCorner{position=BottomRight, radius=90, center=Point(990, 2310)}, RoundedCorner{position=BottomLeft, radius=90, center=Point(90, 2310)}]}  mRoundedCornerFrame=Rect(0, 0 - 1080, 2400), mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=Rect(956, 0 - 1080, 88) rotation=0}, mSources= { InsetsSource: {mType=ITYPE_STATUS_BAR, mFrame=[0,0][1080,88], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_NAVIGATION_BAR, mFrame=[0,2400][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_LEFT_GESTURES, mFrame=[0,0][67,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_RIGHT_GESTURES, mFrame=[1013,0][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_MANDATORY_GESTURES, mFrame=[0,0][1080,122], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_MANDATORY_GESTURES, mFrame=[0,2344][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_LEFT_DISPLAY_CUTOUT, mFrame=[0,0][-100000,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_DISPLAY_CUTOUT, mFrame=[0,0][1080,88], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_RIGHT_DISPLAY_CUTOUT, mFrame=[100000,0][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_DISPLAY_CUTOUT, mFrame=[0,100000][1080,2400], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_TOP_TAPPABLE_ELEMENT, mFrame=[0,0][1080,88], mVisible=true, mInsetsRoundedCornerFrame=false}, InsetsSource: {mType=ITYPE_BOTTOM_TAPPABLE_ELEMENT, mFrame=[0,0][0,0], mVisible=true, mInsetsRoundedCornerFrame=false} } host=ViewRenderableWindow from=android.view.ViewRootImpl.setView:1700
+I/ViewRootImpl@6e07866[ViewRenderableWindow](20942): setView = android.widget.FrameLayout@d6bb4f2 TM=true
+I/SurfaceView@80a06d9(20942): finishedDrawing
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): performTraversals params={(0,0)(wrapxwrap) sim={adjust=pan} ty=APPLICATION_PANEL fmt=TRANSLUCENT
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942):   fl=1000218
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942):   pfl=42000000
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942):   bhv=DEFAULT
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942):   fitTypes=STATUS_BARS NAVIGATION_BARS CAPTION_BAR naviIconColor=0}
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): performTraversals mFirst=true windowShouldResize=true viewVisibilityChanged=false mForceNextWindowRelayout=false params={(0,0)(wrapxwrap) sim={adjust=pan} ty=APPLICATION_PANEL fmt=TRANSLUCENT
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942):   fl=1000218
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942):   pfl=42000000
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942):   bhv=DEFAULT
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942):   fitTypes=STATUS_BARS NAVIGATION_BARS CAPTION_BAR naviIconColor=0}
+D/BLASTBufferQueue(20942): new BLASTBufferQueue, mNativeObject= 0xb40000712b8e4110 name= ViewRootImpl@6e07866[ViewRenderableWindow] sc.mNativeObject= 0xb4000070bb91b270 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2789 android.view.ViewRootImpl.relayoutWindow:9635 android.view.ViewRootImpl.performTraversals:3759 android.view.ViewRootImpl.doTraversal:2991 android.view.ViewRootImpl$TraversalRunnable.run:10665 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 android.view.Choreographer.doCallbacks:923 android.view.Choreographer.doFrame:852 android.view.Choreographer$FrameDisplayEventReceiver.run:1283 
+D/BLASTBufferQueue(20942): update, w= 1 h= 1 mNativeObject= 0xb40000712b8e4110 sc.mNativeObject= 0xb4000070bb91b270 format= -3 caller= android.graphics.BLASTBufferQueue.<init>:76 android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2789 android.view.ViewRootImpl.relayoutWindow:9635 android.view.ViewRootImpl.performTraversals:3759 android.view.ViewRootImpl.doTraversal:2991 android.view.ViewRootImpl$TraversalRunnable.run:10665 
+I/ViewRootImpl@6e07866[ViewRenderableWindow](20942): Relayout returned: old=(0,0,1080,2400) new=(540,1200,540,1200) req=(0,0)0 dur=16 res=0x3 s={true 0xb4000071bb979270} ch=true seqId=0
+D/OpenGLRenderer(20942): eglCreateWindowSurface
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): mThreadedRenderer.initialize() mSurface={isValid=true 0xb4000071bb979270} hwInitialized=true
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): reportNextDraw android.view.ViewRootImpl.performTraversals:4313 android.view.ViewRootImpl.doTraversal:2991 android.view.ViewRootImpl$TraversalRunnable.run:10665 android.view.Choreographer$CallbackRecord.run:1301 android.view.Choreographer$CallbackRecord.run:1309 
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): Setup new sync id=0
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): Setting syncFrameCallback
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): registerCallbacksForSync syncBuffer=false
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): onSyncComplete
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): setupSync seqId=0 mSyncId=0 fn=0 caller=android.view.ViewRootImpl$$ExternalSyntheticLambda11.accept:6 android.window.SurfaceSyncer.lambda$setupSync$1$android-window-SurfaceSyncer:128 android.window.SurfaceSyncer$$ExternalSyntheticLambda1.accept:8 android.window.SurfaceSyncer$SyncSet.checkIfSyncIsComplete:382 android.window.SurfaceSyncer$SyncSet.markSyncReady:359 android.window.SurfaceSyncer.markSyncReady:151 android.view.ViewRootImpl.performTraversals:4373 
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): reportDrawFinished seqId=0 mSyncId=-1 fn=0 mSurfaceChangedTransaction=0xb4000070eb8f3190
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): performTraversals mFirst=false windowShouldResize=false viewVisibilityChanged=false mForceNextWindowRelayout=true params=null
+D/BLASTBufferQueue(20942): update, w= 1 h= 1 mNativeObject= 0xb40000712b8e4110 sc.mNativeObject= 0xb4000070bb91bd70 format= -3 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2778 android.view.ViewRootImpl.relayoutWindow:9635 android.view.ViewRootImpl.performTraversals:3759 android.view.ViewRootImpl.doTraversal:2991 android.view.ViewRootImpl$TraversalRunnable.run:10665 android.view.Choreographer$CallbackRecord.run:1301 
+I/ViewRootImpl@6e07866[ViewRenderableWindow](20942): Relayout returned: old=(540,1200,540,1200) new=(540,1200,540,1200) req=(0,0)0 dur=9 res=0x0 s={true 0xb4000071bb979270} ch=false seqId=0
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): mThreadedRenderer.updateSurface() mSurface={isValid=true 0xb4000071bb979270}
+D/OpenGLRenderer(20942): setSurface() destroyed EGLSurface
+D/OpenGLRenderer(20942): destroyEglSurface
+D/OpenGLRenderer(20942): eglCreateWindowSurface
+I/native  (20942): I0000 00:00:1670407730.329825   21068 logger.h:28] CameraMetrics: CreateCaptureSession: 457.131614ms
+I/native  (20942): I0000 00:00:1670407730.331631   21068 capture_request_utils.cc:207] Flash: ConfigureRequestFlashMode - OFF
+I/native  (20942): I0000 00:00:1670407730.335015   21068 logger.h:28] DataSourceMetrics: kFirstGlCallback: 606.69052ms
+I/native  (20942): I0000 00:00:1670407730.335089   21060 cameras.cc:1385] Camera 0 changed state CLOSED->OPEN; Camera device opened successfully. i=0
+I/native  (20942): I0000 00:00:1670407730.335114   21068 capture_request_utils.cc:207] Flash: ConfigureRequestFlashMode - OFF
+I/native  (20942): I0000 00:00:1670407730.336708   21060 cameras.cc:1385] Camera 0 changed state OPEN->CAPTURING; Started capture session. i=1
+I/native  (20942): I0000 00:00:1670407730.336765   21060 cameras.cc:1385] Camera 0 changed state CAPTURING->RECONFIGURING; Changing runtime configuration... i=2
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/ConscryptEngineSocket;->setUseSessionTickets(Z)V (max-target-q,core-platform-api, reflection, denied)
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/OpenSSLSocketImpl;->setUseSessionTickets(Z)V (max-target-q,core-platform-api, reflection, denied)
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/AbstractConscryptSocket;->setUseSessionTickets(Z)V (max-target-q, reflection, denied)
+E/FlutterGeolocator(20942): Geolocator position updates started
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/ConscryptEngineSocket;->setHostname(Ljava/lang/String;)V (max-target-q,core-platform-api, reflection, denied)
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/OpenSSLSocketImpl;->setHostname(Ljava/lang/String;)V (max-target-q,core-platform-api, reflection, denied)
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/AbstractConscryptSocket;->setHostname(Ljava/lang/String;)V (max-target-q, reflection, denied)
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/OpenSSLSocketImpl;->setAlpnProtocols([B)V (max-target-q,core-platform-api, reflection, denied)
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/AbstractConscryptSocket;->setAlpnProtocols([B)V (max-target-q, reflection, denied)
+I/CameraManagerGlobal(20942): Camera 0 facing CAMERA_FACING_BACK state now CAMERA_STATE_ACTIVE for client io.carius.lars.ar_flutter_plugin_example API Level 2
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/OpenSSLSocketImpl;->getAlpnSelectedProtocol()[B (max-target-q,core-platform-api, reflection, denied)
+W/_plugin_example(20942): Accessing hidden method Lcom/android/org/conscrypt/AbstractConscryptSocket;->getAlpnSelectedProtocol()[B (max-target-q, reflection, denied)
+I/native  (20942): I0000 00:00:1670407730.661158   21109 logger.h:28] CameraMetrics: FirstCaptureComplete: 325.948021ms
+I/native  (20942): I0000 00:00:1670407730.687988   21107 timebase_helpers.cc:169] Timebase offset intialized to 0
+I/native  (20942): I0000 00:00:1670407730.688101   21107 logger.h:28] DataSourceMetrics: kFirstImageCallback: 959.776249ms
+E/ACameraMetadata(20942): getConstEntry: cannot find metadata tag 65578
+W/native  (20942): W0000 00:00:1670407730.688228   21107 frame_buffer.cc:158] A pose node at t=571742140391819 could not be created; dropping the image: FAILED_PRECONDITION: VIO is not tracking.
+W/native  (20942): === Source Location Trace: === 
+W/native  (20942): third_party/redwood/perception/pose_manager/pose_manager.cc:121
+W/native  (20942): 
+W/native  (20942): W0000 00:00:1670407730.697479   21080 feature_matcher_and_filter_utils.cc:258] INVALID_ARGUMENT: integration window start at 0
+W/native  (20942): === Source Location Trace: === 
+W/native  (20942): third_party/redwood/perception/imu_processing/imu_integrator/imu_integrator_utils.cc:96
+W/native  (20942):  Use identity R.
+I/native  (20942): I0000 00:00:1670407730.699397   21075 model_inference_cpu.cc:106] Successfully started the ArDepthCalculator graph.
+W/native  (20942): W0000 00:00:1670407730.702640   21083 frame_buffer.cc:77] Failed to create a pose node: FAILED_PRECONDITION: VIO is not tracking.
+W/native  (20942): === Source Location Trace: === 
+W/native  (20942): third_party/redwood/perception/pose_manager/pose_manager.cc:121
+W/native  (20942): 
+I/native  (20942): I0000 00:00:1670407730.703474   21109 android_camera.cc:1627] [Camera=0; State=RECONFIGURING] Camera completed repeating capture sequence 0
+I/native  (20942): I0000 00:00:1670407730.703548   21109 logger.h:28] CameraMetrics: LastCaptureComplete: 0
+I/native  (20942): I0000 00:00:1670407730.703649   21060 cameras.cc:1385] Camera 0 changed state RECONFIGURING->CAPTURING; [Camera=0; State=RECONFIGURING] Camera reconfigure complete. i=3
+I/native  (20942): I0000 00:00:1670407730.704343   21338 jni_util.cc:41] GetEnv: not attached
+D/ASACloud(20942): [MobileNeighborhoodManager::OnResetTrackingSession] Clearing all previous keyframes and resetting bookkeeping for the current tracking session.
+D/ASACloud(20942): OnError - An anchor identifier set on AnchorLocateCriteria was invalid
+E/ASACloud(20942): An anchor identifier set on AnchorLocateCriteria was invalid
+I/tflite  (20942): Replacing 117 node(s) with delegate (TfLiteXNNPackDelegate) node, yielding 2 partitions.
+D/ASACloud(20942): PoseQueryProcessorStream - ReqCV: 1IcJgVCsQDGvSUHl+UGjgg
+D/BLASTBufferQueue(20942): [SurfaceView[]@0#3](f:0,a:0) onFrameAvailable the first frame is available
+I/native  (20942): I0000 00:00:1670407731.159961   21079 bundle_adjustment_initializer.cc:275] Intrinsic vector size of the camera 0 is 7
+I/native  (20942): I0000 00:00:1670407731.185456   21079 bundle_adjustment_initializer.cc:483] [SSBA Solver] Initializer did not converge: Maximum number of iterations reached. Number of iterations: 18.
+I/native  (20942): I0000 00:00:1670407731.224183   21079 bundle_adjustment_initializer.cc:878] Refinement did not converge: Maximum number of iterations reached. Number of iterations: 18.
+I/native  (20942): I0000 00:00:1670407731.224329   21079 bundle_adjustment_initializer.cc:494] [SSBA Depth Refinement] Refine successfully!
+I/native  (20942): I0000 00:00:1670407731.225670   21079 bundle_adjustment_initialization.h:143] Number of measurements used in BA initialization for temporal landmarks: 300
+I/native  (20942): I0000 00:00:1670407731.225718   21079 bundle_adjustment_initialization.h:145] Number of good measurements (i.e., reprojection errors <= 3 pixels) in BA initialization for temporal landmarks: 296
+E/native  (20942): E0000 00:00:1670407731.241942   20942 hit_test.cc:428] INTERNAL: No point hit.
+D/ASACloud(20942): [MobileNeighborhoodManager::IsCandidateKeyFrameRedundant] Key-Frame is NOT redundant, so we will enqueue this frame for further processing...
+D/ASACloud(20942): [MobileNeighborhoodManager::OnArFrameAvailable] No pixel data in current frame, so making a request for that in subsequent frame.
+D/TrafficStats(20942): tagSocket(129) with statsTag=0xffffffff, statsUid=-1
+D/ASACloud(20942): MobileNeighborhoodManager::CreateNeighborhoodAnchorForFrameAtCurrentLocation: Reusing existing platform anchor
+D/ASACloud(20942): [MobileNeighborhoodManager::OnArFrameAvailable] Queueing the frame for keyframe creation - Queue-count: 1, running?=1 at-work?=0
+D/ASACloud(20942): OnError - An anchor identifier set on AnchorLocateCriteria was invalid
+E/ASACloud(20942): An anchor identifier set on AnchorLocateCriteria was invalid
+D/ASACloud(20942): [MobileNeighborhoodManager::SelectAndProcessNextAvailableMobileArFrame] Candidate '5a95f80d824d3e40b63c3a2cb362f857' was added to the map; map not full so not bumping out any previous frames.
+D/ASACloud(20942): [SelectAndProcessNextAvailableMobileArFrame] Create or query sufficiency status hash changed (notificationMask: a). Notifying listeners now.
+D/ASACloud(20942): OnError - An anchor identifier set on AnchorLocateCriteria was invalid
+E/ASACloud(20942): An anchor identifier set on AnchorLocateCriteria was invalid
+E/native  (20942): E0000 00:00:1670407731.275316   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.341649   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.378129   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.408240   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.445774   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.474465   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.507923   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.542104   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.607812   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.642196   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.674127   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.707159   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.740700   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.774579   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.807916   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.841142   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.874080   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.907544   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.940829   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407731.974629   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.007413   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.041096   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.074255   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.107420   20942 hit_test.cc:428] INTERNAL: No point hit.
+D/ASACloud(20942): [MobileNeighborhoodManager::IsCandidateKeyFrameRedundant] Key-Frame is NOT redundant, so we will enqueue this frame for further processing...
+D/ASACloud(20942): [MobileNeighborhoodManager::OnArFrameAvailable] No pixel data in current frame, so making a request for that in subsequent frame.
+D/ASACloud(20942): [MobileNeighborhoodManager::OnArFrameAvailable] Queueing the frame for keyframe creation - Queue-count: 1, running?=1 at-work?=0
+D/ASACloud(20942): [MobileNeighborhoodManager::SelectAndProcessNextAvailableMobileArFrame] Candidate 'bb69a98a1771c84cbf947d32d6794721' was added to the map; map not full so not bumping out any previous frames.
+D/ASACloud(20942): [SelectAndProcessNextAvailableMobileArFrame] Create or query sufficiency status hash changed (notificationMask: a). Notifying listeners now.
+D/ASACloud(20942): OnError - An anchor identifier set on AnchorLocateCriteria was invalid
+E/ASACloud(20942): An anchor identifier set on AnchorLocateCriteria was invalid
+E/native  (20942): E0000 00:00:1670407732.140869   20942 hit_test.cc:428] INTERNAL: No point hit.
+W/native  (20942): W0000 00:00:1670407732.157394   21083 plane_estimator.cc:676] Got a new plane, id: 1, with a invalid statistics.
+W/native  (20942): W0000 00:00:1670407732.157503   21083 plane_estimator.cc:676] Got a new plane, id: 3, with a invalid statistics.
+E/native  (20942): E0000 00:00:1670407732.176526   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.207198   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.240647   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.274134   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.307417   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.340409   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.374328   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.407669   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.440631   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.473923   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.508242   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.548917   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.574068   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.609561   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.644632   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407732.675155   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.040098   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.074548   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.106843   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.140068   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.174817   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.206391   20942 hit_test.cc:428] INTERNAL: No point hit.
+W/native  (20942): W0000 00:00:1670407733.226971   21083 plane_estimator.cc:676] Got a new plane, id: 6, with a invalid statistics.
+E/native  (20942): E0000 00:00:1670407733.239774   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.307717   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.339861   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.374155   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.407392   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.473143   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.506676   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.539898   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.574014   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.606953   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.640791   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.706443   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.740089   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.773407   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.806302   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.840247   20942 hit_test.cc:428] INTERNAL: No point hit.
+D/ASACloud(20942): [MobileNeighborhoodManager::IsCandidateKeyFrameRedundant] Key-Frame is NOT redundant, so we will enqueue this frame for further processing...
+D/ASACloud(20942): [MobileNeighborhoodManager::OnArFrameAvailable] No pixel data in current frame, so making a request for that in subsequent frame.
+D/ASACloud(20942): [MobileNeighborhoodManager::OnArFrameAvailable] Queueing the frame for keyframe creation - Queue-count: 1, running?=1 at-work?=0
+D/ASACloud(20942): [MobileNeighborhoodManager::SelectAndProcessNextAvailableMobileArFrame] Candidate '9a42f6d601895547bdf2d2f08bd83a49' was added to the map; map not full so not bumping out any previous frames.
+D/ASACloud(20942): [SelectAndProcessNextAvailableMobileArFrame] Create or query sufficiency status hash changed (notificationMask: a). Notifying listeners now.
+D/ASACloud(20942): OnError - An anchor identifier set on AnchorLocateCriteria was invalid
+E/ASACloud(20942): An anchor identifier set on AnchorLocateCriteria was invalid
+I/native  (20942): I0000 00:00:1670407733.870189   21081 viwls_optimization.cc:1128] Skip Lite-COM due to a significant calibration change.
+E/native  (20942): E0000 00:00:1670407733.873007   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.906737   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.939691   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407733.973005   20942 hit_test.cc:428] INTERNAL: No point hit.
+I/native  (20942): I0000 00:00:1670407733.974301   21081 viwls_optimization.cc:977] MAP SOLVE: USER_SUCCESS
+I/native  (20942): I0000 00:00:1670407733.993718   21081 visual_inertial_wls.cc:256] online_viwls_solve_time in seconds = 0.177027 solve_time_counter_ = 0
+E/native  (20942): E0000 00:00:1670407734.006393   20942 hit_test.cc:428] INTERNAL: No point hit.
+I/native  (20942): I0000 00:00:1670407734.028502   21081 multi_map_manager.cc:290] Added ADF into multi_map_manager: a28ca767-74bd-21ce-9727-5dff1e51bb29
+E/native  (20942): E0000 00:00:1670407734.039507   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.072664   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.105889   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.139579   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.173875   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.206063   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.239301   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.273608   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.306382   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.341480   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.372708   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.406106   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.439981   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.505931   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.539570   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.572482   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.606294   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.639197   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.673289   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.706201   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.739020   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.772328   20942 hit_test.cc:428] INTERNAL: No point hit.
+I/native  (20942): I0000 00:00:1670407734.791373   21082 sbr_constraint_update_utils.cc:622] Refined adf_T_C from: q = [x: 0.613886, y: -0.448533, z: -0.525261, w: 0.382181], p = [x: -0.066089, y: 0.00384502, z: 0.00723076]
+I/native  (20942): to: q = [x: 0.618377, y: -0.448874, z: -0.512818, w: 0.391331], p = [x: -0.0805082, y: -0.000917472, z: 0.014004]
+I/native  (20942): rotation change: 1.84357(deg), position change: 0.0166274(m).
+E/native  (20942): E0000 00:00:1670407734.792431   21082 sbr_action_state.cc:220] 2 consistent ADF to VIO transformation from MLE are required to initialize this variable in VIO. Current value is 1.
+E/native  (20942): E0000 00:00:1670407734.792501   21082 ralph_adapter.cc:866] NOT_FOUND: Map with id: 0 not found in the state.
+E/native  (20942): === Source Location Trace: === 
+E/native  (20942): third_party/alphatrack/internal/ralph/ralph.cc:1314
+E/native  (20942): 
+E/native  (20942): E0000 00:00:1670407734.806151   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.839621   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.872381   20942 hit_test.cc:428] INTERNAL: No point hit.
+I/native  (20942): I0000 00:00:1670407734.894878   21082 sbr_constraint_update_utils.cc:622] Refined adf_T_C from: q = [x: 0.584254, y: -0.482521, z: -0.482644, w: 0.439175], p = [x: -0.0379205, y: 0.00517798, z: 0.0118064]
+I/native  (20942): to: q = [x: 0.584619, y: -0.479958, z: -0.480724, w: 0.443582], p = [x: -0.0432698, y: 0.00648878, z: 0.00673063]
+I/native  (20942): rotation change: 0.625732(deg), position change: 0.00748983(m).
+I/native  (20942): I0000 00:00:1670407734.895967   21082 sbr_constraint_update_utils.cc:286] (Re-)setting adf_T_vio: q = [x: 0, y: 0, z: 0.00508163, w: 0.999987], p = [x: -0.00988776, y: 0.00590433, z: -0.00323795]
+E/native  (20942): E0000 00:00:1670407734.905459   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.939188   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407734.972564   20942 hit_test.cc:428] INTERNAL: No point hit.
+I/native  (20942): I0000 00:00:1670407734.994775   21072 pose_manager.cc:279] World pose node changing to MapId:a28ca767-74bd-21ce-9727-5dff1e51bb29 with 1 opt.
+E/native  (20942): E0000 00:00:1670407735.005571   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407735.039040   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407735.072450   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407735.105302   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407735.139616   20942 hit_test.cc:428] INTERNAL: No point hit.
+E/native  (20942): E0000 00:00:1670407735.172663   20942 hit_test.cc:428] INTERNAL: No point hit.
+W/native  (20942): W0000 00:00:1670407735.510901   21083 plane_estimator.cc:676] Got a new plane, id: 11, with a invalid statistics.
+D/ASACloud(20942): OnError - An anchor identifier set on AnchorLocateCriteria was invalid
+E/ASACloud(20942): An anchor identifier set on AnchorLocateCriteria was invalid
+I/native  (20942): I0000 00:00:1670407736.456592   21081 viwls_optimization.cc:1130] Run Lite-COM for the map optimization.
+I/native  (20942): I0000 00:00:1670407736.727631   21081 viwls_optimization.cc:977] MAP SOLVE: USER_SUCCESS
+I/native  (20942): I0000 00:00:1670407736.752908   21081 visual_inertial_wls.cc:256] online_viwls_solve_time in seconds = 0.391179 solve_time_counter_ = 0
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 0
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTapSurface
+E/native  (20942): E0000 00:00:1670407737.316889   20942 hit_test.cc:428] INTERNAL: No point hit.
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): addAnchor (local)
+D/ArModelBuilder(20942): makeNodeFromAsset
+D/CompatibilityChangeReporter(20942): Compat change id reported: 210923482; UID 10421; state: DISABLED
+D/CompatibilityChangeReporter(20942): Compat change id reported: 37756858; UID 10421; state: ENABLED
+W/_plugin_example(20942): Accessing hidden field Landroid/graphics/SurfaceTexture;->mSurfaceTexture:J (unsupported, JNI, allowed)
+W/_plugin_example(20942): Accessing hidden field Landroid/graphics/SurfaceTexture;->mProducer:J (unsupported, JNI, allowed)
+I/flutter (20942): didAddAnchor == true
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+I/flutter (20942): Instance of 'ARAnchor'
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): performTraversals mFirst=false windowShouldResize=true viewVisibilityChanged=false mForceNextWindowRelayout=false params=null
+I/ViewRootImpl@6e07866[ViewRenderableWindow](20942): Resizing android.view.ViewRootImpl@d29f743: frame = [371,1132][709,1268] reportDraw = false forceLayout = false syncSeqId = 0
+D/BLASTBufferQueue(20942): update, w= 338 h= 136 mNativeObject= 0xb40000712b8e4110 sc.mNativeObject= 0xb4000070bb92c8e0 format= -3 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:2778 android.view.ViewRootImpl.relayoutWindow:9635 android.view.ViewRootImpl.performTraversals:3759 android.view.ViewRootImpl.doTraversal:2991 android.view.ViewRootImpl$TraversalRunnable.run:10665 android.view.Choreographer$CallbackRecord.run:1301 
+I/ViewRootImpl@6e07866[ViewRenderableWindow](20942): Relayout returned: old=(540,1200,540,1200) new=(371,1132,709,1268) req=(338,136)0 dur=9 res=0x0 s={true 0xb4000071bb979270} ch=false seqId=0
+D/OpenGLRenderer(20942): setSurface() destroyed EGLSurface
+D/OpenGLRenderer(20942): destroyEglSurface
+D/OpenGLRenderer(20942): eglCreateWindowSurface
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): mThreadedRenderer.updateSurface() mSurface={isValid=true 0xb4000071bb979270}
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): Received frameDrawingCallback syncResult=0 frameNum=1.
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): Setting up sync and frameCommitCallback
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 1
+D/BLASTBufferQueue(20942): [ViewRootImpl@6e07866[ViewRenderableWindow]#4](f:0,a:0) onFrameAvailable the first frame is available
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): Received frameCommittedCallback lastAttemptedDrawFrameNum=1 didProduceBuffer=true
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): setupSync seqId=0 mSyncId=-1 fn=1 caller=android.view.ViewRootImpl$$ExternalSyntheticLambda11.accept:6 android.window.SurfaceSyncer.lambda$setupSync$1$android-window-SurfaceSyncer:128 android.window.SurfaceSyncer$$ExternalSyntheticLambda1.accept:8 android.window.SurfaceSyncer$SyncSet.checkIfSyncIsComplete:382 android.window.SurfaceSyncer$SyncSet.-$$Nest$mcheckIfSyncIsComplete:0 android.window.SurfaceSyncer$SyncSet$1.onBufferReady:338 android.view.ViewRootImpl$12.lambda$onFrameDraw$0$android-view-ViewRootImpl$12:13173 
+D/OpenGLRenderer(20942): CFMS:: SetUp Pid : 20942    Tid : 20967
+W/Parcel  (20942): Expecting binder but got null!
+D/ViewRootImpl@6e07866[ViewRenderableWindow](20942): reportDrawFinished seqId=0 mSyncId=-1 fn=1 mSurfaceChangedTransaction=0xb4000070eb8f3190
+I/ViewRootImpl@6e07866[ViewRenderableWindow](20942): handleResized, msg = 4 frames=ClientWindowFrames{frame=[371,1132][709,1268] display=[-100000,-100000][100000,100000] parentFrame=[0,0][0,0] parentClippedByDisplayCutout=false} forceNextWindowRelayout=false displayId=0 resizeMode=-1 frameChanged=false displayFrameChanged=false configChanged=false displayChanged=false
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+I/native  (20942): I0000 00:00:1670407737.466826   21072 pose_manager.cc:279] World pose node changing to MapId:a28ca767-74bd-21ce-9727-5dff1e51bb29 with 2 opt.
+I/native  (20942): I0000 00:00:1670407739.983937   21081 viwls_optimization.cc:1130] Run Lite-COM for the map optimization.
+I/native  (20942): I0000 00:00:1670407740.480305   21081 viwls_optimization.cc:977] MAP SOLVE: USER_SUCCESS
+I/native  (20942): I0000 00:00:1670407740.528340   21081 visual_inertial_wls.cc:256] online_viwls_solve_time in seconds = 0.702364 solve_time_counter_ = 0
+I/native  (20942): I0000 00:00:1670407740.825941   21071 pose_manager.cc:279] World pose node changing to MapId:a28ca767-74bd-21ce-9727-5dff1e51bb29 with 3 opt.
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 0
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 1
+D/ASACloud(20942): StoreAndWatcherTrackedState::TryCreateInternalAsync for a new SpatialAnchor.
+D/ASACloud(20942): StoreAndWatcherTrackedState::TryCreateWithNewNeighborhoodAnchor
+D/ASACloud(20942): [MobileNeighborhoodManager::TryGetPoseBetweenAnchors] Pose computed successfully.
+D/ASACloud(20942): [MobileNeighborhoodManager::TryGetPoseBetweenAnchors] Pose computed successfully.
+D/ASACloud(20942): Translation From World Origin (KFSQ:2) : [           1,            0,            0,  5.58794e-09,            0,            1,            0, -2.56114e-09,            0,            0,            1,  9.31323e-10,            0,            0,            0,            1]
+D/ASACloud(20942): Translation From Reference Keyframe (KFSQ:2) : [           1,            0,            0, -5.58794e-09,            0,            1,            0,  1.16415e-09,            0,            0,            1, -2.32831e-10,            0,            0,            0,            1]
+D/ASACloud(20942): Drift from original anchor position in world (KFSQ:2)  : 0.000000
+D/ASACloud(20942): [MobileNeighborhoodManager::TryGetPoseBetweenAnchors] Pose computed successfully.
+D/ASACloud(20942): Translation From World Origin (KFSQ:27) : [  0.939155,  -0.160152,  -0.303872, -0.0153954,   0.200731,   0.973766,   0.107173, -0.0267551,   0.278737,  -0.161649,   0.946666, -0.0981204,          0,          0,          0,          1]
+D/ASACloud(20942): Translation From Reference Keyframe (KFSQ:27) : [  0.936857,  -0.162426,  -0.309703, -0.0159365,   0.205605,   0.972196,   0.112082, -0.0293083,   0.282887,  -0.168682,   0.944204, -0.0976182,          0,          0,          0,          1]
+D/ASACloud(20942): Drift from original anchor position in world (KFSQ:27)  : 0.002275
+D/ASACloud(20942): [MobileNeighborhoodManager::TryGetPoseBetweenAnchors] Pose computed successfully.
+D/ASACloud(20942): Translation From World Origin (KFSQ:74) : [  0.977692,  -0.203089, -0.0535975, -0.0120294,   0.153731,   0.865765,  -0.476254, -0.0402027,   0.143125,    0.45739,   0.877673,  -0.020713,          0,          0,          0,          1]
+D/ASACloud(20942): Translation From Reference Keyframe (KFSQ:74) : [  0.976282,  -0.206552, -0.0648856, -0.0132647,   0.151504,   0.865865,  -0.476786, -0.0399899,   0.154663,   0.455647,   0.876622, -0.0264523,          0,          0,          0,          1]
+D/ASACloud(20942): Drift from original anchor position in world (KFSQ:74)  : 0.005743
+D/ASACloud(20942): [MobileNeighborhoodManager::GetAnchorNeighborhoodDataAsync] Creating anchor blob using 3 key-frames.
+D/ASACloud(20942): [MobileNeighborhoodManager::GetAnchorNeighborhoodDataAsync] Does not have enough neighborhood data: NeighborhoodDataFeedback::NotEnoughMotion
+D/ASACloud(20942): [MobileNeighborhoodManager::GetQueryNeighborhoodDataAsync] Anchor neighborhood data is NOT available. Feedback: 3.
+D/ASACloud(20942): TryCreateWithNewNeighborhoodAnchor was unable to get enough neighborhood data.
+D/ASACloud(20942): OnError - Not enough Neighborhood Spatial Data was available to complete the desired create or update operation
+E/ASACloud(20942): Not enough Neighborhood Spatial Data was available to complete the desired create or update operation
+W/System.err(20942): java.util.concurrent.ExecutionException: com.microsoft.azure.spatialanchors.CloudSpatialException: 
+W/System.err(20942): 	at java.util.concurrent.FutureTask.report(FutureTask.java:122)
+W/System.err(20942): 	at java.util.concurrent.FutureTask.get(FutureTask.java:191)
+W/System.err(20942): 	at io.carius.lars.ar_flutter_plugin.AzureSpatialAnchorsManager.toEmptyCompletableFuture$lambda-3(AzureSpatialAnchorsManager.kt:140)
+W/System.err(20942): 	at io.carius.lars.ar_flutter_plugin.AzureSpatialAnchorsManager.$r8$lambda$pbtJoTssJXesTFl9JdJuzHkxrA0(Unknown Source:0)
+W/System.err(20942): 	at io.carius.lars.ar_flutter_plugin.AzureSpatialAnchorsManager$$ExternalSyntheticLambda2.run(Unknown Source:2)
+W/System.err(20942): 	at java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1712)
+W/System.err(20942): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+W/System.err(20942): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+W/System.err(20942): 	at java.lang.Thread.run(Thread.java:1012)
+W/System.err(20942): Caused by: com.microsoft.azure.spatialanchors.CloudSpatialException: 
+W/System.err(20942): 	at com.microsoft.azure.spatialanchors.NativeLibraryHelpers.checkStatus(NativeLibraryHelpers.java:96)
+W/System.err(20942): 	at com.microsoft.azure.spatialanchors.CloudSpatialAnchorSession$3.call(CloudSpatialAnchorSession.java:516)
+W/System.err(20942): 	at com.microsoft.azure.spatialanchors.CloudSpatialAnchorSession$3.call(CloudSpatialAnchorSession.java:512)
+W/System.err(20942): 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+W/System.err(20942): 	... 3 more
+E/ACameraMetadata(20942): getConstEntry: cannot find metadata tag 65578
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 0
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 1
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 0
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 1
+W/native  (20942): W0000 00:00:1670407746.059594   21083 plane_estimator.cc:676] Got a new plane, id: 12, with a invalid statistics.
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 0
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTapSurface
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): addAnchor (local)
+D/ArModelBuilder(20942): makeNodeFromAsset
+I/flutter (20942): didAddAnchor == true
+I/flutter (20942): Instance of 'ARAnchor'
+I/ViewRootImpl@a174a92[MainActivity](20942): ViewPostIme pointer 1
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+D/io.carius.lars.ar_flutter_plugin.AndroidARView(20942): onTap
+
+Application finished.

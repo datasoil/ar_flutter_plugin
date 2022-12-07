@@ -8,6 +8,7 @@ import 'package:ar_flutter_plugin/managers/ar_object_manager.dart';
 import 'package:ar_flutter_plugin/datatypes/config_planedetection.dart';
 
 // Type definitions to enforce a consistent use of the API
+//inglobatore di mangers per passarli in giro?
 typedef ARViewCreatedCallback = void Function(
     ARSessionManager arSessionManager,
     ARObjectManager arObjectManager,
@@ -36,6 +37,7 @@ abstract class PlatformARView {
   void onPlatformViewCreated(int id);
 }
 
+//funzione implicitamente void?
 /// Instantiates [ARSessionManager], [ARObjectManager] and returns them to the widget instantiating the [ARView] using the [arViewCreatedCallback]
 createManagers(
     int id,
