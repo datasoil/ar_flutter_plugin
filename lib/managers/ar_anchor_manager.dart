@@ -32,10 +32,12 @@ class ARAnchorManager {
   }
 
   /// Activates collaborative AR mode (using Google Cloud Anchors)
+  // modificato per prendere le ASA
   initAzureCloudAnchorMode() async {
     _channel.invokeMethod<bool>('initAzureCloudAnchorMode', {});
   }
 
+  //gestisce le method calls
   Future<dynamic> _platformCallHandler(MethodCall call) async {
     if (debug) {
       print('_platformCallHandler call ${call.method} ${call.arguments}');

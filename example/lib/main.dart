@@ -59,6 +59,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+//entry point per cloud anchor example
 class ExampleList extends StatelessWidget {
   ExampleList({Key? key}) : super(key: key);
 

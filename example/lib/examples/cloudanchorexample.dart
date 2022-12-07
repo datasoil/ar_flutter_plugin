@@ -19,6 +19,7 @@ class CloudAnchorWidget extends StatefulWidget {
 }
 
 class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
+  //assegnati in void onARViewCreated()
   ARSessionManager? arSessionManager;
   ARObjectManager? arObjectManager;
   ARAnchorManager? arAnchorManager;
@@ -46,6 +47,7 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
         ),
         body: Container(
             child: Stack(children: [
+          //init della vista AR su assi xy e z
           ARView(
             onARViewCreated: onARViewCreated,
             planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
@@ -96,15 +98,19 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
     this.arLocationManager = arLocationManager;
 
     this.arSessionManager!.onInitialize(
-          showPlanes: false,
+          showPlanes: true,
           showAnimatedGuide: true,
           customPlaneTexturePath: "Images/triangle.png",
         );
     this.arObjectManager!.onInitialize();
+    //aggiunta: default usa Google Cloud Anchors
     this.arAnchorManager!.initAzureCloudAnchorMode();
 
     this.arSessionManager!.onPlaneOrPointTap = onPlaneOrPointTapped;
     this.arObjectManager!.onNodeTap = onNodeTapped;
+    //removed from og:
+    //this.arAnchorManager!.onAnchorUploaded = onAnchorUploaded;
+    //this.arAnchorManager!.onAnchorDownloaded = onAnchorDownloaded;
 
     this
         .arLocationManager!
@@ -112,6 +118,7 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
         .then((value) => null)
         .onError((error, stackTrace) {
       switch (error.toString()) {
+        //switch per errori sui permessi app
         case 'Location services disabled':
           {
             showAlertDialog(
@@ -163,6 +170,7 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
       this.arAnchorManager!.removeAnchor(anchor);
     });
     anchors = [];
+    //in og code then e do some minor stuff
   }
 
   Future<void> onNodeTapped(String nodeName) async {
@@ -170,11 +178,14 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
     this.arSessionManager!.onError(foregroundNode.data!["onTapText"]);
   }
 
+  //permette di creare nuova anchor
   Future<void> onPlaneOrPointTapped(
       List<ARHitTestResult> hitTestResults) async {
     var singleHitTestResult = hitTestResults.firstOrNull;
     if (singleHitTestResult != null) {
-      var asset = {"id": '1231546', "cod": "Asset nuovo più nuovo"};
+      var asset = {"id": 'asset_id', "cod": "Nome dell'Asset"};
+      //var newAnchor = ARPlaneAnchor ()
+      //anchor di tipo plane: ARPlaneAnchor extends ARAnchor (other type = UndefiniedAnchor)
       var newAnchor = ARAnchor(
           transformation: singleHitTestResult.worldTransform,
           name: asset["id"].toString());
@@ -182,6 +193,8 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
           await this.arAnchorManager!.addAnchor(newAnchor, asset);
       if (didAddAnchor ?? false) {
         this.anchors.add(newAnchor);
+        print("didAddAnchor == true");
+        print(newAnchor.toString());
       } else {
         this.arSessionManager!.onError("Adding Node to Anchor failed");
       }
