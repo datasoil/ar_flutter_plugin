@@ -58,6 +58,10 @@ class ARSessionManager {
           }).toList();
           onPlaneOrPointTap(hitTestResults);
           break;
+        case 'log':
+          final msg = call.arguments as String;
+          debugPrint("Native LOG: "+ msg);
+          break;
         case 'dispose':
           _channel.invokeMethod<void>("dispose");
           break;

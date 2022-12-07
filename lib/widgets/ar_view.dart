@@ -75,7 +75,6 @@ class AndroidARView implements PlatformARView {
     // This is used in the platform side to register the view.
     final String viewType = 'ar_flutter_plugin_view';
     final Map<String, dynamic> creationParams = <String, dynamic>{};
-    print("return AndroidView");
     return AndroidView(
         viewType: viewType,
         layoutDirection: TextDirection.ltr,

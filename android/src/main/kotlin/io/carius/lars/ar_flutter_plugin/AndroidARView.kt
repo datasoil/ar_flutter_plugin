@@ -66,7 +66,6 @@ internal class AndroidARView(
     private var nearbyAssets: ArrayList<Asset> = ArrayList()
 
     private lateinit var sceneUpdateListener: com.google.ar.sceneform.Scene.OnUpdateListener
-    private lateinit var onNodeTapListener: com.google.ar.sceneform.Scene.OnPeekTouchListener
 
     // Method channel handlers
     private val onSessionMethodCall =
@@ -115,40 +114,21 @@ internal class AndroidARView(
                         val anchorName: String = call.argument<String>("name") as String
                         removeAnchor(anchorName, result) //assetId
                     }
-                    "initAzureCloudAnchorMode" -> {
-                        if (arSceneView.session != null) {
-                            val config = Config(arSceneView.session)
-                            config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
-                            config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-                            config.focusMode = Config.FocusMode.AUTO
-                            arSceneView.session?.configure(config)
-
-                            azureSpatialAnchorsManager =
-                                AzureSpatialAnchorsManager(arSceneView.session!!)
-
-                            azureSpatialAnchorsManager.addAnchorLocatedListener(
-                                AnchorLocatedListener { event ->
-                                    onAnchorLocated(event)
-                                })
-                            azureSpatialAnchorsManager.start();
-                            result.success(true);
-                        } else {
-                            sessionManagerChannel.invokeMethod(
-                                "onError",
-                                listOf("Error initializing cloud anchor mode: Session is null")
-                            )
-                            result.success(false);
-                        }
-                    }
                     "startLocateAnchors" -> {
-                        val assets: List<Map<String, Any>>? = call.argument<List<Map<String, Any>>>("assets")
-                        if(assets!=null){
-                            for (map in assets.toTypedArray()){
+                        val assets: List<Map<String, Any>>? =
+                            call.argument<List<Map<String, Any>>>("assets")
+                        if (assets != null) {
+                            for (map in assets.toTypedArray()) {
                                 nearbyAssets.add(Asset(map))
                             }
-                            var ids = nearbyAssets.filter { a -> a.arAnchorID.length>1 }.map { a -> a.arAnchorID }
+                            var ids: ArrayList<String> = ArrayList()
+                            for (a: Asset in nearbyAssets){
+                                if(!a.arAnchorID.equals("")){
+                                    ids.add(a.arAnchorID)
+                                }
+                            }
                             startLocatingNearbyAssets(ids, result)
-                        }else{
+                        } else {
                             result.success(false)
                         }
                     }
@@ -169,6 +149,7 @@ internal class AndroidARView(
     override fun dispose() {
         // Destroy AR session
         Log.d(TAG, "dispose called")
+        sessionManagerChannel.invokeMethod("log", "dispose")
         try {
             onPause()
             onDestroy()
@@ -181,6 +162,7 @@ internal class AndroidARView(
     init {
 
         Log.d(TAG, "Initializing AndroidARView")
+        sessionManagerChannel.invokeMethod("log", "Initializing AndroidARView")
         viewContext = context
 
         arSceneView = ArSceneView(context)
@@ -211,24 +193,29 @@ internal class AndroidARView(
                     savedInstanceState: Bundle?
                 ) {
                     Log.d(TAG, "onActivityCreated")
+                    sessionManagerChannel.invokeMethod("log", "onActivityCreated")
                 }
 
                 override fun onActivityStarted(activity: Activity) {
                     Log.d(TAG, "onActivityStarted")
+                    sessionManagerChannel.invokeMethod("log", "onActivityStarted")
                 }
 
                 override fun onActivityResumed(activity: Activity) {
                     Log.d(TAG, "onActivityResumed")
+                    sessionManagerChannel.invokeMethod("log", "onActivityResumed")
                     onResume()
                 }
 
                 override fun onActivityPaused(activity: Activity) {
                     Log.d(TAG, "onActivityPaused")
+                    sessionManagerChannel.invokeMethod("log", "onActivityPaused")
                     onPause()
                 }
 
                 override fun onActivityStopped(activity: Activity) {
                     Log.d(TAG, "onActivityStopped")
+                    sessionManagerChannel.invokeMethod("log", "onActivityStopped")
                     onPause()
                 }
 
@@ -240,6 +227,7 @@ internal class AndroidARView(
 
                 override fun onActivityDestroyed(activity: Activity) {
                     Log.d(TAG, "onActivityDestroyed")
+                    sessionManagerChannel.invokeMethod("log", "onActivityDestroyed")
                 }
             }
 
@@ -247,6 +235,7 @@ internal class AndroidARView(
     }
 
     fun onResume() {
+        sessionManagerChannel.invokeMethod("log", "onResume")
         // Create session if there is none
         if (arSceneView.session == null) {
             Log.d(TAG, "ARSceneView session is null. Trying to initialize")
@@ -269,9 +258,17 @@ internal class AndroidARView(
                 } else {
                     val config = Config(session)
                     config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+                    config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
                     config.focusMode = Config.FocusMode.AUTO
                     session.configure(config)
                     arSceneView.setupSession(session)
+                    azureSpatialAnchorsManager =
+                        AzureSpatialAnchorsManager(arSceneView.session)
+
+                    azureSpatialAnchorsManager.addAnchorLocatedListener(
+                        AnchorLocatedListener { event ->
+                            onAnchorLocated(event)
+                        })
                 }
             } catch (ex: UnavailableUserDeclinedInstallationException) {
                 // Display an appropriate message to the user zand return gracefully.
@@ -303,27 +300,35 @@ internal class AndroidARView(
 
         try {
             arSceneView.resume()
+            azureSpatialAnchorsManager.start()
+
         } catch (ex: CameraNotAvailableException) {
             Log.d(TAG, "Unable to get camera $ex")
             activity.finish()
             return
         } catch (e: Exception) {
+            Log.d(TAG, "Something wrong in onResume")
+            sessionManagerChannel.invokeMethod("log", "Something wrong in onResume")
             return
         }
     }
 
     fun onPause() {
+        sessionManagerChannel.invokeMethod("log", "onPause")
         arSceneView.pause()
+        if (this::azureSpatialAnchorsManager.isInitialized) {
+            azureSpatialAnchorsManager.stop();
+        }
     }
 
     fun onDestroy() {
+        sessionManagerChannel.invokeMethod("log", "onDestroy")
         try {
             arSceneView.session?.close()
             arSceneView.destroy()
             arSceneView.scene?.removeOnUpdateListener(sceneUpdateListener)
-            arSceneView.scene?.removeOnPeekTouchListener(onNodeTapListener)
             if (this::azureSpatialAnchorsManager.isInitialized) {
-                azureSpatialAnchorsManager.stop();
+                azureSpatialAnchorsManager.reset();
             }
 
         } catch (e: Exception) {
@@ -336,6 +341,12 @@ internal class AndroidARView(
         val argPlaneDetectionConfig: Int? = call.argument<Int>("planeDetectionConfig")
         val argShowPlanes: Boolean? = call.argument<Boolean>("showPlanes")
 
+        arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
+            onTap(
+                hitTestResult,
+                motionEvent
+            )
+        }
 
         sceneUpdateListener =
             com.google.ar.sceneform.Scene.OnUpdateListener { frameTime: FrameTime ->
@@ -343,15 +354,8 @@ internal class AndroidARView(
                     azureSpatialAnchorsManager.update(arSceneView.arFrame)
                 }
             }
-        onNodeTapListener =
-            com.google.ar.sceneform.Scene.OnPeekTouchListener { hitTestResult, motionEvent ->
-                if (hitTestResult.node != null && motionEvent?.action == MotionEvent.ACTION_DOWN) {
-                    objectManagerChannel.invokeMethod("onNodeTap", listOf(hitTestResult.node?.name))
-                }
-            }
 
         arSceneView.scene?.addOnUpdateListener(sceneUpdateListener)
-        arSceneView.scene?.addOnPeekTouchListener(onNodeTapListener)
 
         // Configure plane detection
         val config = arSceneView.session?.config
@@ -377,12 +381,6 @@ internal class AndroidARView(
         // Configure whether or not detected planes should be shown
         arSceneView.planeRenderer.isVisible = argShowPlanes == true
 
-        arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
-            onTap(
-                hitTestResult,
-                motionEvent
-            )
-        }
         result.success(null)
     }
 
@@ -485,13 +483,16 @@ internal class AndroidARView(
 
     }
 
-    private fun startLocatingNearbyAssets(ids: List<String>, result: MethodChannel.Result) {
+    private fun startLocatingNearbyAssets(ids: ArrayList<String>, result: MethodChannel.Result) {
         val criteria = AnchorLocateCriteria()
+        Log.d(TAG, ids.toString());
         criteria.identifiers = ids.toTypedArray<String>()
+        sessionManagerChannel.invokeMethod("log", "startLocatingNearbyAssets"+ids.toString())
         try {
             if (this::azureSpatialAnchorsManager.isInitialized) {
                 azureSpatialAnchorsManager.stopLocating()
                 azureSpatialAnchorsManager.startLocating(criteria)
+                sessionManagerChannel.invokeMethod("log", "realStart")
             }
             result.success(true)
         } catch (e: Exception) {
@@ -501,20 +502,22 @@ internal class AndroidARView(
 
     private fun onAnchorLocated(event: AnchorLocatedEvent) {
         val status = event.status
+        sessionManagerChannel.invokeMethod("log", "onAnchorLocated")
         if (status == LocateAnchorStatus.Located) {
+            sessionManagerChannel.invokeMethod("log", "real Located")
             Log.d(TAG, "renderLocatedAnchor: rendering located anchor" + event.anchor.identifier)
             var cloudAnchor = event.anchor
             //get the asset name to print
             //get the asset name to print
             var theAsset = Asset("porcodio", "PORCODIO", cloudAnchor.identifier)
-            synchronized(nearbyAssets) {
-                for (asset in nearbyAssets) {
-                    if (asset.arAnchorID.equals(cloudAnchor.identifier)) {
-                        theAsset = asset
-                        break
-                    }
-                }
-            }
+            //synchronized(nearbyAssets) {
+            //    for (asset in nearbyAssets) {
+            //        if (asset.arAnchorID.equals(cloudAnchor.identifier)) {
+            //            theAsset = asset
+            //            break
+            //        }
+            //    }
+            //}
             activity.runOnUiThread {
                 val foundVisual = AnchorVisualAsset(cloudAnchor.localAnchor, theAsset, theAsset.id)
                 foundVisual.cloudAnchor = cloudAnchor
