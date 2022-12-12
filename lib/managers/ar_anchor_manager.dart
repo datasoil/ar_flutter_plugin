@@ -2,10 +2,6 @@ import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:flutter/services.dart';
 
 // Type definitions to enforce a consistent use of the API
-typedef AnchorUploadedHandler = void Function(ARAnchor arAnchor);
-typedef AnchorDownloadedHandler = ARAnchor Function(
-    Map<String, dynamic> serializedAnchor);
-// Type definitions to enforce a consistent use of the API
 typedef NodeTapResultHandler = void Function(String node);
 
 /// Handles all anchor-related functionality of an [ARView], including configuration and usage of collaborative sessions
@@ -16,17 +12,8 @@ class ARAnchorManager {
   /// Debugging status flag. If true, all platform calls are printed. Defaults to false.
   final bool debug;
 
-  /// Reference to all anchors that are being uploaded to the google cloud anchor API
-  List<ARAnchor> pendingAnchors = [];
-
   /// Callback function that is invoked when the platform detects a tap on a node
   NodeTapResultHandler? onNodeTap;
-
-  /// Callback that is triggered once an anchor has successfully been uploaded to the google cloud anchor API
-  AnchorUploadedHandler? onAnchorUploaded;
-
-  /// Callback that is triggered once an anchor has successfully been downloaded from the google cloud anchor API and resolved within the current scene
-  AnchorDownloadedHandler? onAnchorDownloaded;
 
   ARAnchorManager(int id, {this.debug = false}) {
     _channel = MethodChannel('aranchors_$id');
@@ -89,6 +76,16 @@ class ARAnchorManager {
     try {
       return await _channel
           .invokeMethod<String?>('uploadAnchor', {'name': anchorId});
+    } on PlatformException catch (_) {
+      return null;
+    }
+  }
+
+  /// Upload given anchor from the underlying AR scene to the Google Cloud Anchor API
+  Future<bool?> removeCloudAnchor(String anchorId) async {
+    try {
+      return await _channel
+          .invokeMethod<bool?>('removeCloudAnchor', {'name': anchorId});
     } on PlatformException catch (_) {
       return null;
     }

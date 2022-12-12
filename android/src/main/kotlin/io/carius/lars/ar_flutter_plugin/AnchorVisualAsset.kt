@@ -16,15 +16,14 @@ import com.microsoft.azure.spatialanchors.CloudSpatialAnchor
 
 internal class AnchorVisualAsset(_localAnchor: Anchor, private val asset: Asset, val name: String) {
     var cloudAnchor: CloudSpatialAnchor? = null
-    val node = AnchorNode(_localAnchor)
+    private val node = AnchorNode(_localAnchor)
     val localAnchor = _localAnchor
+    private val TAG: String = AndroidARView::class.java.name
 
-    fun render(context: Context, scene: Scene){
-        Log.d("ArModelBuilder", "makeNodeFromAsset")
-        ViewRenderable.builder()
-            .setView(context, R.layout.ar_label_extended)
-            .build()
-            .thenAccept{ renderable: ViewRenderable ->
+    fun render(context: Context, scene: Scene) {
+        Log.d(TAG, "render")
+        ViewRenderable.builder().setView(context, R.layout.ar_label_extended).build()
+            .thenAccept { renderable: ViewRenderable ->
                 val extra: View = renderable.view.findViewById(R.id.extra_info)
                 val parent: View = renderable.view
                 val assetCod: TextView = renderable.view.findViewById(R.id.cod_label)
@@ -33,15 +32,15 @@ internal class AnchorVisualAsset(_localAnchor: Anchor, private val asset: Asset,
                 } else if (asset.tickets.size > 0) {
                     (parent.findViewById<View>(R.id.main_icon) as ImageView).setImageResource(R.drawable.ar_maint_icon)
                 }
-                renderable.isShadowReceiver=false
-                renderable.isShadowCaster=false
+                renderable.isShadowReceiver = false
+                renderable.isShadowCaster = false
                 assetCod.text = asset.cod
-                extra.visibility=View.VISIBLE
-                if(asset.function!=null){
+                extra.visibility = View.VISIBLE
+                if (asset.function != null) {
                     val functionL: TextView = renderable.view.findViewById(R.id.function_label)
                     var strExtra = asset.function!!.cod
-                    if(asset.category!=null){
-                        strExtra+=" - " + asset.category!!.cod
+                    if (asset.category != null) {
+                        strExtra += " - " + asset.category!!.cod
                     }
                     functionL.text = strExtra
                 }
@@ -71,6 +70,20 @@ internal class AnchorVisualAsset(_localAnchor: Anchor, private val asset: Asset,
             }
     }
 
+    fun dispose() {
+        Log.d(TAG, "dispose")
+        this.node.renderable=null
+        Log.d(TAG, "renderable")
+        this.node.setParent(null)
+        Log.d(TAG, "parent")
+        this.node.anchor=null
+        Log.d(TAG, "anchor")
+        this.localAnchor.detach()
+        Log.d(TAG, "detached anchor")
 
+    }
 
+    override fun toString(): String {
+        return "AnchorVisualAsset(name: $name, asset: ${asset.toString()}, cloudAnchor: ${cloudAnchor.toString()}, node: ${node.toString()}, localAnchor: ${localAnchor.toString()})"
+    }
 }
