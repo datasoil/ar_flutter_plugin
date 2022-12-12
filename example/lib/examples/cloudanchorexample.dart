@@ -1,15 +1,17 @@
-import 'package:ar_flutter_plugin/managers/ar_location_manager.dart';
+//import 'package:ar_flutter_plugin/managers/ar_location_manager.dart';
+import 'dart:ffi';
+
 import 'package:ar_flutter_plugin/managers/ar_session_manager.dart';
-import 'package:ar_flutter_plugin/managers/ar_object_manager.dart';
+//import 'package:ar_flutter_plugin/managers/ar_object_manager.dart';
 import 'package:ar_flutter_plugin/managers/ar_anchor_manager.dart';
 import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:flutter/material.dart';
 import 'package:ar_flutter_plugin/ar_flutter_plugin.dart';
-import 'package:ar_flutter_plugin/datatypes/config_planedetection.dart';
+//import 'package:ar_flutter_plugin/datatypes/config_planedetection.dart';
 import 'package:ar_flutter_plugin/datatypes/hittest_result_types.dart';
 import 'package:ar_flutter_plugin/models/ar_node.dart';
 import 'package:ar_flutter_plugin/models/ar_hittest_result.dart';
-import 'package:vector_math/vector_math_64.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 import 'package:collection/collection.dart';
 
 class CloudAnchorWidget extends StatefulWidget {
@@ -21,12 +23,13 @@ class CloudAnchorWidget extends StatefulWidget {
 class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
   //assegnati in void onARViewCreated()
   ARSessionManager? arSessionManager;
-  ARObjectManager? arObjectManager;
+  //ARObjectManager? arObjectManager;
   ARAnchorManager? arAnchorManager;
-  ARLocationManager? arLocationManager;
+  //ARLocationManager? arLocationManager;
 
   Map<String, ARNode> nodes = {};
   List<ARAnchor> anchors = [];
+  bool showTextFlag = false;
 
   @override
   void initState() {
@@ -48,15 +51,14 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
         body: Container(
             child: Stack(children: [
           //init della vista AR su assi xy e z
-          ARView(
-            onARViewCreated: onARViewCreated,
-            planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
-            creationParams: {
+          ARView(onARViewCreated: onARViewCreated
+              //planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical, //removed bc default xyz
+              /*creationParams: {
               "assets": [
                 {"id": "1234", "cod": "Codice", "ar_anchor": ""}
               ]
-            },
-          ),
+            },*/
+              ),
           Align(
             alignment: FractionalOffset.bottomCenter,
             child: Row(
@@ -83,35 +85,52 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
                           onPressed: onDownloadButtonPressed,
                           child: Text("Download"))),
                 ]),
-          )
+          ),
+          Align(
+            alignment: FractionalOffset.center,
+            child: Visibility(
+                visible: this.showTextFlag,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                  ),
+                  child: Text(
+                    "Anchor Uploaded",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                )),
+          ),
         ])));
   }
 
   void onARViewCreated(
       ARSessionManager arSessionManager,
-      ARObjectManager arObjectManager,
-      ARAnchorManager arAnchorManager,
-      ARLocationManager arLocationManager) {
+      //ARObjectManager arObjectManager,
+      ARAnchorManager arAnchorManager
+      //ARLocationManager arLocationManager
+      ) {
     this.arSessionManager = arSessionManager;
-    this.arObjectManager = arObjectManager;
+    //this.arObjectManager = arObjectManager;
     this.arAnchorManager = arAnchorManager;
-    this.arLocationManager = arLocationManager;
+    //this.arLocationManager = arLocationManager;
 
     this.arSessionManager!.onInitialize(
           showPlanes: true,
-          showAnimatedGuide: true,
+          //showAnimatedGuide: true,
           customPlaneTexturePath: "Images/triangle.png",
         );
-    this.arObjectManager!.onInitialize();
+    //this.arObjectManager!.onInitialize();
     //aggiunta: default usa Google Cloud Anchors
-    this.arAnchorManager!.initAzureCloudAnchorMode();
+    //this.arAnchorManager!.initAzureCloudAnchorMode(); //ASA mode is only mode
 
     this.arSessionManager!.onPlaneOrPointTap = onPlaneOrPointTapped;
-    this.arObjectManager!.onNodeTap = onNodeTapped;
+    //this.arObjectManager!.onNodeTap = onNodeTapped;
     //removed from og:
     //this.arAnchorManager!.onAnchorUploaded = onAnchorUploaded;
     //this.arAnchorManager!.onAnchorDownloaded = onAnchorDownloaded;
 
+    //location manager has been removed
+    /*
     this
         .arLocationManager!
         .startLocationUpdates()
@@ -162,12 +181,12 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
           }
       }
       this.arSessionManager!.onError(error.toString());
-    });
+    }); */
   }
 
   Future<void> onRemoveEverything() async {
     anchors.forEach((anchor) {
-      this.arAnchorManager!.removeAnchor(anchor);
+      this.arAnchorManager!.removeAnchor(anchor.name);
     });
     anchors = [];
     //in og code then e do some minor stuff
@@ -204,9 +223,20 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
   }
 
   Future<void> onUploadButtonPressed() async {
-    var uploaded = await this.arAnchorManager!.uploadAnchor(this.anchors.first);
-    if (uploaded ?? false) {
+    String? uploaded =
+        await this.arAnchorManager!.uploadAnchor(this.anchors.first.name);
+    if (uploaded != null) {
       print('caricato');
+      // Show a text message
+      setState(() {
+        this.showTextFlag = true;
+      });
+
+      // Wait for 2 seconds before hiding the text message
+      await Future.delayed(Duration(seconds: 2));
+      setState(() {
+        this.showTextFlag = false;
+      });
     } else {
       this.arSessionManager!.onError("Upload failed");
     }
