@@ -1,16 +1,13 @@
 package io.carius.lars.ar_flutter_plugin
 
 
-import android.R
 import android.app.Activity
 import android.app.Application
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
@@ -21,15 +18,12 @@ import com.google.ar.sceneform.ux.*
 import com.microsoft.azure.spatialanchors.*
 import io.carius.lars.ar_flutter_plugin.Serialization.deserializeMatrix4
 import io.carius.lars.ar_flutter_plugin.Serialization.serializeHitResult
-import io.flutter.FlutterInjector
-import io.flutter.embedding.engine.loader.FlutterLoader
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.ArrayList
 import kotlin.collections.set
 
 
@@ -53,7 +47,7 @@ internal class AndroidARView(
     private val anchorManagerChannel: MethodChannel = MethodChannel(messenger, "aranchors_$id")
 
     // UI variables
-    private lateinit var arSceneView: ArSceneView
+    private var arSceneView: ArSceneView
 
     // Setting defaults
     private var footprintSelectionVisualizer = FootprintSelectionVisualizer()
@@ -68,72 +62,87 @@ internal class AndroidARView(
     private lateinit var sceneUpdateListener: com.google.ar.sceneform.Scene.OnUpdateListener
 
     // Method channel handlers
-    private val onSessionMethodCall =
-        object : MethodChannel.MethodCallHandler {
-            override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-                Log.d(TAG, "AndroidARView onsessionmethodcall reveived a call!")
-                when (call.method) {
-                    "init" -> {
-                        initializeARView(call, result)
-                    }
-                    "dispose" -> {
-                        dispose()
-                    }
-                    else -> {
-                    }
+    private val onSessionMethodCall = object : MethodChannel.MethodCallHandler {
+        override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+            Log.d(TAG, "AndroidARView onsessionmethodcall reveived a call!")
+            when (call.method) {
+                "init" -> {
+                    val argShowPlanes: Boolean? = call.argument<Boolean>("showPlanes")
+                    initializeARView(argShowPlanes)
+                }
+                "dispose" -> {
+                    dispose()
+                }
+                else -> {
+                    Log.d(TAG, call.method + "not supported on sessionManager")
                 }
             }
         }
-    private val onAnchorMethodCall =
-        object : MethodChannel.MethodCallHandler {
-            override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-                when (call.method) {
-                    "addAnchor" -> {
-                        val dict_asset: HashMap<String, Any>? =
-                            call.argument<HashMap<String, Any>>("asset")
-                        val dict_anchor: HashMap<String, Any>? =
-                            call.argument<HashMap<String, Any>>("anchor")
-                        if (dict_asset != null && dict_anchor != null) {
-                            val transform: ArrayList<Double> =
-                                dict_anchor["transformation"] as ArrayList<Double>
-                            val name: String = dict_anchor["name"] as String
-                            val asset: Asset = Asset(dict_asset)
-                            result.success(addAnchor(transform, name, asset))
-                        } else {
-                            result.success(false)
+    }
+    private val onAnchorMethodCall = object : MethodChannel.MethodCallHandler {
+        override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+            when (call.method) {
+                "addAnchor" -> {
+                    val dictAsset: HashMap<String, Any>? = call.argument("asset")
+                    val dictAnchor: HashMap<String, Any>? = call.argument("anchor")
+                    if (dictAsset != null && dictAnchor != null) {
+                        val transform: ArrayList<Double> =
+                            dictAnchor["transformation"] as ArrayList<Double>
+                        val name: String = dictAnchor["name"] as String
+                        val asset = Asset(dictAsset)
+                        result.success(addAnchor(transform, name, asset))
+                    } else {
+                        result.success(false)
+                    }
+                }
+                "removeAnchor" -> {
+                    val anchorName: String? = call.argument("name")
+                    if (anchorName != null) {
+                        result.success(removeAnchor(anchorName))
+                    } else {
+                        result.success(false)
+                    }
+                }
+                "startLocateAnchors" -> {
+                    val assets: List<Map<String, Any>>? = call.argument("assets")
+                    if (assets != null) {
+                        for (map in assets.toTypedArray()) {
+                            nearbyAssets.add(Asset(map))
                         }
-                    }
-                    "removeAnchor" -> {
-                        val anchorName: String = call.argument<String>("name") as String
-                        removeAnchor(anchorName, result) //assetId
-                    }
-                    "startLocateAnchors" -> {
-                        val assets: List<Map<String, Any>>? =
-                            call.argument<List<Map<String, Any>>>("assets")
-                        if (assets != null) {
-                            for (map in assets.toTypedArray()) {
-                                nearbyAssets.add(Asset(map))
+                        var ids: ArrayList<String> = ArrayList()
+                        for (a: Asset in nearbyAssets) {
+                            if (a.anchorId != "" && a.anchorId != null) {
+                                ids.add(a.anchorId!!)
                             }
-                            var ids: ArrayList<String> = ArrayList()
-                            for (a: Asset in nearbyAssets){
-                                if(a.anchorId != "" && a.anchorId!=null){
-                                    ids.add(a.anchorId!!)
-                                }
-                            }
-                            startLocatingNearbyAssets(ids, result)
-                        } else {
-                            result.success(false)
                         }
+                        result.success(startLocatingNearbyAssets(ids))
+                    } else {
+                        result.success(false)
                     }
-                    "uploadAnchor" -> {
-                        val anchorName: String = call.argument<String>("name") as String
+
+                }
+                "uploadAnchor" -> {
+                    val anchorName: String? = call.argument("name")
+                    if (anchorName != null) {
                         uploadAnchor(anchorName, result)
+                    } else {
+                        result.success(false)
                     }
-                    else -> {
+                }
+                "removeCloudAnchor" -> {
+                    val anchorName: String? = call.argument("name")
+                    if (anchorName != null) {
+                        removeCloudAnchor(anchorName, result)
+                    } else {
+                        result.success(false)
                     }
+                }
+                else -> {
+                    Log.d(TAG, call.method + "not supported on anchorManager")
                 }
             }
         }
+    }
 
     override fun getView(): View {
         return arSceneView
@@ -142,7 +151,6 @@ internal class AndroidARView(
     override fun dispose() {
         // Destroy AR session
         Log.d(TAG, "dispose called")
-        sessionManagerChannel.invokeMethod("log", "dispose")
         try {
             onPause()
             onDestroy()
@@ -155,7 +163,6 @@ internal class AndroidARView(
     init {
 
         Log.d(TAG, "Initializing AndroidARView")
-        sessionManagerChannel.invokeMethod("log", "Initializing AndroidARView")
         viewContext = context
 
         arSceneView = ArSceneView(context)
@@ -173,68 +180,59 @@ internal class AndroidARView(
                     ShapeFactory.makeCylinder(0.7f, 0.05f, Vector3(0f, 0f, 0f), mat)
             }
 
-        onResume() // call onResume once to setup initial session
-        // TODO: find out why this does not happen automatically
+        onResume()
     }
 
     private fun setupLifeCycle(context: Context) {
-        activityLifecycleCallbacks =
-            object : Application.ActivityLifecycleCallbacks {
-                override fun onActivityCreated(
-                    activity: Activity,
-                    savedInstanceState: Bundle?
-                ) {
-                    Log.d(TAG, "onActivityCreated")
-                    sessionManagerChannel.invokeMethod("log", "onActivityCreated")
-                }
-
-                override fun onActivityStarted(activity: Activity) {
-                    Log.d(TAG, "onActivityStarted")
-                    sessionManagerChannel.invokeMethod("log", "onActivityStarted")
-                }
-
-                override fun onActivityResumed(activity: Activity) {
-                    Log.d(TAG, "onActivityResumed")
-                    sessionManagerChannel.invokeMethod("log", "onActivityResumed")
-                    onResume()
-                }
-
-                override fun onActivityPaused(activity: Activity) {
-                    Log.d(TAG, "onActivityPaused")
-                    sessionManagerChannel.invokeMethod("log", "onActivityPaused")
-                    onPause()
-                }
-
-                override fun onActivityStopped(activity: Activity) {
-                    Log.d(TAG, "onActivityStopped")
-                    sessionManagerChannel.invokeMethod("log", "onActivityStopped")
-                    onPause()
-                }
-
-                override fun onActivitySaveInstanceState(
-                    activity: Activity,
-                    outState: Bundle
-                ) {
-                }
-
-                override fun onActivityDestroyed(activity: Activity) {
-                    Log.d(TAG, "onActivityDestroyed")
-                    sessionManagerChannel.invokeMethod("log", "onActivityDestroyed")
-                }
+        activityLifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityCreated(
+                activity: Activity, savedInstanceState: Bundle?
+            ) {
+                Log.d(TAG, "onActivityCreated")
             }
+
+            override fun onActivityStarted(activity: Activity) {
+                Log.d(TAG, "onActivityStarted")
+            }
+
+            override fun onActivityResumed(activity: Activity) {
+                Log.d(TAG, "onActivityResumed")
+                onResume()
+            }
+
+            override fun onActivityPaused(activity: Activity) {
+                Log.d(TAG, "onActivityPaused")
+                onPause()
+            }
+
+            override fun onActivityStopped(activity: Activity) {
+                Log.d(TAG, "onActivityStopped")
+                onPause()
+            }
+
+            override fun onActivitySaveInstanceState(
+                activity: Activity, outState: Bundle
+            ) {
+            }
+
+            override fun onActivityDestroyed(activity: Activity) {
+                Log.d(TAG, "onActivityDestroyed")
+            }
+        }
 
         activity.application.registerActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
     }
 
     fun onResume() {
-        sessionManagerChannel.invokeMethod("log", "onResume")
         // Create session if there is none
         if (arSceneView.session == null) {
             Log.d(TAG, "ARSceneView session is null. Trying to initialize")
             try {
                 var session: Session?
-                if (ArCoreApk.getInstance().requestInstall(activity, mUserRequestedInstall) ==
-                    ArCoreApk.InstallStatus.INSTALL_REQUESTED
+                if (ArCoreApk.getInstance().requestInstall(
+                        activity,
+                        mUserRequestedInstall
+                    ) == ArCoreApk.InstallStatus.INSTALL_REQUESTED
                 ) {
                     Log.d(TAG, "Install of ArCore APK requested")
                     session = null
@@ -254,22 +252,17 @@ internal class AndroidARView(
                     config.focusMode = Config.FocusMode.AUTO
                     session.configure(config)
                     arSceneView.setupSession(session)
-                    azureSpatialAnchorsManager =
-                        AzureSpatialAnchorsManager(arSceneView.session)
+                    azureSpatialAnchorsManager = AzureSpatialAnchorsManager(arSceneView.session)
 
-                    azureSpatialAnchorsManager.addAnchorLocatedListener(
-                        AnchorLocatedListener { event ->
-                            onAnchorLocated(event)
-                        })
+                    azureSpatialAnchorsManager.addAnchorLocatedListener(AnchorLocatedListener { event ->
+                        onAnchorLocated(event)
+                    })
                 }
             } catch (ex: UnavailableUserDeclinedInstallationException) {
                 // Display an appropriate message to the user zand return gracefully.
                 Toast.makeText(
-                    activity,
-                    "TODO: handle exception " + ex.localizedMessage,
-                    Toast.LENGTH_LONG
-                )
-                    .show()
+                    activity, "TODO: handle exception " + ex.localizedMessage, Toast.LENGTH_LONG
+                ).show()
                 return
             } catch (ex: UnavailableArcoreNotInstalledException) {
                 Toast.makeText(activity, "Please install ARCore", Toast.LENGTH_LONG).show()
@@ -328,14 +321,11 @@ internal class AndroidARView(
         }
     }
 
-    private fun initializeARView(call: MethodCall, result: MethodChannel.Result) {
-        // Unpack call arguments
-        val argShowPlanes: Boolean? = call.argument<Boolean>("showPlanes")
+    private fun initializeARView(argShowPlanes: Boolean?) {
 
         arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
             onTap(
-                hitTestResult,
-                motionEvent
+                hitTestResult, motionEvent
             )
         }
 
@@ -358,13 +348,10 @@ internal class AndroidARView(
 
         // Configure whether or not detected planes should be shown
         arSceneView.planeRenderer.isVisible = argShowPlanes == true
-
-        result.success(null)
     }
 
     private fun onTap(hitTestResult: HitTestResult, motionEvent: MotionEvent?): Boolean {
         val frame = arSceneView.arFrame
-        Log.d(TAG, "onTap")
         if (hitTestResult.node != null && motionEvent?.action == MotionEvent.ACTION_DOWN) {
             Log.d(TAG, "onTapNode")
             anchorManagerChannel.invokeMethod("onNodeTap", hitTestResult.node!!.name)
@@ -378,8 +365,7 @@ internal class AndroidARView(
             val serializedPlaneAndPointHitResults: ArrayList<HashMap<String, Any>> =
                 ArrayList(planeAndPointHitResults.map { serializeHitResult(it) })
             sessionManagerChannel.invokeMethod(
-                "onPlaneOrPointTap",
-                serializedPlaneAndPointHitResults
+                "onPlaneOrPointTap", serializedPlaneAndPointHitResults
             )
             return true
         }
@@ -387,7 +373,7 @@ internal class AndroidARView(
     }
 
     private fun addAnchor(transform: ArrayList<Double>, anchorName: String, asset: Asset): Boolean {
-        Log.d(TAG, "addAnchor (local)")
+        Log.d(TAG, "addAnchor $anchorName")
         return try {
             val position = floatArrayOf(
                 deserializeMatrix4(transform).second.x,
@@ -410,26 +396,21 @@ internal class AndroidARView(
         }
     }
 
-    private fun removeAnchor(name: String, result: MethodChannel.Result) {
-        try {
-            val visual: AnchorVisualAsset =
-                anchorVisuals[name] as AnchorVisualAsset
-            visual.localAnchor.detach()
-            for (node in visual.node.children) {
-                node.setParent(null)
-            }
-            visual.node.setParent(null)
+    private fun removeAnchor(name: String): Boolean {
+        Log.d(TAG, "removeAnchor $name")
+        return try {
+            val visual: AnchorVisualAsset = anchorVisuals[name] as AnchorVisualAsset
+            visual.dispose()
             anchorVisuals.remove(name)
-            result.success(true)
+            true
         } catch (e: Exception) {
-            result.success(false)
+            false
         }
-
     }
 
     private fun uploadAnchor(name: String, result: MethodChannel.Result) {
-        val visual: AnchorVisualAsset =
-            anchorVisuals[name] as AnchorVisualAsset
+        Log.d(TAG, "uploadAnchor $name")
+        val visual: AnchorVisualAsset = anchorVisuals[name] as AnchorVisualAsset
         val cloudAnchor = CloudSpatialAnchor()
         cloudAnchor.localAnchor = visual.localAnchor
         visual.cloudAnchor = cloudAnchor
@@ -441,49 +422,69 @@ internal class AndroidARView(
         cal.add(Calendar.DATE, 7)
         val oneWeekFromNow = cal.time
         cloudAnchor.expiration = oneWeekFromNow
-        try {
-            var anchorSaveResult =
-                azureSpatialAnchorsManager.createAnchorAsync(visual.cloudAnchor!!)
-            if (anchorSaveResult == null) {
-                sessionManagerChannel.invokeMethod(
-                    "onError",
-                    listOf("Error initializing cloud anchor mode: Session is null")
-                )
-                result.success(null)
-            } else {
-                anchorSaveResult.thenAccept { csa: CloudSpatialAnchor ->
-                    result.success(csa.identifier);
-                }
-            }
-        } catch (e: Exception) {
+
+        azureSpatialAnchorsManager.createAnchorAsync(visual.cloudAnchor!!).exceptionally { thrown ->
+            thrown.printStackTrace()
             result.success(null)
+            null
+        }.thenAccept { csa ->
+            if (csa != null) {
+                result.success(csa.identifier);
+            } else {
+                result.success(null)
+            }
         }
 
     }
 
-    private fun startLocatingNearbyAssets(ids: ArrayList<String>, result: MethodChannel.Result) {
+    private fun removeCloudAnchor(name: String, result: MethodChannel.Result) {
+        Log.d(TAG, "removeCloudAnchor $name")
+        val visual: AnchorVisualAsset = anchorVisuals[name] as AnchorVisualAsset
+
+        azureSpatialAnchorsManager.deleteAnchorAsync(visual.cloudAnchor!!).exceptionally { thrown ->
+            thrown.printStackTrace()
+            result.success(false)
+            null
+        }.thenAccept { _ ->
+            Log.d(TAG, "Anchor Deleted")
+            Log.d(TAG, visual.toString())
+            activity.runOnUiThread {
+                visual.dispose()
+            }
+            Log.d(TAG, visual.toString())
+            Log.d(TAG, "Anchor Disposed")
+            anchorVisuals.remove(name)
+            Log.d(TAG, "Anchor removed from list")
+            result.success(true)
+            Log.d(TAG, "After result")
+        }
+    }
+
+    private fun startLocatingNearbyAssets(ids: ArrayList<String>): Boolean {
+        Log.d(TAG, "startLocatingNearbyAssets")
         val criteria = AnchorLocateCriteria()
-        Log.d(TAG, ids.toString());
-        criteria.identifiers = ids.toTypedArray<String>()
-        sessionManagerChannel.invokeMethod("log", "startLocatingNearbyAssets"+ids.toString())
-        try {
+        criteria.identifiers = ids.toTypedArray()
+        return try {
             if (this::azureSpatialAnchorsManager.isInitialized) {
                 azureSpatialAnchorsManager.stopLocating()
                 azureSpatialAnchorsManager.startLocating(criteria)
-                sessionManagerChannel.invokeMethod("log", "realStart")
+                true
+            } else {
+                false
             }
-            result.success(true)
         } catch (e: Exception) {
-            result.success(false)
+            false
         }
     }
 
     private fun onAnchorLocated(event: AnchorLocatedEvent) {
         val status = event.status
         if (status == LocateAnchorStatus.Located) {
-            Log.d(TAG, "renderLocatedAnchor: rendering located anchor" + event.anchor.identifier)
+            Log.d(TAG, "onAnchorLocated" + event.anchor.identifier)
             var cloudAnchor = event.anchor
-            var theAsset = Asset("Unknown", "Unknown", cloudAnchor.identifier, null, null, ArrayList(0), ArrayList(0))
+            var theAsset = Asset(
+                "Unknown", "Unknown", cloudAnchor.identifier, null, null, ArrayList(0), ArrayList(0)
+            )
             for (asset in nearbyAssets) {
                 if (asset.anchorId == cloudAnchor.identifier) {
                     theAsset = asset

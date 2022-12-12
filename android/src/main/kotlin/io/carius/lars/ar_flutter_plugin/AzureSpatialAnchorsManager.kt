@@ -83,12 +83,12 @@ internal class AzureSpatialAnchorsManager(arCoreSession: Session?) {
     }
 
 
-    fun createAnchorAsync(anchor: CloudSpatialAnchor): CompletableFuture<CloudSpatialAnchor>? {
+    fun createAnchorAsync(anchor: CloudSpatialAnchor): CompletableFuture<CloudSpatialAnchor> {
         return toEmptyCompletableFuture(spatialAnchorsSession.createAnchorAsync(anchor))
-                .thenApply { anchor }
+            .thenApply{ anchor }
     }
 
-    fun deleteAnchorAsync(anchor: CloudSpatialAnchor?): CompletableFuture<*>? {
+    fun deleteAnchorAsync(anchor: CloudSpatialAnchor?): CompletableFuture<*> {
         return toEmptyCompletableFuture(spatialAnchorsSession.deleteAnchorAsync(anchor))
     }
 
@@ -138,10 +138,7 @@ internal class AzureSpatialAnchorsManager(arCoreSession: Session?) {
         return CompletableFuture.runAsync(Runnable {
             try {
                 future.get()
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
-                throw RuntimeException(e)
-            } catch (e: ExecutionException) {
+            } catch (e: Exception) {
                 e.printStackTrace()
                 throw RuntimeException(e)
             }
