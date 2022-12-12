@@ -51,11 +51,11 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
           ARView(
             onARViewCreated: onARViewCreated,
             planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
-            creationParams: {
+            /*creationParams: {
               "assets": [
                 {"id": "1234", "cod": "Codice", "ar_anchor": ""}
               ]
-            },
+            },*/
           ),
           Align(
             alignment: FractionalOffset.bottomCenter,
@@ -99,7 +99,7 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
 
     this.arSessionManager!.onInitialize(
           showPlanes: true,
-          showAnimatedGuide: true,
+          //showAnimatedGuide: true,
           customPlaneTexturePath: "Images/triangle.png",
         );
     this.arObjectManager!.onInitialize();
@@ -167,7 +167,7 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
 
   Future<void> onRemoveEverything() async {
     anchors.forEach((anchor) {
-      this.arAnchorManager!.removeAnchor(anchor);
+      this.arAnchorManager!.removeAnchor(anchor.name);
     });
     anchors = [];
     //in og code then e do some minor stuff
@@ -204,8 +204,9 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
   }
 
   Future<void> onUploadButtonPressed() async {
-    var uploaded = await this.arAnchorManager!.uploadAnchor(this.anchors.first);
-    if (uploaded ?? false) {
+    String? uploaded =
+        await this.arAnchorManager!.uploadAnchor(this.anchors.first.name);
+    if (uploaded != null) {
       print('caricato');
     } else {
       this.arSessionManager!.onError("Upload failed");
