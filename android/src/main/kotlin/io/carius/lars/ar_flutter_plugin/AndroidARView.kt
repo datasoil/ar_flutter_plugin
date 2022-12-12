@@ -29,6 +29,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.ArrayList
 import kotlin.collections.set
 
 
@@ -115,8 +116,8 @@ internal class AndroidARView(
                             }
                             var ids: ArrayList<String> = ArrayList()
                             for (a: Asset in nearbyAssets){
-                                if(a.ARanchorID != "" && a.ARanchorID!=null){
-                                    ids.add(a.ARanchorID)
+                                if(a.anchorId != "" && a.anchorId!=null){
+                                    ids.add(a.anchorId!!)
                                 }
                             }
                             startLocatingNearbyAssets(ids, result)
@@ -482,15 +483,15 @@ internal class AndroidARView(
         if (status == LocateAnchorStatus.Located) {
             Log.d(TAG, "renderLocatedAnchor: rendering located anchor" + event.anchor.identifier)
             var cloudAnchor = event.anchor
-            var theAsset = Asset("Unknown", "Unknown", cloudAnchor.identifier)
+            var theAsset = Asset("Unknown", "Unknown", cloudAnchor.identifier, null, null, ArrayList(0), ArrayList(0))
             for (asset in nearbyAssets) {
-                if (asset.ARanchorID == cloudAnchor.identifier) {
+                if (asset.anchorId == cloudAnchor.identifier) {
                     theAsset = asset
                     break
                 }
             }
             activity.runOnUiThread {
-                val foundVisual = AnchorVisualAsset(cloudAnchor.localAnchor, theAsset, theAsset.ID)
+                val foundVisual = AnchorVisualAsset(cloudAnchor.localAnchor, theAsset, theAsset.id)
                 foundVisual.cloudAnchor = cloudAnchor
                 foundVisual.render(viewContext, arSceneView.scene)
                 anchorVisuals[foundVisual.name] = foundVisual
