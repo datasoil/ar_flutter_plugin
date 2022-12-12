@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 typedef AnchorUploadedHandler = void Function(ARAnchor arAnchor);
 typedef AnchorDownloadedHandler = ARAnchor Function(
     Map<String, dynamic> serializedAnchor);
+// Type definitions to enforce a consistent use of the API
+typedef NodeTapResultHandler = void Function(String node);
 
 /// Handles all anchor-related functionality of an [ARView], including configuration and usage of collaborative sessions
 class ARAnchorManager {
@@ -16,6 +18,9 @@ class ARAnchorManager {
 
   /// Reference to all anchors that are being uploaded to the google cloud anchor API
   List<ARAnchor> pendingAnchors = [];
+
+  /// Callback function that is invoked when the platform detects a tap on a node
+  NodeTapResultHandler? onNodeTap;
 
   /// Callback that is triggered once an anchor has successfully been uploaded to the google cloud anchor API
   AnchorUploadedHandler? onAnchorUploaded;
@@ -31,16 +36,6 @@ class ARAnchorManager {
     }
   }
 
-//<<<<<<< refactor
-//=======
-  /// Activates collaborative AR mode (using Google Cloud Anchors)
-  // modificato per prendere le ASA
-  //initAzureCloudAnchorMode() async {
-  //  _channel.invokeMethod<bool>('initAzureCloudAnchorMode', {});
-  //}
-
-  //gestisce le method calls
-//>>>>>>> intern
   Future<dynamic> _platformCallHandler(MethodCall call) async {
     if (debug) {
       print('_platformCallHandler call ${call.method} ${call.arguments}');
@@ -49,6 +44,12 @@ class ARAnchorManager {
       switch (call.method) {
         case 'onError':
           print(call.arguments);
+          break;
+        case 'onNodeTap':
+          if (onNodeTap != null) {
+            final tappedNode = call.arguments as String;
+            onNodeTap!(tappedNode);
+          }
           break;
         default:
           if (debug) {
@@ -59,11 +60,6 @@ class ARAnchorManager {
       print('Error caught: ' + e.toString());
     }
     return Future.value();
-  }
-
-  /// Activates collaborative AR mode (using Google Cloud Anchors)
-  Future<bool?> initAzureCloudAnchorMode() async {
-    return await _channel.invokeMethod<bool>('initAzureCloudAnchorMode');
   }
 
   /// Start search for anchors ids

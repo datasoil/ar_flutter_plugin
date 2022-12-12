@@ -49,7 +49,6 @@ internal class AndroidARView(
 
     // Platform channels
     private val sessionManagerChannel: MethodChannel = MethodChannel(messenger, "arsession_$id")
-    private val objectManagerChannel: MethodChannel = MethodChannel(messenger, "arobjects_$id")
     private val anchorManagerChannel: MethodChannel = MethodChannel(messenger, "aranchors_$id")
 
     // UI variables
@@ -84,13 +83,6 @@ internal class AndroidARView(
                 }
             }
         }
-    private val onObjectMethodCall =
-        object : MethodChannel.MethodCallHandler {
-            override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-                Log.d(TAG, "AndroidARView onobjectmethodcall reveived a call!")
-                Log.d(TAG, call.method)
-            }
-        }
     private val onAnchorMethodCall =
         object : MethodChannel.MethodCallHandler {
             override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -123,8 +115,8 @@ internal class AndroidARView(
                             }
                             var ids: ArrayList<String> = ArrayList()
                             for (a: Asset in nearbyAssets){
-                                if(!a.arAnchorID.equals("")){
-                                    ids.add(a.arAnchorID)
+                                if(a.ARanchorID != "" && a.ARanchorID!=null){
+                                    ids.add(a.ARanchorID)
                                 }
                             }
                             startLocatingNearbyAssets(ids, result)
@@ -170,7 +162,6 @@ internal class AndroidARView(
         setupLifeCycle(context)
 
         sessionManagerChannel.setMethodCallHandler(onSessionMethodCall)
-        objectManagerChannel.setMethodCallHandler(onObjectMethodCall)
         anchorManagerChannel.setMethodCallHandler(onAnchorMethodCall)
 
         //Original visualizer: com.google.ar.sceneform.ux.R.raw.sceneform_footprint
@@ -338,7 +329,6 @@ internal class AndroidARView(
 
     private fun initializeARView(call: MethodCall, result: MethodChannel.Result) {
         // Unpack call arguments
-        val argPlaneDetectionConfig: Int? = call.argument<Int>("planeDetectionConfig")
         val argShowPlanes: Boolean? = call.argument<Boolean>("showPlanes")
 
         arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
@@ -362,20 +352,7 @@ internal class AndroidARView(
         if (config == null) {
             sessionManagerChannel.invokeMethod("onError", listOf("session is null"))
         }
-        when (argPlaneDetectionConfig) {
-            1 -> {
-                config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
-            }
-            2 -> {
-                config?.planeFindingMode = Config.PlaneFindingMode.VERTICAL
-            }
-            3 -> {
-                config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-            }
-            else -> {
-                config?.planeFindingMode = Config.PlaneFindingMode.DISABLED
-            }
-        }
+        config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
         arSceneView.session?.configure(config)
 
         // Configure whether or not detected planes should be shown
@@ -389,7 +366,7 @@ internal class AndroidARView(
         Log.d(TAG, "onTap")
         if (hitTestResult.node != null && motionEvent?.action == MotionEvent.ACTION_DOWN) {
             Log.d(TAG, "onTapNode")
-            objectManagerChannel.invokeMethod("onNodeTap", hitTestResult.node!!.name)
+            anchorManagerChannel.invokeMethod("onNodeTap", hitTestResult.node!!.name)
             return true
         }
         if (motionEvent != null && motionEvent.action == MotionEvent.ACTION_DOWN) {
@@ -502,24 +479,18 @@ internal class AndroidARView(
 
     private fun onAnchorLocated(event: AnchorLocatedEvent) {
         val status = event.status
-        sessionManagerChannel.invokeMethod("log", "onAnchorLocated")
         if (status == LocateAnchorStatus.Located) {
-            sessionManagerChannel.invokeMethod("log", "real Located")
             Log.d(TAG, "renderLocatedAnchor: rendering located anchor" + event.anchor.identifier)
             var cloudAnchor = event.anchor
-            //get the asset name to print
-            //get the asset name to print
-            var theAsset = Asset("porcodio", "PORCODIO", cloudAnchor.identifier)
-            //synchronized(nearbyAssets) {
-            //    for (asset in nearbyAssets) {
-            //        if (asset.arAnchorID.equals(cloudAnchor.identifier)) {
-            //            theAsset = asset
-            //            break
-            //        }
-            //    }
-            //}
+            var theAsset = Asset("Unknown", "Unknown", cloudAnchor.identifier)
+            for (asset in nearbyAssets) {
+                if (asset.ARanchorID == cloudAnchor.identifier) {
+                    theAsset = asset
+                    break
+                }
+            }
             activity.runOnUiThread {
-                val foundVisual = AnchorVisualAsset(cloudAnchor.localAnchor, theAsset, theAsset.id)
+                val foundVisual = AnchorVisualAsset(cloudAnchor.localAnchor, theAsset, theAsset.ID)
                 foundVisual.cloudAnchor = cloudAnchor
                 foundVisual.render(viewContext, arSceneView.scene)
                 anchorVisuals[foundVisual.name] = foundVisual
