@@ -82,7 +82,8 @@ internal class AzureSpatialAnchorsManager(arCoreSession: Session?) {
         spatialAnchorsSession.locationProvider = locationProvider
     }
 
-
+    // creates an asynchronous operation that creates a cloud anchor and then returns 
+    //the same anchor once the operation is complete
     fun createAnchorAsync(anchor: CloudSpatialAnchor): CompletableFuture<CloudSpatialAnchor>? {
         return toEmptyCompletableFuture(spatialAnchorsSession.createAnchorAsync(anchor))
                 .thenApply { anchor }
