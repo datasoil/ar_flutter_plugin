@@ -1,11 +1,11 @@
-import 'package:ar_flutter_plugin/managers/ar_location_manager.dart';
+//import 'package:ar_flutter_plugin/managers/ar_location_manager.dart';
 import 'package:ar_flutter_plugin/managers/ar_session_manager.dart';
-import 'package:ar_flutter_plugin/managers/ar_object_manager.dart';
+//import 'package:ar_flutter_plugin/managers/ar_object_manager.dart';
 import 'package:ar_flutter_plugin/managers/ar_anchor_manager.dart';
 import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:flutter/material.dart';
 import 'package:ar_flutter_plugin/ar_flutter_plugin.dart';
-import 'package:ar_flutter_plugin/datatypes/config_planedetection.dart';
+//import 'package:ar_flutter_plugin/datatypes/config_planedetection.dart';
 import 'package:ar_flutter_plugin/datatypes/hittest_result_types.dart';
 import 'package:ar_flutter_plugin/models/ar_node.dart';
 import 'package:ar_flutter_plugin/models/ar_hittest_result.dart';
@@ -21,9 +21,9 @@ class CloudAnchorWidget extends StatefulWidget {
 class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
   //assegnati in void onARViewCreated()
   ARSessionManager? arSessionManager;
-  ARObjectManager? arObjectManager;
+  //ARObjectManager? arObjectManager;
   ARAnchorManager? arAnchorManager;
-  ARLocationManager? arLocationManager;
+  //ARLocationManager? arLocationManager;
 
   Map<String, ARNode> nodes = {};
   List<ARAnchor> anchors = [];
@@ -48,15 +48,14 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
         body: Container(
             child: Stack(children: [
           //init della vista AR su assi xy e z
-          ARView(
-            onARViewCreated: onARViewCreated,
-            planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
-            /*creationParams: {
+          ARView(onARViewCreated: onARViewCreated
+              //planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical, //removed bc default xyz
+              /*creationParams: {
               "assets": [
                 {"id": "1234", "cod": "Codice", "ar_anchor": ""}
               ]
             },*/
-          ),
+              ),
           Align(
             alignment: FractionalOffset.bottomCenter,
             child: Row(
@@ -89,29 +88,32 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
 
   void onARViewCreated(
       ARSessionManager arSessionManager,
-      ARObjectManager arObjectManager,
-      ARAnchorManager arAnchorManager,
-      ARLocationManager arLocationManager) {
+      //ARObjectManager arObjectManager,
+      ARAnchorManager arAnchorManager
+      //ARLocationManager arLocationManager
+      ) {
     this.arSessionManager = arSessionManager;
-    this.arObjectManager = arObjectManager;
+    //this.arObjectManager = arObjectManager;
     this.arAnchorManager = arAnchorManager;
-    this.arLocationManager = arLocationManager;
+    //this.arLocationManager = arLocationManager;
 
     this.arSessionManager!.onInitialize(
           showPlanes: true,
           //showAnimatedGuide: true,
           customPlaneTexturePath: "Images/triangle.png",
         );
-    this.arObjectManager!.onInitialize();
+    //this.arObjectManager!.onInitialize();
     //aggiunta: default usa Google Cloud Anchors
-    this.arAnchorManager!.initAzureCloudAnchorMode();
+    //this.arAnchorManager!.initAzureCloudAnchorMode(); //ASA mode is only mode
 
     this.arSessionManager!.onPlaneOrPointTap = onPlaneOrPointTapped;
-    this.arObjectManager!.onNodeTap = onNodeTapped;
+    //this.arObjectManager!.onNodeTap = onNodeTapped;
     //removed from og:
     //this.arAnchorManager!.onAnchorUploaded = onAnchorUploaded;
     //this.arAnchorManager!.onAnchorDownloaded = onAnchorDownloaded;
 
+    //location manager has been removed
+    /*
     this
         .arLocationManager!
         .startLocationUpdates()
@@ -162,7 +164,7 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
           }
       }
       this.arSessionManager!.onError(error.toString());
-    });
+    }); */
   }
 
   Future<void> onRemoveEverything() async {
