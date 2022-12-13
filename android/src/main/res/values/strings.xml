@@ -15,4 +15,7 @@
     <string name="back_button_text">Back</string>
     <string name="create_button_text">Create</string>
     <string name="locate_button_text">Locate</string>
+    <string name="hint_scan_for_creation">💡 Look around the anchor to scan the environment.</string>
+    <string name="required_scan_progress">Required scan progress:</string>
+    <string name="recommended_scan_progress">Recommended scan progress:</string>
 </resources>

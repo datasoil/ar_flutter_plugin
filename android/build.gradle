@@ -56,6 +56,7 @@ dependencies {
 
     implementation "com.microsoft.azure.spatialanchors:spatialanchors_jni:[${azureSpatialAnchorsSdkVersion}]"
     implementation "com.microsoft.azure.spatialanchors:spatialanchors_java:[${azureSpatialAnchorsSdkVersion}]"
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 }
 
 afterEvaluate {

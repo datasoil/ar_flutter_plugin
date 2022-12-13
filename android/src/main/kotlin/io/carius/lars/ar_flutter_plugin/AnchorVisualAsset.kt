@@ -73,13 +73,9 @@ internal class AnchorVisualAsset(_localAnchor: Anchor, private val asset: Asset,
     fun dispose() {
         Log.d(TAG, "dispose")
         this.node.renderable=null
-        Log.d(TAG, "renderable")
         this.node.setParent(null)
-        Log.d(TAG, "parent")
         this.node.anchor=null
-        Log.d(TAG, "anchor")
         this.localAnchor.detach()
-        Log.d(TAG, "detached anchor")
 
     }
 
