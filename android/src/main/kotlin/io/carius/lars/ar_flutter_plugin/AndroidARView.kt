@@ -9,13 +9,15 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
+import android.widget.TextView
+import android.widget.LinearLayout
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
 import com.google.ar.sceneform.*
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.*
 import com.google.ar.sceneform.ux.*
-import com.microsoft.azure.spatialanchors.*
+import com.microsoft.azure.spatialanchors.* //import all ASA stuff
 import io.carius.lars.ar_flutter_plugin.Serialization.deserializeMatrix4
 import io.carius.lars.ar_flutter_plugin.Serialization.serializeHitResult
 import io.flutter.plugin.common.BinaryMessenger
@@ -23,6 +25,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import java.util.*
+import java.text.DecimalFormat
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
 
@@ -34,6 +37,10 @@ internal class AndroidARView(
     id: Int,
     creationParams: Map<String?, Any?>?
 ) : PlatformView {
+    private var enoughDataForSaving : Boolean = false
+    private val progressLock : Object = Object()
+    private var createByTapEnabled : Boolean = true
+
     // constants
     private val TAG: String = AndroidARView::class.java.name
 
@@ -48,6 +55,18 @@ internal class AndroidARView(
 
     // UI variables
     private var arSceneView: ArSceneView
+    //private var scanProgressText: TextView
+    //private var arFragment : ArFragment
+    //private var backButton : Button
+    //private var saveAnchorButton : Button
+    //private var cancelAnchorButton : Button
+    //private var gridSwitch : Switch
+    private var anchorEditButtons : LinearLayout = LinearLayout(context)
+    private var scanProgressText : TextView = TextView(context)
+    //private var sceneView : ArSceneView
+    private var statusText : TextView = TextView(context)
+    //private var reactContext : ThemedReactContext
+    //private var assetselect :View
 
     // Setting defaults
     private var footprintSelectionVisualizer = FootprintSelectionVisualizer()
@@ -64,7 +83,7 @@ internal class AndroidARView(
     // Method channel handlers
     private val onSessionMethodCall = object : MethodChannel.MethodCallHandler {
         override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-            Log.d(TAG, "AndroidARView onsessionmethodcall reveived a call!")
+            Log.d(TAG, "AndroidARView onSessionMethodCall reveived a call!")
             when (call.method) {
                 "init" -> {
                     val argShowPlanes: Boolean? = call.argument<Boolean>("showPlanes")
@@ -257,6 +276,9 @@ internal class AndroidARView(
                     azureSpatialAnchorsManager.addAnchorLocatedListener(AnchorLocatedListener { event ->
                         onAnchorLocated(event)
                     })
+                    azureSpatialAnchorsManager.addSessionUpdatedListener(SessionUpdatedListener { event -> 
+                        onSessionUpdated(event)
+                    })
                 }
             } catch (ex: UnavailableUserDeclinedInstallationException) {
                 // Display an appropriate message to the user zand return gracefully.
@@ -423,7 +445,8 @@ internal class AndroidARView(
         val oneWeekFromNow = cal.time
         cloudAnchor.expiration = oneWeekFromNow
 
-        azureSpatialAnchorsManager.createAnchorAsync(visual.cloudAnchor!!).exceptionally { thrown ->
+        //here we use ASA's tools
+        azureSpatialAnchorsManager.createAnchorAsync(visual.cloudAnchor!!)!!.exceptionally { thrown ->
             thrown.printStackTrace()
             result.success(null)
             null
@@ -498,6 +521,30 @@ internal class AndroidARView(
                 anchorVisuals[foundVisual.name] = foundVisual
             }
 
+        }
+    }
+
+    //makes sure there are enough frames
+    //SessionUpdatedEvent is from ASA cloud
+    private fun onSessionUpdated(args: SessionUpdatedEvent) {
+        var progress = args.getStatus().getRecommendedForCreateProgress();
+        enoughDataForSaving = progress >= 1.0;
+        synchronized (progressLock) {
+            if (!createByTapEnabled) {
+                var decimalFormat : DecimalFormat = DecimalFormat("00");
+                activity.runOnUiThread {
+                    var progressMessage : String = "Scan progress is " + decimalFormat.format(Math.min(1.0f, progress) * 100) + "%"
+                    scanProgressText.setText(progressMessage)
+                }
+
+                if (enoughDataForSaving && anchorEditButtons.getVisibility() != View.VISIBLE) {
+                    // Enable the save button
+                    activity.runOnUiThread {
+                        statusText.setText("Ready to save")
+                        anchorEditButtons.setVisibility(View.VISIBLE)
+                    }
+                }
+            }
         }
     }
 }
