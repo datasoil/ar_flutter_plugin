@@ -1,11 +1,14 @@
 package io.carius.lars.ar_flutter_plugin
 
-
-import android.R
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.opengl.EGL14
+import android.opengl.EGLContext
+import android.opengl.EGLDisplay
+import android.opengl.EGLSurface
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -15,7 +18,6 @@ import android.widget.Toast
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
 import com.google.ar.sceneform.*
-import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.*
 import com.google.ar.sceneform.ux.*
 import com.microsoft.azure.spatialanchors.*
@@ -51,14 +53,11 @@ internal class AndroidARView(
 
     // UI variables
     private var arSceneView: ArSceneView
+    private var isStarted: Boolean = false
     private var showAnimatedGuide: Boolean = false
     private lateinit var animatedGuide: View
     private var showScanProgress: Boolean = false
     private lateinit var scanProgress: View
-
-    // Setting defaults
-    private var footprintSelectionVisualizer = FootprintSelectionVisualizer()
-
 
     private lateinit var azureSpatialAnchorsManager: AzureSpatialAnchorsManager
     private val anchorVisuals: ConcurrentHashMap<String, AnchorVisualAsset> = ConcurrentHashMap()
@@ -66,7 +65,15 @@ internal class AndroidARView(
     // Assets
     private var nearbyAssets: ArrayList<Asset> = ArrayList()
 
-    private lateinit var sceneUpdateListener: com.google.ar.sceneform.Scene.OnUpdateListener
+    private var sceneUpdateListener: Scene.OnUpdateListener
+
+    //EGL variables
+    companion object {
+        private var savedContext: EGLContext? = null
+        private var savedDisplay: EGLDisplay? = null
+        private var savedReadSurface: EGLSurface? = null
+        private var savedDrawSurface: EGLSurface? = null
+    }
 
     // Method channel handlers
     private val onSessionMethodCall = object : MethodChannel.MethodCallHandler {
@@ -77,7 +84,19 @@ internal class AndroidARView(
                     initializeARView(argShowPlanes)
                 }
                 "dispose" -> {
+                    Log.d(TAG, call.method + "called in sessionmanager")
                     dispose()
+                    result.success(null)
+                }
+                "pause" -> {
+                    Log.d(TAG, call.method + "called in sessionmanager")
+                    onPause()
+                    result.success(null)
+                }
+                "resume" -> {
+                    Log.d(TAG, call.method + "called in sessionmanager")
+                    onResume()
+                    result.success(null)
                 }
                 else -> {
                     Log.d(TAG, call.method + "not supported on sessionManager")
@@ -150,6 +169,65 @@ internal class AndroidARView(
         }
     }
 
+    init {
+        //costruttore
+        //queste operazioni vengono eseguite solo alla costruzione della view
+        Log.d(TAG, "Initializing AndroidARView")
+        viewContext = context
+        //creo la scena
+        arSceneView = ArSceneView(context)
+        //setup lifecycle per gestire gli eventi della main activity(flutter activity)
+        //ossia cosa deve fare il plugin se pauso/chiudo/riapro l'app
+        setupLifeCycle(context)
+
+        sessionManagerChannel.setMethodCallHandler(onSessionMethodCall)
+        anchorManagerChannel.setMethodCallHandler(onAnchorMethodCall)
+        //aggiungo ontouch listener sulla scena (tap sui plane, tap sul nodo)
+        arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
+            onTap(hitTestResult, motionEvent)
+        }
+        //mostra sempre la mano che si muove fin che cerco i plane
+        showAnimatedGuide = true
+        val view = activity.findViewById(android.R.id.content) as ViewGroup
+        animatedGuide = activity.layoutInflater.inflate(
+            com.google.ar.sceneform.ux.R.layout.sceneform_instructions_plane_discovery, null
+        )
+        view.addView(animatedGuide)
+
+        //inizializzo il listener sull'aggiornamento della scena
+        sceneUpdateListener =
+            Scene.OnUpdateListener { frameTime: FrameTime ->
+                val frame = arSceneView.arFrame
+                if(frame!=null){
+                    if (this::azureSpatialAnchorsManager.isInitialized) {
+                        //se ASA session è inizializzata propago l'update
+                        azureSpatialAnchorsManager.update(frame)
+                    }
+                    //tolgo la mano che si muove se ho trovato i plane
+                    if (showAnimatedGuide && arSceneView.arFrame != null) {
+                        for (plane in arSceneView.arFrame!!.getUpdatedTrackables(Plane::class.java)) {
+                            if (plane.trackingState === TrackingState.TRACKING) {
+                                val view = activity.findViewById(android.R.id.content) as ViewGroup
+                                view.removeView(animatedGuide)
+                                showAnimatedGuide = false
+                                break
+                            }
+                        }
+                    }
+                }else{
+                    Log.d(TAG, "OnUpdateListener proke e frame null")
+                }
+            }
+
+        arSceneView.scene?.addOnUpdateListener(sceneUpdateListener)
+
+        // Configure whether or not detected planes should be shown
+        arSceneView.planeRenderer.isVisible = true
+
+        //lancio onResume a mano
+        onResume()
+    }
+
     override fun getView(): View {
         return arSceneView
     }
@@ -158,35 +236,12 @@ internal class AndroidARView(
         // Destroy AR session
         Log.d(TAG, "dispose called")
         try {
-            onPause()
+            //onPause()
             onDestroy()
-            ArSceneView.destroyAllResources()
+            //ArSceneView.destroyAllResources()
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    init {
-
-        Log.d(TAG, "Initializing AndroidARView")
-        viewContext = context
-
-        arSceneView = ArSceneView(context)
-
-        setupLifeCycle(context)
-
-        sessionManagerChannel.setMethodCallHandler(onSessionMethodCall)
-        anchorManagerChannel.setMethodCallHandler(onAnchorMethodCall)
-
-        //Original visualizer: com.google.ar.sceneform.ux.R.raw.sceneform_footprint
-
-        MaterialFactory.makeTransparentWithColor(context, Color(255f, 255f, 255f, 0.3f))
-            .thenAccept { mat ->
-                footprintSelectionVisualizer.footprintRenderable =
-                    ShapeFactory.makeCylinder(0.7f, 0.05f, Vector3(0f, 0f, 0f), mat)
-            }
-
-        onResume()
     }
 
     private fun setupLifeCycle(context: Context) {
@@ -208,7 +263,7 @@ internal class AndroidARView(
 
             override fun onActivityPaused(activity: Activity) {
                 Log.d(TAG, "onActivityPaused")
-                onPause()
+                //onPause()
             }
 
             override fun onActivityStopped(activity: Activity) {
@@ -223,6 +278,7 @@ internal class AndroidARView(
 
             override fun onActivityDestroyed(activity: Activity) {
                 Log.d(TAG, "onActivityDestroyed")
+                onDestroy()
             }
         }
 
@@ -230,6 +286,9 @@ internal class AndroidARView(
     }
 
     fun onResume() {
+        //queste istruzioni sono eseguite al resume dell'activity e alla costruzione perchè richiamate in init
+        Log.d(TAG, "onResume")
+        restoreEglContext()
         // Create session if there is none
         if (arSceneView.session == null) {
             Log.d(TAG, "ARSceneView session is null. Trying to initialize")
@@ -251,20 +310,13 @@ internal class AndroidARView(
                     mUserRequestedInstall = false
                     return
                 } else {
+                    //setto la sessione arCore alla mia scena
                     val config = Config(session)
                     config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-                    config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
+                    config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
                     config.focusMode = Config.FocusMode.AUTO
                     session.configure(config)
-                    arSceneView.setupSession(session)
-                    azureSpatialAnchorsManager = AzureSpatialAnchorsManager(arSceneView.session)
-                    azureSpatialAnchorsManager.addSessionUpdatedListener(SessionUpdatedListener { event ->
-                        onSessionUpdate(event)
-                    })
-
-                    azureSpatialAnchorsManager.addAnchorLocatedListener(AnchorLocatedListener { event ->
-                        onAnchorLocated(event)
-                    })
+                    arSceneView.session = session
                 }
             } catch (ex: UnavailableUserDeclinedInstallationException) {
                 // Display an appropriate message to the user zand return gracefully.
@@ -292,8 +344,14 @@ internal class AndroidARView(
         }
 
         try {
-            arSceneView.resume()
-            azureSpatialAnchorsManager.start()
+            Log.d(TAG, "scene view is Started: $isStarted")
+            //starto la sessione arcore se non sta già andando
+            if (!isStarted) {
+                isStarted = true
+                arSceneView.resume()
+            }
+            //startNewSession()
+            //azureSpatialAnchorsManager.start()
 
         } catch (ex: CameraNotAvailableException) {
             Log.d(TAG, "Unable to get camera $ex")
@@ -305,33 +363,107 @@ internal class AndroidARView(
         }
     }
 
-    fun onPause() {
-        Log.d(TAG, "onPause")
+    private fun restoreEglContext() {
+        if (Looper.getMainLooper().thread != Thread.currentThread()) {
+            throw IllegalStateException("restoreEglContext called from non-UI thread")
+        }
+        Log.d(TAG, "Restoring EGL context")
+        if (savedContext != null && savedContext != EGL14.EGL_NO_CONTEXT) {
+            if (!EGL14.eglMakeCurrent(savedDisplay, savedDrawSurface, savedReadSurface, savedContext)) {
+                Log.d(TAG, "Failed to restore")
+            }else{
+                Log.d(TAG, "EGL context restored")
+            }
+        } else {
+            Log.d(TAG, "Nothing to restore")
+        }
+    }
+
+    private fun saveEglContext() {
+        if (Looper.getMainLooper().thread != Thread.currentThread()) {
+            throw IllegalStateException("saveEglContext called from non-UI thread")
+        }
+        Log.d(TAG, "Saving EGL context")
+        val currentContext = EGL14.eglGetCurrentContext()
+        if (currentContext == null || currentContext == EGL14.EGL_NO_CONTEXT) {
+            Log.d(TAG, "Nothing to save")
+        } else {
+            savedContext = currentContext
+            savedDisplay = EGL14.eglGetCurrentDisplay()
+            savedDrawSurface = EGL14.eglGetCurrentSurface(EGL14.EGL_DRAW)
+            savedReadSurface = EGL14.eglGetCurrentSurface(EGL14.EGL_READ)
+            EGL14.eglMakeCurrent(
+                savedDisplay,
+                EGL14.EGL_NO_SURFACE,
+                EGL14.EGL_NO_SURFACE,
+                EGL14.EGL_NO_CONTEXT
+            )
+            Log.d(TAG, "EGL context saved")
+        }
+    }
+
+    private fun stopArCoreSession (){
+        Log.d(TAG, "stopArCoreSession scene view is Started: $isStarted")
+        saveEglContext()
+        if (isStarted) {
+            arSceneView.pause()
+            isStarted=false
+        }
         if (showAnimatedGuide) {
-            val view = activity.findViewById(R.id.content) as ViewGroup
+            val view = activity.findViewById(android.R.id.content) as ViewGroup
             view.removeView(animatedGuide)
             showAnimatedGuide = false
         }
-        if (showScanProgress) {
-            val view = activity.findViewById(R.id.content) as ViewGroup
-            view.removeView(scanProgress)
-            showScanProgress = false
-        }
-        arSceneView.pause()
+    }
+
+    private fun destroySession() {
+        Log.d(TAG, "destroySession ${this::azureSpatialAnchorsManager.isInitialized}")
         if (this::azureSpatialAnchorsManager.isInitialized) {
             azureSpatialAnchorsManager.stop();
         }
+        for (visual: AnchorVisualAsset in anchorVisuals.values) {
+            visual.dispose()
+        }
+        anchorVisuals.clear()
+    }
+
+    private fun startNewSession() {
+        Log.d(TAG, "startNewSession")
+        //destroySession()
+        azureSpatialAnchorsManager = AzureSpatialAnchorsManager(arSceneView.session)
+        azureSpatialAnchorsManager.addSessionUpdatedListener(SessionUpdatedListener { event ->
+            onSessionUpdate(event)
+        })
+
+        azureSpatialAnchorsManager.addAnchorLocatedListener(AnchorLocatedListener { event ->
+            onAnchorLocated(event)
+        })
+        azureSpatialAnchorsManager.start()
+    }
+
+    fun onPause() {
+        Log.d(TAG, "onPause")
+        stopArCoreSession()
+        if (showScanProgress) {
+            val view = activity.findViewById(android.R.id.content) as ViewGroup
+            view.removeView(scanProgress)
+            showScanProgress = false
+        }
+
+        /*if (this::azureSpatialAnchorsManager.isInitialized) {
+            azureSpatialAnchorsManager.stop();
+        }*/
     }
 
     fun onDestroy() {
         Log.d(TAG, "onDestroy")
         try {
-            arSceneView.session?.close()
+            stopArCoreSession()
+            //arSceneView?.renderer?.dispose()
             arSceneView.destroy()
             arSceneView.scene?.removeOnUpdateListener(sceneUpdateListener)
-            if (this::azureSpatialAnchorsManager.isInitialized) {
-                azureSpatialAnchorsManager.reset();
-            }
+            activity.application.unregisterActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
+            //destroySession()
 
         } catch (e: Exception) {
             e.printStackTrace();
@@ -340,7 +472,7 @@ internal class AndroidARView(
 
     private fun initializeARView(argShowPlanes: Boolean?) {
 
-        arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
+        /*arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
             onTap(
                 hitTestResult, motionEvent
             )
@@ -382,7 +514,7 @@ internal class AndroidARView(
         arSceneView.session?.configure(config)
 
         // Configure whether or not detected planes should be shown
-        arSceneView.planeRenderer.isVisible = argShowPlanes == true
+        arSceneView.planeRenderer.isVisible = argShowPlanes == true*/
     }
 
     private fun onTap(hitTestResult: HitTestResult, motionEvent: MotionEvent?): Boolean {
@@ -427,9 +559,9 @@ internal class AndroidARView(
             anchorVisuals[visual.name] = visual
             activity.runOnUiThread {
                 showScanProgress = true
-                val view = activity.findViewById(R.id.content) as ViewGroup
+                val view = activity.findViewById(android.R.id.content) as ViewGroup
                 scanProgress = activity.layoutInflater.inflate(
-                    io.carius.lars.ar_flutter_plugin.R.layout.environment_scan, null
+                    R.layout.environment_scan, null
                 )
                 view.addView(scanProgress)
             }
@@ -447,7 +579,7 @@ internal class AndroidARView(
             anchorVisuals.remove(name)
             if (showScanProgress) {
                 activity.runOnUiThread {
-                    val view = activity.findViewById(R.id.content) as ViewGroup
+                    val view = activity.findViewById(android.R.id.content) as ViewGroup
                     view.removeView(scanProgress)
                     showScanProgress = false
                 }
@@ -482,7 +614,7 @@ internal class AndroidARView(
                 if (csa != null) {
                     if (showScanProgress) {
                         activity.runOnUiThread {
-                            val view = activity.findViewById(R.id.content) as ViewGroup
+                            val view = activity.findViewById(android.R.id.content) as ViewGroup
                             view.removeView(scanProgress)
                             showScanProgress = false
                         }
@@ -561,9 +693,9 @@ internal class AndroidARView(
 
             activity.runOnUiThread {
                 var recommendedProgress =
-                    scanProgress.findViewById(io.carius.lars.ar_flutter_plugin.R.id.recommended_scan_progress) as ProgressBar
+                    scanProgress.findViewById(R.id.recommended_scan_progress) as ProgressBar
                 var requiredProgress =
-                    scanProgress.findViewById(io.carius.lars.ar_flutter_plugin.R.id.required_scan_progress) as ProgressBar
+                    scanProgress.findViewById(R.id.required_scan_progress) as ProgressBar
                 requiredProgress.progress = (100 * requiredForCreateProgress).toInt()
                 recommendedProgress.progress = (100 * recommendedForCreateProgress).toInt()
                 if (requiredForCreateProgress >= 1.0f) {

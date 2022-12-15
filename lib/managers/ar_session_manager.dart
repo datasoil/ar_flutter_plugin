@@ -98,4 +98,20 @@ class ARSessionManager {
       print(e);
     }
   }
+
+  pause() async {
+    try {
+      await _channel.invokeMethod<void>("pause");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  resume() async {
+    try {
+      await _channel.invokeMethod<void>("resume");
+    } catch (e) {
+      print(e);
+    }
+  }
 }
