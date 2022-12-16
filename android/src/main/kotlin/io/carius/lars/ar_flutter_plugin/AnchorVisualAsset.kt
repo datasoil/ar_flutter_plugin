@@ -18,7 +18,7 @@ internal class AnchorVisualAsset(_localAnchor: Anchor, private val asset: Asset,
     var cloudAnchor: CloudSpatialAnchor? = null
     private val node = AnchorNode(_localAnchor)
     val localAnchor = _localAnchor
-    private val TAG: String = AndroidARView::class.java.name
+    private val TAG: String = AnchorVisualAsset::class.java.name
 
     fun render(context: Context, scene: Scene) {
         Log.d(TAG, "render")
@@ -71,15 +71,11 @@ internal class AnchorVisualAsset(_localAnchor: Anchor, private val asset: Asset,
     }
 
     fun dispose() {
-        Log.d(TAG, "dispose")
+        Log.d(TAG, "dispose visual")
         this.node.renderable=null
-        Log.d(TAG, "renderable")
         this.node.setParent(null)
-        Log.d(TAG, "parent")
         this.node.anchor=null
-        Log.d(TAG, "anchor")
         this.localAnchor.detach()
-        Log.d(TAG, "detached anchor")
 
     }
 

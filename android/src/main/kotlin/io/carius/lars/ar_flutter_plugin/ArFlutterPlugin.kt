@@ -1,16 +1,12 @@
 package io.carius.lars.ar_flutter_plugin
 
-import androidx.annotation.NonNull
+import androidx.fragment.app.FragmentActivity
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.plugin.common.MethodChannel.Result
 
-import com.microsoft.CloudServices;
+import com.microsoft.CloudServices
 
 /** ArFlutterPlugin */
 class ArFlutterPlugin : FlutterPlugin, ActivityAware {
@@ -21,12 +17,12 @@ class ArFlutterPlugin : FlutterPlugin, ActivityAware {
   private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
 
   override fun onAttachedToEngine(
-      @NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
+      flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
   ) {
     this.flutterPluginBinding = flutterPluginBinding
   }
 
-  override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+  override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {

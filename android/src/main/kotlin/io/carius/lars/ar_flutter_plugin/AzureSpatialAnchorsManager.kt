@@ -132,7 +132,7 @@ internal class AzureSpatialAnchorsManager(arCoreSession: Session?) {
         isRunning = false
     }
 
-    fun update(frame: Frame?) {
+    fun update(frame: Frame) {
         spatialAnchorsSession.processFrame(frame)
     }
 
