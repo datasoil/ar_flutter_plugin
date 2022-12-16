@@ -15,12 +15,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.Toast
+import android.widget.TextView
+import android.widget.LinearLayout
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
 import com.google.ar.sceneform.*
 import com.google.ar.sceneform.rendering.*
 import com.google.ar.sceneform.ux.*
-import com.microsoft.azure.spatialanchors.*
+import com.microsoft.azure.spatialanchors.* //import all ASA stuff
 import io.carius.lars.ar_flutter_plugin.Serialization.deserializeMatrix4
 import io.carius.lars.ar_flutter_plugin.Serialization.serializeHitResult
 import io.flutter.plugin.common.BinaryMessenger
@@ -28,6 +30,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import java.util.*
+import java.text.DecimalFormat
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
 
@@ -39,6 +42,10 @@ internal class AndroidARView(
     id: Int,
     creationParams: Map<String?, Any?>?
 ) : PlatformView {
+    private var enoughDataForSaving : Boolean = false
+    private val progressLock : Object = Object()
+    private var createByTapEnabled : Boolean = true
+
     // constants
     private val TAG: String = AndroidARView::class.java.name
 
@@ -58,6 +65,22 @@ internal class AndroidARView(
     private lateinit var animatedGuide: View
     private var showScanProgress: Boolean = false
     private lateinit var scanProgress: View
+    
+    //private var scanProgressText: TextView
+    //private var arFragment : ArFragment
+    //private var backButton : Button
+    //private var saveAnchorButton : Button
+    //private var cancelAnchorButton : Button
+    //private var gridSwitch : Switch
+    //private var anchorEditButtons : LinearLayout = LinearLayout(context)
+    //private var scanProgressText : TextView = TextView(context)
+    //private var sceneView : ArSceneView
+    //private var statusText : TextView = TextView(context)
+    //private var reactContext : ThemedReactContext
+    //private var assetselect :View
+
+    // Setting defaults
+    //private var footprintSelectionVisualizer = FootprintSelectionVisualizer()
 
     private lateinit var azureSpatialAnchorsManager: AzureSpatialAnchorsManager
     private val anchorVisuals: ConcurrentHashMap<String, AnchorVisualAsset> = ConcurrentHashMap()
@@ -605,6 +628,7 @@ internal class AndroidARView(
         val oneWeekFromNow = cal.time
         cloudAnchor.expiration = oneWeekFromNow
 
+        //here we use ASA's tools
         azureSpatialAnchorsManager.createAnchorAsync(visual.cloudAnchor!!)
             ?.exceptionally { thrown ->
                 thrown.printStackTrace()
@@ -686,6 +710,8 @@ internal class AndroidARView(
         }
     }
 
+    //makes sure there are enough frames
+    //SessionUpdatedEvent is from ASA cloud
     private fun onSessionUpdate(event: SessionUpdatedEvent?) {
         if (event != null && showScanProgress) {
             var recommendedForCreateProgress = event.status.recommendedForCreateProgress;
