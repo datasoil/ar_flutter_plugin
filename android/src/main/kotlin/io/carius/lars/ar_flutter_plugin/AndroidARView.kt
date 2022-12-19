@@ -302,6 +302,8 @@ internal class AndroidARView(
             override fun onActivityDestroyed(activity: Activity) {
                 Log.d(TAG, "onActivityDestroyed")
                 onDestroy()
+                //premi il tasto home l'app va in pausa, elimini dallo stack delle app
+                //aperte viene chiamato on destroy
             }
         }
 
@@ -311,7 +313,7 @@ internal class AndroidARView(
     fun onResume() {
         //queste istruzioni sono eseguite al resume dell'activity e alla costruzione perchè richiamate in init
         Log.d(TAG, "onResume")
-        restoreEglContext()
+        restoreEglContext() //restora il context
         // Create session if there is none
         if (arSceneView.session == null) {
             Log.d(TAG, "ARSceneView session is null. Trying to initialize")
@@ -366,12 +368,13 @@ internal class AndroidARView(
             }
         }
 
+        //faccio direttamente questo se non sono alla prima creazione
         try {
             Log.d(TAG, "scene view is Started: $isStarted")
             //starto la sessione arcore se non sta già andando
             if (!isStarted) {
                 isStarted = true
-                arSceneView.resume()
+                arSceneView.resume() //questo è uno start
             }
             //startNewSession()
             //azureSpatialAnchorsManager.start()
@@ -415,7 +418,7 @@ internal class AndroidARView(
             savedDisplay = EGL14.eglGetCurrentDisplay()
             savedDrawSurface = EGL14.eglGetCurrentSurface(EGL14.EGL_DRAW)
             savedReadSurface = EGL14.eglGetCurrentSurface(EGL14.EGL_READ)
-            EGL14.eglMakeCurrent(
+            EGL14.eglMakeCurrent( //backuppare il contesto
                 savedDisplay,
                 EGL14.EGL_NO_SURFACE,
                 EGL14.EGL_NO_SURFACE,
@@ -425,9 +428,9 @@ internal class AndroidARView(
         }
     }
 
-    private fun stopArCoreSession (){
+    private fun stopArCoreSession (){ 
         Log.d(TAG, "stopArCoreSession scene view is Started: $isStarted")
-        saveEglContext()
+        saveEglContext() //salvo sempre il contesto e lo restoro nell' [onresume]
         if (isStarted) {
             arSceneView.pause()
             isStarted=false
@@ -446,6 +449,7 @@ internal class AndroidARView(
         }
         for (visual: AnchorVisualAsset in anchorVisuals.values) {
             visual.dispose()
+            //chiama il destroy
         }
         anchorVisuals.clear()
     }
@@ -464,7 +468,9 @@ internal class AndroidARView(
         azureSpatialAnchorsManager.start()
     }
 
-    fun onPause() {
+    fun onPause() {// in realtà va in stop e non in pause
+        //o andando nella home, phone block, o chiamandola manualmente
+        //se apri e fai "indietro" viene fatto on destroy
         Log.d(TAG, "onPause")
         stopArCoreSession()
         if (showScanProgress) {
@@ -472,6 +478,8 @@ internal class AndroidARView(
             view.removeView(scanProgress)
             showScanProgress = false
         }
+        //se tu blocchi e risblocchi il cellulare non riparti dalla costruzione
+        //
 
         /*if (this::azureSpatialAnchorsManager.isInitialized) {
             azureSpatialAnchorsManager.stop();
