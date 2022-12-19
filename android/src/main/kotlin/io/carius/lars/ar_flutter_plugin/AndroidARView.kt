@@ -429,11 +429,25 @@ internal class AndroidARView(
     }
 
     private fun stopArCoreSession (){ 
+        //secondo la issue si dovrebbe fare : 
+        // "every time my app gets paused:"
+        //on surface texture destroyed ->
+        //(
+        //    A TextureView can be used to display a content stream, such as that coming from a camera preview, a video, or an OpenGL scene. The content stream can come from the application's process as well as a remote process.
+        //)
+        //mCamera.setPreviewCallback(null);
+        //mCamera.stopPreview();
+        //mCamera.release();
+
+        //però noi abbiamo solo surfaceView 
         Log.d(TAG, "stopArCoreSession scene view is Started: $isStarted")
         saveEglContext() //salvo sempre il contesto e lo restoro nell' [onresume]
         if (isStarted) {
+            //quindi forse qui dobbiamo rilasciare le risorse
+            
             arSceneView.pause()
             isStarted=false
+            Log.d(TAG, "arSceneView.pause() lanciata, isStared = $isStarted")
         }
         if (showAnimatedGuide) {
             val view = activity.findViewById(android.R.id.content) as ViewGroup
@@ -471,7 +485,7 @@ internal class AndroidARView(
     fun onPause() {// in realtà va in stop e non in pause
         //o andando nella home, phone block, o chiamandola manualmente
         //se apri e fai "indietro" viene fatto on destroy
-        Log.d(TAG, "onPause")
+        Log.d(TAG, "onPause") //facciamo pause, facciamo direttamente destroy
         stopArCoreSession()
         if (showScanProgress) {
             val view = activity.findViewById(android.R.id.content) as ViewGroup
