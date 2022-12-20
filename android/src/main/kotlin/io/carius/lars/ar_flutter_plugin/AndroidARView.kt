@@ -420,9 +420,9 @@ internal class AndroidARView(
             savedReadSurface = EGL14.eglGetCurrentSurface(EGL14.EGL_READ)
             EGL14.eglMakeCurrent( //backuppare il contesto
                 savedDisplay,
-                EGL14.EGL_NO_SURFACE,
-                EGL14.EGL_NO_SURFACE,
-                EGL14.EGL_NO_CONTEXT
+                savedDrawSurface,
+                savedReadSurface,
+                savedContext
             )
             Log.d(TAG, "EGL context saved")
         }
@@ -445,9 +445,9 @@ internal class AndroidARView(
         if (isStarted) {
             //quindi forse qui dobbiamo rilasciare le risorse
             
-            arSceneView.pause()
+            arSceneView.pause() //con destroy bugga uguale
             isStarted=false
-            Log.d(TAG, "arSceneView.pause() lanciata, isStared = $isStarted")
+            Log.d(TAG, "arSceneView.destroy() lanciata, isStared = $isStarted")
         }
         if (showAnimatedGuide) {
             val view = activity.findViewById(android.R.id.content) as ViewGroup
@@ -482,6 +482,7 @@ internal class AndroidARView(
         azureSpatialAnchorsManager.start()
     }
 
+    //non entra mai qua
     fun onPause() {// in realtà va in stop e non in pause
         //o andando nella home, phone block, o chiamandola manualmente
         //se apri e fai "indietro" viene fatto on destroy
@@ -505,12 +506,12 @@ internal class AndroidARView(
         try {
             stopArCoreSession()
             //arSceneView?.renderer?.dispose()
-            arSceneView.destroy()
+            arSceneView.destroy()  
             arSceneView.scene?.removeOnUpdateListener(sceneUpdateListener)
             activity.application.unregisterActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
             //destroySession()
-
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             e.printStackTrace();
         }
     }
