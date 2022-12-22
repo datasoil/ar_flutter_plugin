@@ -7,7 +7,7 @@ Many thanks to Oleksandr Leuschenko for the [arkit_flutter_plugin](https://githu
 
 ## Getting Started
 
-# Run preventing logs in Command Prompt
+### Run preventing logs in Command Prompt
 
 To prevent logs for every frame run in cmd:
 

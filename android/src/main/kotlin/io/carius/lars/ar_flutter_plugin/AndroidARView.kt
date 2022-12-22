@@ -275,6 +275,8 @@ internal class AndroidARView(
             override fun onActivityDestroyed(activity: Activity) {
                 Log.d(TAG, "onActivityDestroyed")
                 onDestroy()
+                //premi il tasto home l'app va in pausa, elimini dallo stack delle app
+                //aperte viene chiamato on destroy
             }
         }
 
@@ -338,12 +340,13 @@ internal class AndroidARView(
             }
         }
 
+        //faccio direttamente questo se non sono alla prima creazione
         try {
             Log.d(TAG, "scene view is Started: $isStarted")
             //starto la sessione arcore se non sta già andando
             if (!isStarted) {
                 isStarted = true
-                arSceneView.resume()
+                arSceneView.resume() //questo è uno start
             }
             startASASession()
 
@@ -385,6 +388,7 @@ internal class AndroidARView(
         }
         for (visual: AnchorVisualAsset in anchorVisuals.values) {
             visual.dispose()
+            //chiama il destroy
         }
         anchorVisuals.clear()
     }
@@ -403,8 +407,11 @@ internal class AndroidARView(
         azureSpatialAnchorsManager!!.start()
     }
 
-    fun onPause() {
-        Log.d(TAG, "onPause")
+    //non entra mai qua
+    fun onPause() {// in realtà va in stop e non in pause
+        //o andando nella home, phone block, o chiamandola manualmente
+        //se apri e fai "indietro" viene fatto on destroy
+        Log.d(TAG, "onPause") //facciamo pause, facciamo direttamente destroy
         stopArCoreSession()
     }
 
