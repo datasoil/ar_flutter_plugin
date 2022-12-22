@@ -11,35 +11,37 @@ import java.util.List
 import java.util.concurrent.*
 import java.util.function.Supplier
 
-internal class AzureSpatialAnchorsManager(arCoreSession: Session?) {
+internal class AzureSpatialAnchorsManager(arCoreSession: Session?, apiKey: String, apiId: String) {
     private val executorService: ExecutorService = Executors.newFixedThreadPool(2)
     var isRunning = false
     private val spatialAnchorsSession: CloudSpatialAnchorSession
+    // Set this string to the account ID provided for the Azure Spatial Anchors account resource.
+    private val SpatialAnchorsAccountId = apiId
 
-    companion object {
-        // Set this string to the account ID provided for the Azure Spatial Anchors account resource.
-        const val SpatialAnchorsAccountId = "dd0d9d8a-b72c-41ba-9075-36071c430b17"
+    // Set this string to the account key provided for the Azure Spatial Anchors account resource.
+    private val SpatialAnchorsAccountKey = apiKey
 
-        // Set this string to the account key provided for the Azure Spatial Anchors account resource.
-        const val SpatialAnchorsAccountKey = "Yz0+xeuZmCBu7QQ3coFF12Sg7N7nh52QXj9dfJVX0F0="
+    // Set this string to the account domain provided for the Azure Spatial Anchors account resource.
+    //private val SpatialAnchorsAccountDomain = "westeurope.mixedreality.azure.com"
 
-        // Set this string to the account domain provided for the Azure Spatial Anchors account resource.
-        const val SpatialAnchorsAccountDomain = "westeurope.mixedreality.azure.com"
-
-        // Log message tag
-        private const val TAG = "ASACloud"
-    }
+    // Log message tag
+    private val TAG = "AzureSpatialAnchorsManager"
 
     init {
+        Log.d(TAG, apiKey)
+        Log.d(TAG, apiId)
         if (arCoreSession == null) {
+            Log.d(TAG, "arCoreSession == null")
             throw IllegalArgumentException("The arCoreSession may not be null.")
+        }else{
+            Log.d(TAG, "arCoreSession NOT null ${arCoreSession.toString()}")
         }
         spatialAnchorsSession = CloudSpatialAnchorSession()
         spatialAnchorsSession.configuration.accountId = SpatialAnchorsAccountId
         spatialAnchorsSession.configuration.accountKey = SpatialAnchorsAccountKey
-        spatialAnchorsSession.configuration.accountDomain = SpatialAnchorsAccountDomain
+        //spatialAnchorsSession.configuration.accountDomain = SpatialAnchorsAccountDomain
         spatialAnchorsSession.session = arCoreSession
-        spatialAnchorsSession.logLevel = SessionLogLevel.All
+        spatialAnchorsSession.logLevel = SessionLogLevel.Error
         spatialAnchorsSession.addOnLogDebugListener { args: OnLogDebugEvent? ->
             if (args != null) {
                 onLogDebugListener(args)
@@ -97,6 +99,9 @@ internal class AzureSpatialAnchorsManager(arCoreSession: Session?) {
     fun reset() {
         stopLocating()
         spatialAnchorsSession.reset()
+    }
+    fun close() {
+        spatialAnchorsSession.close()
     }
 
     fun start() {
