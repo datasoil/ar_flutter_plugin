@@ -42,8 +42,8 @@ internal class AndroidARView(
     id: Int,
     creationParams: Map<String?, Any?>?
 ) : PlatformView {
-    private var apiKey: String = creationParams!!["apiKey"] as String
-    private var apiId: String = creationParams!!["apiId"] as String
+    private val apiKey: String = creationParams!!["apiKey"] as String
+    private val apiId: String = creationParams!!["apiId"] as String
 
     // constants
     private val TAG: String = AndroidARView::class.java.name
@@ -124,24 +124,6 @@ internal class AndroidARView(
                         result.success(false)
                     }
                 }
-                "startLocateAnchors" -> {
-                    val assets: List<Map<String, Any>>? = call.argument("assets")
-                    if (assets != null) {
-                        for (map in assets.toTypedArray()) {
-                            nearbyAssets.add(Asset(map))
-                        }
-                        var ids: ArrayList<String> = ArrayList()
-                        for (a: Asset in nearbyAssets) {
-                            if (a.anchorId != "" && a.anchorId != null) {
-                                ids.add(a.anchorId!!)
-                            }
-                        }
-                        result.success(startLocatingNearbyAssets(ids))
-                    } else {
-                        result.success(false)
-                    }
-
-                }
                 "uploadAnchor" -> {
                     val anchorName: String? = call.argument("name")
                     if (anchorName != null) {
@@ -169,6 +151,10 @@ internal class AndroidARView(
         //costruttore
         //queste operazioni vengono eseguite solo alla costruzione della view
         Log.d(TAG, "Initializing AndroidARView")
+        val assets: List<Map<String, Any>> = creationParams!!["assets"] as List<Map<String, Any>>
+        for (map in assets.toTypedArray()) {
+            nearbyAssets.add(Asset(map))
+        }
         viewContext = context
         //creo la scena
         arSceneView = ArSceneView(context)
@@ -405,6 +391,7 @@ internal class AndroidARView(
             onAnchorLocated(event)
         })
         azureSpatialAnchorsManager!!.start()
+        startLocatingNearbyAssets()
     }
 
     //non entra mai qua
@@ -559,20 +546,23 @@ internal class AndroidARView(
         }
     }
 
-    private fun startLocatingNearbyAssets(ids: ArrayList<String>): Boolean {
+    private fun startLocatingNearbyAssets() {
         Log.d(TAG, "startLocatingNearbyAssets")
+        var ids: ArrayList<String> = ArrayList()
+        for (a: Asset in nearbyAssets) {
+            if (a.anchorId != "" && a.anchorId != null) {
+                ids.add(a.anchorId!!)
+            }
+        }
         val criteria = AnchorLocateCriteria()
         criteria.identifiers = ids.toTypedArray()
-        return try {
+        try {
             if (azureSpatialAnchorsManager!=null) {
                 azureSpatialAnchorsManager!!.stopLocating()
                 azureSpatialAnchorsManager!!.startLocating(criteria)
-                true
-            } else {
-                false
             }
         } catch (e: Exception) {
-            false
+            e.printStackTrace()
         }
     }
 
