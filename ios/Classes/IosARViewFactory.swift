@@ -9,6 +9,10 @@ class IosARViewFactory: NSObject, FlutterPlatformViewFactory {
         super.init()
     }
 
+    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+        return FlutterStandardMessageCodec.sharedInstance()
+    }
+
     func create(
         withFrame frame: CGRect,
         viewIdentifier viewId: Int64,
@@ -18,6 +22,7 @@ class IosARViewFactory: NSObject, FlutterPlatformViewFactory {
             frame: frame,
             viewIdentifier: viewId,
             arguments: args,
-            binaryMessenger: messenger)
+            binaryMessenger: messenger
+        )
     }
 }

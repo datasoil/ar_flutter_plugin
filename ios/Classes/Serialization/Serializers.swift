@@ -26,26 +26,3 @@ func serializeMatrix(_ matrix: simd_float4x4) -> Array<Float> {
 func serializeArray(_ array: simd_float4) -> Array<Float> {
     return [array[0], array[1], array[2], array[3]]
 }
-
-func serializeAnchor(anchor: ARAnchor, anchorNode: SCNNode?, ganchor: GARAnchor, name: String?) -> Dictionary<String, Any?> {
-    var serializedAnchor = Dictionary<String, Any?>()
-    
-    serializedAnchor["type"] = 0 // index for plane anchors
-    serializedAnchor["name"] = name
-    serializedAnchor["cloudanchorid"] = ganchor.cloudIdentifier
-    serializedAnchor["transformation"] = serializeMatrix(anchor.transform)
-    serializedAnchor["childNodes"] = anchorNode?.childNodes.map{$0.name}
-
-    return serializedAnchor
-}
-
-func serializeLocalTransformation(node: SCNNode?) -> Dictionary<String, Any?> {
-    var serializedLocalTransformation = Dictionary<String, Any?>()
-
-    let transform: [Float?] = [node?.transform.m11, node?.transform.m12, node?.transform.m13, node?.transform.m14, node?.transform.m21, node?.transform.m22, node?.transform.m23, node?.transform.m24, node?.transform.m31, node?.transform.m32, node?.transform.m33, node?.transform.m34, node?.transform.m41, node?.transform.m42, node?.transform.m43, node?.transform.m44]
-    
-    serializedLocalTransformation["name"] = node?.name
-    serializedLocalTransformation["transform"] = transform
-
-    return serializedLocalTransformation
-}
