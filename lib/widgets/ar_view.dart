@@ -27,7 +27,8 @@ abstract class PlatformARView {
       @required ARViewCreatedCallback arViewCreatedCallback,
       @required String apiKey,
       @required String apiId,
-      @required List<Map<String, dynamic>> assets});
+      @required List<Map<String, dynamic>>? assets,
+      @required List<Map<String, dynamic>>? tickets});
 
   /// Callback function that is executed once the view is established
   void onPlatformViewCreated(int id);
@@ -61,7 +62,8 @@ class AndroidARView implements PlatformARView {
       ARViewCreatedCallback? arViewCreatedCallback,
       String? apiKey,
       String? apiId,
-      List<Map<String, dynamic>>? assets}) {
+      List<Map<String, dynamic>>? assets,
+      List<Map<String, dynamic>>? tickets}) {
     _context = context;
     _arViewCreatedCallback = arViewCreatedCallback;
     // This is used in the platform side to register the view.
@@ -70,6 +72,7 @@ class AndroidARView implements PlatformARView {
     creationParams['apiKey'] = apiKey;
     creationParams['apiId'] = apiId;
     creationParams['assets'] = assets;
+    creationParams['tickets'] = tickets;
     return AndroidView(
         viewType: viewType,
         layoutDirection: TextDirection.ltr,
@@ -97,7 +100,8 @@ class IosARView implements PlatformARView {
       ARViewCreatedCallback? arViewCreatedCallback,
       String? apiKey,
       String? apiId,
-      List<Map<String, dynamic>>? assets}) {
+      List<Map<String, dynamic>>? assets,
+      List<Map<String, dynamic>>? tickets}) {
     _context = context;
     _arViewCreatedCallback = arViewCreatedCallback;
     // This is used in the platform side to register the view.
@@ -106,6 +110,7 @@ class IosARView implements PlatformARView {
     creationParams['apiKey'] = apiKey;
     creationParams['apiId'] = apiId;
     creationParams['assets'] = assets;
+    creationParams['tickets'] = tickets;
     return UiKitView(
       viewType: viewType,
       layoutDirection: TextDirection.ltr,
@@ -128,7 +133,8 @@ class ARView extends StatefulWidget {
   final String permissionPromptParentalRestriction;
   final String apiKey;
   final String apiId;
-  final List<Map<String, dynamic>> assets;
+  final List<Map<String, dynamic>>? assets;
+  final List<Map<String, dynamic>>? tickets;
 
   /// Function to be called when the AR View is created
   final ARViewCreatedCallback onARViewCreated;
@@ -138,7 +144,8 @@ class ARView extends StatefulWidget {
       required this.onARViewCreated,
       required this.apiId,
       required this.apiKey,
-      required this.assets,
+      this.assets,
+      this.tickets,
       this.permissionPromptDescription =
           "Camera permission must be given to the app for AR functions to work",
       this.permissionPromptButtonText = "Grant Permission",
@@ -204,7 +211,8 @@ class _ARViewState extends State<ARView> {
               arViewCreatedCallback: widget.onARViewCreated,
               apiKey: widget.apiKey,
               apiId: widget.apiId,
-              assets: widget.assets);
+              assets: widget.assets,
+              tickets: widget.tickets);
         }
       case (PermissionStatus.denied):
         {

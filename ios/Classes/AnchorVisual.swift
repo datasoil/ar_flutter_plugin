@@ -3,31 +3,30 @@
 import Foundation
 
 class AnchorVisual {
-    init() {
-        node = nil
-        identifier = ""
-        cloudAnchor = nil
-        localAnchor = nil
+    var node: SCNNode?
+    // id dell'asset per AnchorAsset, id del ticket per AnchorTicket
+    var id: String
+    var cloudAnchor: ASACloudSpatialAnchor?
+    var localAnchor: ARAnchor
+    var info: AnchorInfo
+    
+    init(localAnchor: ARAnchor, info: AnchorInfo) {
+        self.id = info.id
+        self.localAnchor = localAnchor
+        self.info = info
     }
     
-    var node: SCNNode?
-    var identifier: String
-    var cloudAnchor: ASACloudSpatialAnchor?
-    var localAnchor: ARAnchor?
-    var info: AnchorInfo?
     // var arLabel: SKLabelNode? = nil
     
-    func createLabelMaterial(text: String)->SCNMaterial {
+    func createLabelMaterial()->SCNMaterial {
         let sk = SKScene(size: CGSize(width: 1500, height: 1000))
         sk.backgroundColor = UIColor.clear
         // sk.anchorPoint = CGPoint(x:0,y:2024/4)
-        var theIcon = "armarker_normal_png"
-        if let chosenIcon = info?.icon {
-            if chosenIcon != "" {
-                theIcon = chosenIcon
-            }
+        var icon = "armarker_normal_png"
+        if info.type == "ticket" {
+            icon = "armarker_ticket_png"
         }
-        let markerNode = SKSpriteNode(imageNamed: theIcon)
+        let markerNode = SKSpriteNode(imageNamed: icon)
         markerNode.size = CGSize(width: 496, height: 496)
         markerNode.position = CGPoint(x: sk.size.width/2.0, y: sk.size.height/4.0)
        
@@ -43,7 +42,7 @@ class AnchorVisual {
         // rectangle.lineWidth = 5
         rectangle.alpha = 0.8
            
-        let lbl = SKLabelNode(text: text)
+        let lbl = SKLabelNode(text: info.name)
         lbl.fontSize = 130
         lbl.numberOfLines = 0
         lbl.fontColor = UIColor.white
@@ -70,18 +69,12 @@ class AnchorVisual {
         if node == nil {
             node = SCNNode()
             node!.geometry = SCNPlane(width: 0.4, height: 0.4*2.0/3.0)
-            node!.name = identifier
+            node!.name = id
         }
-        var label: SCNMaterial?
-        // we allow overriding the text manually
-        if let c = info?.name {
-            label = createLabelMaterial(text: c)
-        } else {
-            label = createLabelMaterial(text: "[?ASSET?]")
-        }
+        var label: SCNMaterial = createLabelMaterial()
         
         let plane = node!.geometry as! SCNPlane
-        node!.geometry?.materials = [label!]
+        node!.geometry?.materials = [label]
         node!.geometry?.firstMaterial?.diffuse.contentsTransform = SCNMatrix4Translate(SCNMatrix4MakeScale(1, -1, 1), 0, 1, 0)
         node!.position = SCNVector3(x: 0, y: Float(plane.height)/4.0, z: 0)
                

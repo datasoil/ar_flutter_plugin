@@ -1,6 +1,8 @@
 import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:flutter/services.dart';
 
+import '../utils/json_converters.dart';
+
 // Type definitions to enforce a consistent use of the API
 typedef NodeTapResultHandler = void Function(String node);
 
@@ -49,17 +51,14 @@ class ARAnchorManager {
     return Future.value();
   }
 
-  /// Start search for anchors ids
-  Future<bool?> startLocateAnchors(List<Map<String, dynamic>> assets) async {
-    return await _channel
-        .invokeMethod<bool>('startLocateAnchors', {"assets": assets});
-  }
-
   /// Add given anchor to the underlying AR scene
-  Future<bool?> addAnchor(ARAnchor anchor, Map<String, dynamic> asset) async {
+  Future<bool?> addAnchor(
+      Matrix4 transformation, Map<String, dynamic> info) async {
     try {
-      return await _channel.invokeMethod<bool>(
-          'addAnchor', {"anchor": anchor.toJson(), "asset": asset});
+      return await _channel.invokeMethod<bool>('addAnchor', {
+        "transformation": MatrixConverter().toJson(transformation),
+        "info": info
+      });
     } on PlatformException catch (_) {
       return false;
     }
@@ -67,15 +66,14 @@ class ARAnchorManager {
 
   /// Remove given anchor and all its children from the AR Scene
   Future<bool?> removeAnchor(String anchorId) async {
-    return await _channel
-        .invokeMethod<bool>('removeAnchor', {'name': anchorId});
+    return await _channel.invokeMethod<bool>('removeAnchor', {'id': anchorId});
   }
 
   /// Upload given anchor from the underlying AR scene to the Google Cloud Anchor API
   Future<String?> uploadAnchor(String anchorId) async {
     try {
       return await _channel
-          .invokeMethod<String?>('uploadAnchor', {'name': anchorId});
+          .invokeMethod<String?>('uploadAnchor', {'id': anchorId});
     } on PlatformException catch (_) {
       return null;
     }
@@ -85,7 +83,7 @@ class ARAnchorManager {
   Future<bool?> removeCloudAnchor(String anchorId) async {
     try {
       return await _channel
-          .invokeMethod<bool?>('removeCloudAnchor', {'name': anchorId});
+          .invokeMethod<bool?>('removeCloudAnchor', {'id': anchorId});
     } on PlatformException catch (_) {
       return null;
     }
