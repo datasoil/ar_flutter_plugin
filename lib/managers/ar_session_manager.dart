@@ -19,7 +19,7 @@ class ARSessionManager {
   /// Receives hit results from user taps with tracked planes or feature points
   late ARHitResultHandler onPlaneOrPointTap;
 
-  late void Function() onReadyToUpload;
+  late void Function()? onReadyToUpload;
 
   ARSessionManager(int id, this.buildContext, {this.debug = false}) {
     _channel = MethodChannel('arsession_$id');
@@ -54,7 +54,7 @@ class ARSessionManager {
           debugPrint("Native LOG: " + msg);
           break;
         case 'readyToUpload':
-          onReadyToUpload();
+          if (onReadyToUpload != null) onReadyToUpload!();
           break;
         case 'dispose':
           _channel.invokeMethod<void>("dispose");

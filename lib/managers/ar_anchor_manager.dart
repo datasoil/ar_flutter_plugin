@@ -51,39 +51,50 @@ class ARAnchorManager {
     return Future.value();
   }
 
+  Future<void> startPositioning({List<String>? toHideIds}) async {
+    return await _channel
+        .invokeMethod<void>('startPositioning', {'toHideIds': toHideIds});
+  }
+
+  Future<void> successPositioning({List<String>? toShowIds}) async {
+    return await _channel
+        .invokeMethod<void>('successPositioning', {'toShowIds': toShowIds});
+  }
+
+  Future<void> abortPositioning({List<String>? toShowIds}) async {
+    return await _channel
+        .invokeMethod<void>('abortPositioning', {'toShowIds': toShowIds});
+  }
+
   /// Add given anchor to the underlying AR scene
-  Future<bool?> addAnchor(
-      Matrix4 transformation, Map<String, dynamic> info) async {
-    try {
-      return await _channel.invokeMethod<bool>('addAnchor', {
-        "transformation": MatrixConverter().toJson(transformation),
-        "info": info
-      });
-    } on PlatformException catch (_) {
-      return false;
-    }
+  Future<void> createAnchor(
+      {required Matrix4 transformation,
+      required Map<String, dynamic> info}) async {
+    return await _channel.invokeMethod<void>('createAnchor', {
+      "transformation": MatrixConverter().toJson(transformation),
+      "info": info
+    });
   }
 
   /// Remove given anchor and all its children from the AR Scene
-  Future<bool?> removeAnchor(String anchorId) async {
-    return await _channel.invokeMethod<bool>('removeAnchor', {'id': anchorId});
+  Future<void> deleteAnchor({required String anchorId}) async {
+    return await _channel.invokeMethod<void>('deleteAnchor', {'id': anchorId});
   }
 
   /// Upload given anchor from the underlying AR scene to the Google Cloud Anchor API
-  Future<String?> uploadAnchor(String anchorId) async {
+  Future<String?> uploadAnchor() async {
     try {
-      return await _channel
-          .invokeMethod<String?>('uploadAnchor', {'id': anchorId});
+      return await _channel.invokeMethod<String?>('uploadAnchor');
     } on PlatformException catch (_) {
       return null;
     }
   }
 
   /// Upload given anchor from the underlying AR scene to the Google Cloud Anchor API
-  Future<bool?> removeCloudAnchor(String anchorId) async {
+  Future<bool?> deleteCloudAnchor({required String anchorId}) async {
     try {
       return await _channel
-          .invokeMethod<bool?>('removeCloudAnchor', {'id': anchorId});
+          .invokeMethod<bool?>('deleteCloudAnchor', {'id': anchorId});
     } on PlatformException catch (_) {
       return null;
     }

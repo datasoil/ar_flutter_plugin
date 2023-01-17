@@ -13,8 +13,9 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
 
     private var configuration: ARWorldTrackingConfiguration!
 
+    var enableTapToAdd = false
+    var pendingAnchorVisual: AnchorVisual?
     var anchorVisuals = [String: AnchorVisual]()
-    var cachedAnchorVisual: AnchorVisual?
     var cloudSession: ASACloudSpatialAnchorSession?
     private var apiKey: String = "NONE"
     private var apiId: String = "NONE"
@@ -102,27 +103,39 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     func onAnchorMethodCalled(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
         let arguments = call.arguments as? [String: Any]
         switch call.method {
-            case "addAnchor":
-                let dictInfo = arguments?["info"] as? [String: Any]
-                let transform = arguments?["transformation"] as? [NSNumber]
-                if dictInfo != nil, transform != nil {
-                    let info = AnchorInfo(val: dictInfo!)
-                    result(addAnchor(transform: transform!, info: info))
-                } else {
-                    result(false)
-                }
-            case "removeAnchor":
-                if let infoId = arguments!["id"] as? String {
-                    result(removeAnchor(infoId: infoId))
-                }
+            case "startPositioning":
+                let toHide = arguments?["toHideIds"] as? [String]
+                startPositioning(toHideIds: toHide)
+                result(nil)
+
+            case "createAnchor":
+                let dictInfo = arguments?["info"] as! [String: Any]
+                let transform = arguments?["transformation"] as! [NSNumber]
+                createAnchor(transform: transform, info: AnchorInfo(val: dictInfo))
+                result(nil)
+
             case "uploadAnchor":
-                if let infoId = arguments!["id"] as? String {
-                    uploadAnchor(infoId: infoId, result: result)
-                }
-            case "removeCloudAnchor":
-                if let infoId = arguments!["id"] as? String {
-                    removeCloudAnchor(infoId: infoId, result: result)
-                }
+                uploadAnchor(result: result)
+
+            case "successPositioning":
+                let toShow = arguments?["toShowIds"] as? [String]
+                successPositioning(toShowIds: toShow)
+                result(nil)
+
+            case "abortPositioning":
+                let toShow = arguments?["toShowIds"] as? [String]
+                abortPositioning(toShowIds: toShow)
+                result(nil)
+
+            case "deleteAnchor":
+                let infoId = arguments!["id"] as! String
+                deleteAnchor(infoId: infoId)
+                result(nil)
+
+            case "deleteCloudAnchor":
+                let infoId = arguments!["id"] as! String
+                deleteCloudAnchor(infoId: infoId, result: result)
+
             default:
                 result(FlutterMethodNotImplemented)
         }
@@ -158,6 +171,51 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         anchorVisuals.removeAll()
     }
 
+    func startPositioning(toHideIds: [String]?) {
+        if toHideIds != nil {
+            hideAnchors(ids: toHideIds!)
+        }
+        enableTapToAdd = true
+    }
+
+    func successPositioning(toShowIds: [String]?) {
+        if toShowIds != nil {
+            showAnchors(ids: toShowIds!)
+        }
+        enableTapToAdd = false
+        // prendo l' anchor in pending
+        if let pav = pendingAnchorVisual {
+            let id = pav.id
+            // guardo se ne avevo uno già posizionato
+            if let av = anchorVisuals[id] {
+                // se lo avevo lo elimino dalla scena e provo dal cloud
+                sceneView.session.remove(anchor: av.localAnchor)
+                cloudSession!.delete(av.cloudAnchor!, withCompletionHandler: { (_: Error?) in })
+            }
+            anchorVisuals[id] = pendingAnchorVisual
+            pendingAnchorVisual = nil
+        }
+    }
+
+    func abortPositioning(toShowIds: [String]?) {
+        if toShowIds != nil {
+            showAnchors(ids: toShowIds!)
+        }
+        enableTapToAdd = false
+        if let pav = pendingAnchorVisual {
+            sceneView.session.remove(anchor: pav.localAnchor)
+            pendingAnchorVisual = nil
+        }
+    }
+
+    func hideAnchors(ids: [String]) {
+        ids.forEach { if anchorVisuals[$0] != nil { anchorVisuals[$0]!.node?.isHidden = true }}
+    }
+
+    func showAnchors(ids: [String]) {
+        ids.forEach { if anchorVisuals[$0] != nil { anchorVisuals[$0]!.node?.isHidden = false }}
+    }
+
     func updateLookForAssetsAnchor() {
         if nearbyAssets.count < 1 || cloudSession == nil {
             return
@@ -177,6 +235,15 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         if anchor as? ARPlaneAnchor != nil {
             // se è un anchor plane ignoro
+            return
+        }
+        if let pav = pendingAnchorVisual, pav.localAnchor == anchor {
+            let anode: SCNNode? = pav.renderNode()
+            let yFreeConstraint = SCNBillboardConstraint()
+            yFreeConstraint.freeAxes = [.Y, .X] // optionally
+            node.constraints = [yFreeConstraint]
+            node.isHidden = false
+            node.addChildNode(anode!)
             return
         }
         for visual in anchorVisuals.values {
@@ -208,92 +275,62 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         }
     }
 
-    func addAnchor(transform: [NSNumber], info: AnchorInfo) -> Bool {
-        let infoId = info.id
-        // lo rimuovo se lo trovo tra quelli già posizionati (caso di riposizionamento)
-        if anchorVisuals[infoId] != nil {
-            cachedAnchorVisual = anchorVisuals[infoId]!
-            cachedAnchorVisual?.node?.isHidden = true
-        }
+    func createAnchor(transform: [NSNumber], info: AnchorInfo) {
+        NSLog("createAnchor")
         let arAnchor = ARAnchor(transform: simd_float4x4(deserializeMatrix4(transform)))
         sceneView.session.add(anchor: arAnchor)
-        anchorVisuals[infoId] = AnchorVisual(localAnchor: arAnchor, info: info)
-        return true
+        pendingAnchorVisual = AnchorVisual(localAnchor: arAnchor, info: info)
     }
 
-    func removeAnchor(infoId: String) -> Bool {
-        let visual = anchorVisuals[infoId]
-        if visual == nil {
-            return false
+    func deleteAnchor(infoId: String) {
+        if let v = anchorVisuals[infoId] {
+            sceneView.session.remove(anchor: v.localAnchor)
+            anchorVisuals.removeValue(forKey: infoId)
         }
-        sceneView.session.remove(anchor: visual!.localAnchor)
-        anchorVisuals.removeValue(forKey: infoId)
-
-        if cachedAnchorVisual != nil {
-            // entro qui se interrompo il processo di riposizionamento
-            // ho già eliminato l'anchor appena creato, rimetto visibile quello di prima
-            anchorVisuals[infoId] = cachedAnchorVisual!
-            anchorVisuals[infoId]!.node?.isHidden = false
-            cachedAnchorVisual = nil
-        }
-        return true
     }
 
-    func uploadAnchor(infoId: String, result: @escaping FlutterResult) {
-        let visual = anchorVisuals[infoId]
-        if visual == nil {
-            result(nil)
-            return
-        }
-        let cloudAnchor = ASACloudSpatialAnchor()
-        cloudAnchor!.localAnchor = visual!.localAnchor
+    func uploadAnchor(result: @escaping FlutterResult) {
+        NSLog("uploadAnchor")
+        if let pav = pendingAnchorVisual {
+            let cloudAnchor = ASACloudSpatialAnchor()
+            cloudAnchor!.localAnchor = pav.localAnchor
 
-        // In this sample app we delete the cloud anchor explicitly, but you can also set it to expire automatically
-        let secondsInADay = 60 * 60 * 24
-        let oneWeekFromNow = Date(timeIntervalSinceNow: TimeInterval(secondsInADay * 2))
-        cloudAnchor!.expiration = oneWeekFromNow
-        cloudSession!.createAnchor(cloudAnchor, withCompletionHandler: { (error: Error?) in
-            if let error = error {
-                NSLog(error.localizedDescription)
-                NSLog("errore upload")
-                result(nil)
-            } else {
-                visual!.cloudAnchor = cloudAnchor
-                if self.cachedAnchorVisual != nil {
-                    // entro qui se termino il processo di riposizionamento
-                    // provo ad eliminare dal cloud il vecchio anchor
-                    self.cloudSession!.delete(self.cachedAnchorVisual!.cloudAnchor!, withCompletionHandler: { (_: Error?) in })
-                    // ignoro il risultato dell' operazione
-                    // elimino il vecchio anchor localmente
-                    self.sceneView.session.remove(anchor: self.cachedAnchorVisual!.localAnchor)
-                    self.cachedAnchorVisual = nil
+            // In this sample app we delete the cloud anchor explicitly, but you can also set it to expire automatically
+            let secondsInADay = 60 * 60 * 24
+            let oneWeekFromNow = Date(timeIntervalSinceNow: TimeInterval(secondsInADay * 2))
+            cloudAnchor!.expiration = oneWeekFromNow
+
+            cloudSession!.createAnchor(cloudAnchor, withCompletionHandler: { (error: Error?) in
+                if let error = error {
+                    NSLog(error.localizedDescription)
+                    NSLog("error upload pending anchor")
+                    result(nil)
+                } else {
+                    pav.cloudAnchor = cloudAnchor
+                    result(cloudAnchor?.identifier)
                 }
-                result(cloudAnchor?.identifier)
-            }
-        })
+            })
+        } else {
+            result(nil)
+        }
     }
 
-    func removeCloudAnchor(infoId: String, result: @escaping FlutterResult) {
-        let visual = anchorVisuals[infoId]
-        NSLog("removeCloudAnchor")
-        if visual == nil || visual?.cloudAnchor == nil {
-            result(false)
-            return
+    func deleteCloudAnchor(infoId: String, result: @escaping FlutterResult) {
+        NSLog("deleteCloudAnchor")
+        if let visual = anchorVisuals[infoId], visual.cloudAnchor != nil {
+            cloudSession!.delete(visual.cloudAnchor!, withCompletionHandler: { (error: Error?) in
+                if let error = error {
+                    NSLog(error.localizedDescription)
+                    NSLog("errore remove cloud anchor")
+                    result(false)
+                } else {
+                    NSLog("deleted")
+                    self.sceneView.session.remove(anchor: visual.localAnchor)
+                    self.anchorVisuals.removeValue(forKey: infoId)
+                    result(true)
+                }
+            })
         }
-        NSLog("valid to remove")
-        NSLog(visual!.cloudAnchor!.identifier)
-        cloudSession!.delete(visual!.cloudAnchor!, withCompletionHandler: { (error: Error?) in
-            if let error = error {
-                NSLog(error.localizedDescription)
-                NSLog("errore remove cloud anchor")
-                result(false)
-            } else {
-                NSLog("deleted")
-                self.sceneView.session.remove(anchor: visual!.localAnchor)
-                self.anchorVisuals.removeValue(forKey: infoId)
-                result(true)
-            }
-        })
     }
 
     internal func anchorLocated(_ cloudSpatialAnchorSession: ASACloudSpatialAnchorSession!, _ args: ASAAnchorLocatedEventArgs!) {
@@ -333,6 +370,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         guard let sceneView = recognizer.view as? ARSCNView else {
             return
         }
+        NSLog("onTap")
         let touchLocation = recognizer.location(in: sceneView)
         let allHitResults = sceneView.hitTest(touchLocation, options: [SCNHitTestOption.searchMode: SCNHitTestSearchMode.closest.rawValue])
         let nodeHitResult = allHitResults.first?.node
@@ -342,16 +380,20 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             anchorManagerChannel.invokeMethod("onNodeTap", arguments: nodeHitResult!.name!)
             return
         }
-        let planeTypes: ARHitTestResult.ResultType
-        if #available(iOS 11.3, *) {
-            planeTypes = ARHitTestResult.ResultType([.existingPlaneUsingGeometry, .featurePoint])
-        } else {
-            planeTypes = ARHitTestResult.ResultType([.existingPlaneUsingExtent, .featurePoint])
-        }
-        let planeAndPointHitResults = sceneView.hitTest(touchLocation, types: planeTypes)
-        let serializedPlaneAndPointHitResults = planeAndPointHitResults.map { serializeHitResult($0) }
-        if serializedPlaneAndPointHitResults.count != 0 {
-            sessionManagerChannel.invokeMethod("onPlaneOrPointTap", arguments: serializedPlaneAndPointHitResults)
+        if enableTapToAdd {
+            NSLog("enableTapToAdd")
+            let planeTypes: ARHitTestResult.ResultType
+            if #available(iOS 11.3, *) {
+                planeTypes = ARHitTestResult.ResultType([.existingPlaneUsingGeometry, .featurePoint])
+            } else {
+                planeTypes = ARHitTestResult.ResultType([.existingPlaneUsingExtent, .featurePoint])
+            }
+            let planeAndPointHitResults = sceneView.hitTest(touchLocation, types: planeTypes)
+            let serializedPlaneAndPointHitResults = planeAndPointHitResults.map { serializeHitResult($0) }
+            if serializedPlaneAndPointHitResults.count != 0 {
+                NSLog("sendxd")
+                sessionManagerChannel.invokeMethod("onPlaneOrPointTap", arguments: serializedPlaneAndPointHitResults)
+            }
         }
     }
 }
