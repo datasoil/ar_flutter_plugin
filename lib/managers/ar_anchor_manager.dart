@@ -1,4 +1,3 @@
-import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:flutter/services.dart';
 
 import '../utils/json_converters.dart';
@@ -15,7 +14,9 @@ class ARAnchorManager {
   final bool debug;
 
   /// Callback function that is invoked when the platform detects a tap on a node
-  NodeTapResultHandler? onNodeTap;
+  NodeTapResultHandler? onAssetTap;
+
+  NodeTapResultHandler? onTicketTap;
 
   ARAnchorManager(int id, {this.debug = false}) {
     _channel = MethodChannel('aranchors_$id');
@@ -34,10 +35,16 @@ class ARAnchorManager {
         case 'onError':
           print(call.arguments);
           break;
-        case 'onNodeTap':
-          if (onNodeTap != null) {
+        case 'onAssetTap':
+          if (onAssetTap != null) {
             final tappedNode = call.arguments as String;
-            onNodeTap!(tappedNode);
+            onAssetTap!(tappedNode);
+          }
+          break;
+        case 'onTicketTap':
+          if (onTicketTap != null) {
+            final tappedNode = call.arguments as String;
+            onTicketTap!(tappedNode);
           }
           break;
         default:
@@ -51,22 +58,49 @@ class ARAnchorManager {
     return Future.value();
   }
 
+  ///Initialize the process of new anchor positioning, can also hide some object anchors
   Future<void> startPositioning({List<String>? toHideIds}) async {
     return await _channel
         .invokeMethod<void>('startPositioning', {'toHideIds': toHideIds});
   }
 
+  ///Complete the process of new anchor positioning, can also show some object anchors
   Future<void> successPositioning({List<String>? toShowIds}) async {
     return await _channel
         .invokeMethod<void>('successPositioning', {'toShowIds': toShowIds});
   }
 
+  ///Abort the process of new anchor positioning, can also show some object anchors
   Future<void> abortPositioning({List<String>? toShowIds}) async {
     return await _channel
         .invokeMethod<void>('abortPositioning', {'toShowIds': toShowIds});
   }
 
-  /// Add given anchor to the underlying AR scene
+  ///Show the given asset ticket anchors from the AR scene, and also show the new located asset ticket anchors
+  Future<void> showAssetTicketsAnchors({required String assetId}) async {
+    return await _channel
+        .invokeMethod<void>('showAssetTicketsAnchors', {'assetId': assetId});
+  }
+
+  ///Hide the given asset ticket anchors from the AR scene, and also hide the new located asset ticket anchors
+  Future<void> hideAssetTicketsAnchors({required String assetId}) async {
+    return await _channel
+        .invokeMethod<void>('hideAssetTicketsAnchors', {'assetId': assetId});
+  }
+
+  ///Show the given geo ticket anchors from the AR scene, and also show the new located geo ticket anchors
+  Future<void> showTicketsAnchors({required List<String> toShowIds}) async {
+    return await _channel
+        .invokeMethod<void>('showTicketsAnchors', {'toShowIds': toShowIds});
+  }
+
+  ///Hide the given geo ticket anchors from the AR scene, and also hide the new located geo ticket anchors
+  Future<void> hideTicketsAnchors({required List<String> toHideIds}) async {
+    return await _channel
+        .invokeMethod<void>('hideTicketsAnchors', {'toHideIds': toHideIds});
+  }
+
+  /// Add anchor to the AR scene where info is Asset or Ticket
   Future<void> createAnchor(
       {required Matrix4 transformation,
       required Map<String, dynamic> info}) async {
@@ -81,7 +115,7 @@ class ARAnchorManager {
     return await _channel.invokeMethod<void>('deleteAnchor', {'id': anchorId});
   }
 
-  /// Upload given anchor from the underlying AR scene to the Google Cloud Anchor API
+  /// Upload the latest added Anchor to the ASA Cloud
   Future<String?> uploadAnchor() async {
     try {
       return await _channel.invokeMethod<String?>('uploadAnchor');
@@ -90,7 +124,7 @@ class ARAnchorManager {
     }
   }
 
-  /// Upload given anchor from the underlying AR scene to the Google Cloud Anchor API
+  /// Delete the given anchor from the ASA Cloud and the AR Scene
   Future<bool?> deleteCloudAnchor({required String anchorId}) async {
     try {
       return await _channel

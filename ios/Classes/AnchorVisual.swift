@@ -18,7 +18,7 @@ class AnchorVisual {
     
     // var arLabel: SKLabelNode? = nil
     
-    func createLabelMaterial()->SCNMaterial {
+    func createLabelMaterial() -> SCNMaterial {
         let sk = SKScene(size: CGSize(width: 1500, height: 1000))
         sk.backgroundColor = UIColor.clear
         // sk.anchorPoint = CGPoint(x:0,y:2024/4)
@@ -64,20 +64,33 @@ class AnchorVisual {
         return material
     }
     
-    func renderNode()->SCNNode {
+    func renderNode(node: SCNNode, hidden: Bool) {
         // see if we need to initialize node
-        if node == nil {
-            node = SCNNode()
-            node!.geometry = SCNPlane(width: 0.4, height: 0.4*2.0/3.0)
-            node!.name = id
+        if self.node == nil {
+            let yFreeConstraint = SCNBillboardConstraint()
+            yFreeConstraint.freeAxes = [.Y, .X] // optionally
+            node.constraints = [yFreeConstraint]
+            node.geometry = SCNPlane(width: 0.4, height: 0.4*2.0/3.0)
+            node.name = id
+            let label: SCNMaterial = createLabelMaterial()
+            let plane = node.geometry as! SCNPlane
+            node.geometry?.materials = [label]
+            node.geometry?.firstMaterial?.diffuse.contentsTransform = SCNMatrix4Translate(SCNMatrix4MakeScale(1, -1, 1), 0, 1, 0)
+            node.position = SCNVector3(x: 0, y: Float(plane.height)/4.0, z: 0)
+            if hidden {
+                node.isHidden = true
+            } else {
+                node.isHidden = false
+            }
+            self.node = node
         }
-        var label: SCNMaterial = createLabelMaterial()
-        
-        let plane = node!.geometry as! SCNPlane
-        node!.geometry?.materials = [label]
-        node!.geometry?.firstMaterial?.diffuse.contentsTransform = SCNMatrix4Translate(SCNMatrix4MakeScale(1, -1, 1), 0, 1, 0)
-        node!.position = SCNVector3(x: 0, y: Float(plane.height)/4.0, z: 0)
-               
-        return node!
+    }
+    
+    func hide() {
+        node?.isHidden = true
+    }
+
+    func show() {
+        node?.isHidden = false
     }
 }

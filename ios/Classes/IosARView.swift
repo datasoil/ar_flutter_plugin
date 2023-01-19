@@ -5,7 +5,7 @@ import Flutter
 import Foundation
 import UIKit
 
-class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureRecognizerDelegate, ARSessionDelegate, ASACloudSpatialAnchorSessionDelegate {
+class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureRecognizerDelegate, ASACloudSpatialAnchorSessionDelegate {
     let sceneView: ARSCNView
     let coachingView: ARCoachingOverlayView
     let sessionManagerChannel: FlutterMethodChannel
@@ -17,10 +17,13 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     var pendingAnchorVisual: AnchorVisual?
     var anchorVisuals = [String: AnchorVisual]()
     var cloudSession: ASACloudSpatialAnchorSession?
+    var mainWatcher: ASACloudSpatialAnchorWatcher?
     private var apiKey: String = "NONE"
     private var apiId: String = "NONE"
-    private var nearbyAssets: [AnchorInfo] = []
-    private var nearbyTickets: [AnchorInfo] = []
+    private var nearbyAssets = [String: AnchorInfo]()
+    private var nearbyTickets = [String: AnchorInfo]()
+    var hideAssetTickets = [String: Bool]()
+    var hideTickets = false
 
     init(
         frame: CGRect,
@@ -33,10 +36,14 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             self.apiId = argumentsDictionary["apiId"] as! String
             self.apiKey = argumentsDictionary["apiKey"] as! String
             if let assets = argumentsDictionary["assets"] as? [[String: Any]] {
-                self.nearbyAssets = assets.map { AnchorInfo(val: $0) }
+                self.nearbyAssets = assets.reduce(into: [String: AnchorInfo]()) {
+                    $0[$1["id"] as! String] = AnchorInfo(val: $1)
+                }
             }
             if let tickets = argumentsDictionary["tickets"] as? [[String: Any]] {
-                self.nearbyTickets = tickets.map { AnchorInfo(val: $0) }
+                self.nearbyTickets = tickets.reduce(into: [String: AnchorInfo]()) {
+                    $0[$1["id"] as! String] = AnchorInfo(val: $1)
+                }
             }
         }
         print("nearbyTickets LEN: " + String(nearbyTickets.count))
@@ -50,14 +57,10 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
 
         sceneView.delegate = self
         coachingView.delegate = self
-        sceneView.session.delegate = self
+        // sceneView.session.delegate = self
 
         sessionManagerChannel.setMethodCallHandler(onSessionMethodCalled)
         anchorManagerChannel.setMethodCallHandler(onAnchorMethodCalled)
-
-        self.configuration = ARWorldTrackingConfiguration()
-        configuration.environmentTexturing = .automatic
-        configuration.planeDetection = [.horizontal, .vertical]
 
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         tapGestureRecognizer.delegate = self
@@ -71,6 +74,9 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             coachingView.activatesAutomatically = true
             coachingView.goal = .tracking
         }
+        self.configuration = ARWorldTrackingConfiguration()
+        configuration.environmentTexturing = .automatic
+        configuration.planeDetection = [.horizontal, .vertical]
         sceneView.session.run(configuration)
 
         startSession()
@@ -80,20 +86,46 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         return sceneView
     }
 
-    func onDispose(_ result: FlutterResult) {
-        sceneView.session.pause()
+    func onDispose() {
+        print("DISPOSE ARVIEW")
         stopSession()
+        sceneView.session.pause()
         sessionManagerChannel.setMethodCallHandler(nil)
         anchorManagerChannel.setMethodCallHandler(nil)
-        result(nil)
+    }
+
+    func onPause() {
+        sceneView.session.pause()
+        print("PAUSE ARVIEW")
+    }
+
+    func onResume() {
+        print("RESTART ARVIEW")
+        configuration = ARWorldTrackingConfiguration()
+        configuration.environmentTexturing = .automatic
+        configuration.planeDetection = [.horizontal, .vertical]
+        sceneView.session.run(configuration)
     }
 
     func onSessionMethodCalled(_ call: FlutterMethodCall, _ result: FlutterResult) {
-        // let arguments = call.arguments as? [String: Any]
+        let arguments = call.arguments as? [String: Any]
 
         switch call.method {
             case "dispose":
-                onDispose(result)
+                onDispose()
+                result(nil)
+            case "pause":
+                onPause()
+                result(nil)
+            case "resume":
+                onResume()
+                result(nil)
+            case "updateNearbyObjects":
+                let assetsDict = arguments?["assets"] as? [[String: Any]]
+                let ticketsDict = arguments?["tickets"] as? [[String: Any]]
+                let assets = assetsDict?.map { AnchorInfo(val: $0) }
+                let tickets = ticketsDict?.map { AnchorInfo(val: $0) }
+                updateNearbyObjects(newAssets: assets, newTickets: tickets)
                 result(nil)
             default:
                 result(FlutterMethodNotImplemented)
@@ -135,10 +167,134 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             case "deleteCloudAnchor":
                 let infoId = arguments!["id"] as! String
                 deleteCloudAnchor(infoId: infoId, result: result)
+            case "showAssetTicketsAnchors":
+                let assetId = arguments?["assetId"] as! String
+                if let asset = nearbyAssets[assetId], let ats = asset.tickets {
+                    showAnchors(ids: ats.compactMap { $0.id })
+                    hideAssetTickets[assetId] = false
+                }
+                result(nil)
+            case "hideAssetTicketsAnchors":
+                let assetId = arguments?["assetId"] as! String
+                if let asset = nearbyAssets[assetId], let ats = asset.tickets {
+                    hideAnchors(ids: ats.compactMap { $0.id })
+                    hideAssetTickets[assetId] = true
+                }
+                result(nil)
+            case "showTicketsAnchors":
+                let toHide = arguments?["toShowIds"] as! [String]
+                showAnchors(ids: toHide)
+                hideTickets = false
+                result(nil)
+            case "hideTicketsAnchors":
+                let toHide = arguments?["toHideIds"] as! [String]
+                hideAnchors(ids: toHide)
+                hideTickets = true
+                result(nil)
 
             default:
                 result(FlutterMethodNotImplemented)
         }
+    }
+
+    func updateNearbyObjects(newAssets: [AnchorInfo]?, newTickets: [AnchorInfo]?) {
+        NSLog("updateNearbyObjects")
+        NSLog("NT LEN: " + String(newTickets?.count ?? 0))
+        NSLog("OT LEN: " + String(nearbyTickets.count))
+
+        NSLog("NA LEN: " + String(newAssets?.count ?? 0))
+        NSLog("OT LEN: " + String(nearbyAssets.count))
+        if newTickets != nil {
+            NSLog("ho nuovi geoticket")
+            // ho dei nuovi ticket
+            for nt in newTickets! {
+                // se c'era già lo aggiorno, altrimenti lo aggiungo
+                nearbyTickets[nt.id] = nt
+                // controllo le anchorvisual se devo aggiornarle
+                if anchorVisuals[nt.id] != nil {
+                    // aggiorno la visual con il nuovo ticket
+                    if nt.ARanchorID != nil {
+                        anchorVisuals[nt.id]!.info = nt
+                    } else {
+                        deleteAnchor(infoId: nt.id)
+                    }
+                    // forse va aggiornata anche la label del nodo
+                }
+            }
+            if newTickets!.count < nearbyTickets.count {
+                NSLog("hanno rimosso geoticket")
+                // hanno rimosso dei ticket
+                for ot in nearbyTickets.values {
+                    if !newTickets!.contains(where: { $0.id == ot.id }) {
+                        let id = ot.id
+                        // ot non è contenuto nei newTicket, quindi lo tolgo
+                        nearbyTickets.removeValue(forKey: id)
+                        // elimino anche l' anchor visual
+                        deleteAnchor(infoId: id)
+                    }
+                }
+            }
+        }
+
+        if newAssets != nil {
+            NSLog("ho nuovi asset")
+            // ho dei nuovi asset
+            for na in newAssets! {
+                // controllo le anchorvisual per sapere se devo aggiornare quella dell' asset
+                if anchorVisuals[na.id] != nil {
+                    // aggiorno la visual con il nuovo asset
+                    if na.ARanchorID != nil {
+                        anchorVisuals[na.id]!.info = na
+                    } else {
+                        deleteAnchor(infoId: na.id)
+                    }
+                    // forse va aggiornata anche la label del nodo
+                }
+                // controllo le anchorvisual per sapere se devo aggiornare quelle dei ticket dell' asset
+                na.tickets?.forEach {
+                    if anchorVisuals[$0.id] != nil {
+                        // aggiorno la visual con il nuovo asset
+                        if $0.ARanchorID != nil {
+                            anchorVisuals[$0.id]!.info = $0
+                        } else {
+                            deleteAnchor(infoId: $0.id)
+                        }
+                        // forse va aggiornata anche la label del nodo
+                    }
+                }
+                if let nats = na.tickets, let oa = nearbyAssets[na.id], let oats = oa.tickets, nats.count < oats.count {
+                    NSLog("hanno rimosso asset ticket")
+                    // hanno rimosso degli asset ticket
+                    for oat in oats {
+                        if !nats.contains(where: { $0.id == oat.id }) {
+                            let id = oat.id
+                            // oat non è contenuto nei newAssetsTickets, quindi lo tolgo
+                            oa.tickets = oa.tickets?.filter { $0.id != id }
+                            // elimino anche l' anchor visual
+                            deleteAnchor(infoId: id)
+                        }
+                    }
+                }
+                // se c'era già lo aggiorno, altrimenti lo aggiungo
+                nearbyAssets[na.id] = na
+            }
+            if newAssets!.count < nearbyAssets.count {
+                NSLog("hanno rimosso asset")
+                // hanno rimosso degli asset
+                for oa in nearbyAssets.values {
+                    if !newAssets!.contains(where: { $0.id == oa.id }) {
+                        let id = oa.id
+                        // elimino le visual dei ticket dell'asset
+                        oa.tickets?.forEach { deleteAnchor(infoId: $0.id) }
+                        // oa non è contenuto nei newAssets, quindi lo tolgo
+                        nearbyAssets.removeValue(forKey: id)
+                        // elimino anche l' anchor visual
+                        deleteAnchor(infoId: id)
+                    }
+                }
+            }
+        }
+        lookForNearbyAnchors()
     }
 
     func startSession() {
@@ -154,7 +310,31 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         cloudSession!.configuration.accountKey = apiKey
         cloudSession!.start()
         print("STARTED")
-        updateLookForAssetsAnchor()
+        lookForNearbyAnchors()
+    }
+
+    func lookForNearbyAnchors() {
+        if (nearbyAssets.count < 1 && nearbyTickets.count < 1) || cloudSession == nil {
+            return
+        }
+        // compactMap rimuove gli elementi a nil
+        // attualmente non sto cercando gli anchor dei ticket degli asset
+        var ids: [String] = []
+        for asset in nearbyAssets.values {
+            if let assetARanchor = asset.ARanchorID {
+                ids.append(assetARanchor)
+            }
+            if let t = asset.tickets {
+                ids.append(contentsOf: t.compactMap { $0.ARanchorID })
+            }
+        }
+        ids.append(contentsOf: nearbyTickets.compactMapValues { $0.ARanchorID }.values)
+        print("SEARCHING ANCHORS", ids)
+        let criteria = ASAAnchorLocateCriteria()!
+        criteria.identifiers = ids
+        let ws = cloudSession!.getActiveWatchers()
+        ws?.first?.stop()
+        cloudSession!.createWatcher(criteria)
     }
 
     func stopSession() {
@@ -165,9 +345,9 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         cloudSession = nil
 
         for visual in anchorVisuals.values {
-            visual.node?.parent?.removeFromParentNode()
+            visual.node?.removeFromParentNode()
+            sceneView.session.remove(anchor: visual.localAnchor)
         }
-
         anchorVisuals.removeAll()
     }
 
@@ -192,7 +372,15 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                 sceneView.session.remove(anchor: av.localAnchor)
                 cloudSession!.delete(av.cloudAnchor!, withCompletionHandler: { (_: Error?) in })
             }
-            anchorVisuals[id] = pendingAnchorVisual
+            let newArAnchorId = pav.cloudAnchor!.identifier
+            if let asset = nearbyAssets[id] {
+                asset.ARanchorID = newArAnchorId
+            } else if let ticket = nearbyTickets[id] {
+                ticket.ARanchorID = newArAnchorId
+            } else if let assetTicket = nearbyAssets.values.filter({ $0.tickets != nil }).flatMap({ $0.tickets ?? [] }).first(where: { $0.id == id }) {
+                assetTicket.ARanchorID = newArAnchorId
+            }
+            anchorVisuals[id] = pav
             pendingAnchorVisual = nil
         }
     }
@@ -209,27 +397,15 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     }
 
     func hideAnchors(ids: [String]) {
-        ids.forEach { if anchorVisuals[$0] != nil { anchorVisuals[$0]!.node?.isHidden = true }}
+        print("ALL ANCHORS", anchorVisuals.keys)
+        print("HIDE ANCHORS", ids)
+        ids.forEach { if anchorVisuals[$0] != nil { anchorVisuals[$0]!.hide() }}
     }
 
     func showAnchors(ids: [String]) {
-        ids.forEach { if anchorVisuals[$0] != nil { anchorVisuals[$0]!.node?.isHidden = false }}
-    }
-
-    func updateLookForAssetsAnchor() {
-        if nearbyAssets.count < 1 || cloudSession == nil {
-            return
-        }
-        // compactMap rimuove gli elementi a nil
-        // attualmente non sto cercando gli anchor dei ticket degli asset
-        var ids = nearbyAssets.compactMap { $0.ARanchorID }
-        ids.append(contentsOf: nearbyTickets.compactMap { $0.ARanchorID })
-        print("SEARCHING IDS", ids)
-        let criteria = ASAAnchorLocateCriteria()!
-        criteria.identifiers = ids
-        let ws = cloudSession!.getActiveWatchers()
-        ws?.first?.stop()
-        cloudSession!.createWatcher(criteria)
+        print("ALL ANCHORS", anchorVisuals.keys)
+        print("SHOW ANCHORS", ids)
+        ids.forEach { if anchorVisuals[$0] != nil { anchorVisuals[$0]!.show() }}
     }
 
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
@@ -237,23 +413,24 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             // se è un anchor plane ignoro
             return
         }
+        // anchor creato
         if let pav = pendingAnchorVisual, pav.localAnchor == anchor {
-            let anode: SCNNode? = pav.renderNode()
-            let yFreeConstraint = SCNBillboardConstraint()
-            yFreeConstraint.freeAxes = [.Y, .X] // optionally
-            node.constraints = [yFreeConstraint]
-            node.isHidden = false
-            node.addChildNode(anode!)
+            pav.renderNode(node: node, hidden: false)
             return
         }
+        // anchor localizzato
         for visual in anchorVisuals.values {
             if visual.localAnchor == anchor {
-                let anode: SCNNode? = visual.renderNode()
-                let yFreeConstraint = SCNBillboardConstraint()
-                yFreeConstraint.freeAxes = [.Y, .X] // optionally
-                node.constraints = [yFreeConstraint]
-                node.isHidden = false
-                node.addChildNode(anode!)
+                if nearbyAssets[visual.id] != nil {
+                    // significa che l'anchor individuato è di un asset
+                    visual.renderNode(node: node, hidden: false)
+                } else if nearbyTickets[visual.id] != nil {
+                    // significa che l'anchor individuato è di un ticket
+                    visual.renderNode(node: node, hidden: hideTickets)
+                } else if let asset = nearbyAssets.values.first(where: { $0.tickets?.contains(where: { $0.id == visual.id }) ?? false }) {
+                    // significa che l'anchor individuato è di un assetTicket
+                    visual.renderNode(node: node, hidden: hideAssetTickets[asset.id] ?? true)
+                }
                 return
             }
         }
@@ -269,7 +446,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         let status = args.status!
 
         let enoughDataForSaving = status.recommendedForCreateProgress >= 1.0
-        NSLog(String(status.recommendedForCreateProgress))
+        // NSLog(String(status.recommendedForCreateProgress))
         if enoughDataForSaving {
             sessionManagerChannel.invokeMethod("readyToUpload", arguments: nil)
         }
@@ -284,6 +461,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
 
     func deleteAnchor(infoId: String) {
         if let v = anchorVisuals[infoId] {
+            NSLog("deleteAnchor")
             sceneView.session.remove(anchor: v.localAnchor)
             anchorVisuals.removeValue(forKey: infoId)
         }
@@ -327,6 +505,13 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                     NSLog("deleted")
                     self.sceneView.session.remove(anchor: visual.localAnchor)
                     self.anchorVisuals.removeValue(forKey: infoId)
+                    if let asset = self.nearbyAssets[infoId] {
+                        asset.ARanchorID = nil
+                    } else if let ticket = self.nearbyTickets[infoId] {
+                        ticket.ARanchorID = nil
+                    } else if let assetTicket = self.nearbyAssets.values.filter({ $0.tickets != nil }).flatMap({ $0.tickets ?? [] }).first(where: { $0.id == infoId }) {
+                        assetTicket.ARanchorID = nil
+                    }
                     result(true)
                 }
             })
@@ -336,27 +521,33 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     internal func anchorLocated(_ cloudSpatialAnchorSession: ASACloudSpatialAnchorSession!, _ args: ASAAnchorLocatedEventArgs!) {
         let status = args.status
         switch status {
-            case .located:
+            case .located, .alreadyTracked:
                 let cloudAnchor = args.anchor
                 print("Cloud Anchor found! Identifier: \(cloudAnchor!.identifier ?? "nil").")
                 // cerco prima negli asset
-                if let asset = nearbyAssets.first(where: { $0.ARanchorID == cloudAnchor?.identifier }) {
-                    let visual = AnchorVisual(localAnchor: cloudAnchor!.localAnchor, info: asset)
-                    visual.cloudAnchor = cloudAnchor
-                    anchorVisuals[asset.id] = visual
-                    sceneView.session.add(anchor: cloudAnchor!.localAnchor)
+                if let asset = nearbyAssets.values.first(where: { $0.ARanchorID == cloudAnchor?.identifier }) {
+                    if anchorVisuals[asset.id] == nil {
+                        let visual = AnchorVisual(localAnchor: cloudAnchor!.localAnchor, info: asset)
+                        visual.cloudAnchor = cloudAnchor
+                        anchorVisuals[asset.id] = visual
+                        sceneView.session.add(anchor: cloudAnchor!.localAnchor)
+                    }
                     // cerco nei ticket
-                } else if let ticket = nearbyTickets.first(where: { $0.ARanchorID == cloudAnchor?.identifier }) {
-                    let visual = AnchorVisual(localAnchor: cloudAnchor!.localAnchor, info: ticket)
-                    visual.cloudAnchor = cloudAnchor
-                    anchorVisuals[ticket.id] = visual
-                    sceneView.session.add(anchor: cloudAnchor!.localAnchor)
+                } else if let ticket = nearbyTickets.values.first(where: { $0.ARanchorID == cloudAnchor?.identifier }) {
+                    if anchorVisuals[ticket.id] == nil {
+                        let visual = AnchorVisual(localAnchor: cloudAnchor!.localAnchor, info: ticket)
+                        visual.cloudAnchor = cloudAnchor
+                        anchorVisuals[ticket.id] = visual
+                        sceneView.session.add(anchor: cloudAnchor!.localAnchor)
+                    }
                     // cerco nei ticket dentro gli asset
-                } else if let assetTicket = nearbyAssets.filter({ $0.tickets != nil }).flatMap({ $0.tickets ?? [] }).first(where: { $0.ARanchorID == cloudAnchor?.identifier }) {
-                    let visual = AnchorVisual(localAnchor: cloudAnchor!.localAnchor, info: assetTicket)
-                    visual.cloudAnchor = cloudAnchor
-                    anchorVisuals[assetTicket.id] = visual
-                    sceneView.session.add(anchor: cloudAnchor!.localAnchor)
+                } else if let assetTicket = nearbyAssets.values.filter({ $0.tickets != nil }).flatMap({ $0.tickets ?? [] }).first(where: { $0.ARanchorID == cloudAnchor?.identifier }) {
+                    if anchorVisuals[assetTicket.id] == nil {
+                        let visual = AnchorVisual(localAnchor: cloudAnchor!.localAnchor, info: assetTicket)
+                        visual.cloudAnchor = cloudAnchor
+                        anchorVisuals[assetTicket.id] = visual
+                        sceneView.session.add(anchor: cloudAnchor!.localAnchor)
+                    }
                 } else {
                     print("ERROR Located an unknown anchor!!!!!!!")
                     break
@@ -373,11 +564,20 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         NSLog("onTap")
         let touchLocation = recognizer.location(in: sceneView)
         let allHitResults = sceneView.hitTest(touchLocation, options: [SCNHitTestOption.searchMode: SCNHitTestSearchMode.closest.rawValue])
-        let nodeHitResult = allHitResults.first?.node
-        if nodeHitResult != nil && nodeHitResult?.name != nil {
+
+        if let nodeHitResultName = allHitResults.first?.node.name {
             NSLog("onNodeTap")
-            NSLog(nodeHitResult!.name!)
-            anchorManagerChannel.invokeMethod("onNodeTap", arguments: nodeHitResult!.name!)
+            NSLog(nodeHitResultName)
+            if let visual = anchorVisuals[nodeHitResultName] {
+                switch visual.info.type {
+                    case "asset":
+                        anchorManagerChannel.invokeMethod("onAssetTap", arguments: nodeHitResultName)
+                    case "ticket":
+                        anchorManagerChannel.invokeMethod("onTicketTap", arguments: nodeHitResultName)
+                    default:
+                        NSLog("ERROR: node tapped unrecognized")
+                }
+            }
             return
         }
         if enableTapToAdd {
