@@ -1,36 +1,22 @@
 package io.carius.lars.ar_flutter_plugin
 
 import android.app.Activity
-import android.app.Application
 import android.content.Context
-import android.opengl.EGL14
-import android.opengl.EGLContext
-import android.opengl.EGLDisplay
-import android.opengl.EGLSurface
-import android.os.Bundle
-import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
 import android.widget.Toast
-import android.widget.TextView
-import android.widget.LinearLayout
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
 import com.google.ar.sceneform.*
-import com.google.ar.sceneform.rendering.*
-import com.google.ar.sceneform.ux.*
 import com.microsoft.azure.spatialanchors.* //import all ASA stuff
 import io.carius.lars.ar_flutter_plugin.Serialization.deserializeMatrix4
 import io.carius.lars.ar_flutter_plugin.Serialization.serializeHitResult
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import java.util.*
-import java.text.DecimalFormat
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
 
@@ -50,7 +36,6 @@ internal class AndroidARView(
 
     // Lifecycle variables
     private var mUserRequestedInstall = true
-    lateinit var activityLifecycleCallbacks: Application.ActivityLifecycleCallbacks
     private val viewContext: Context
 
     // Platform channels
@@ -62,36 +47,44 @@ internal class AndroidARView(
     private var isStarted: Boolean = false
     private var showAnimatedGuide: Boolean = false
     private var animatedGuide: View
-    private var showScanProgress: Boolean = false
-    private lateinit var scanProgress: View
 
 
     private var azureSpatialAnchorsManager: AzureSpatialAnchorsManager? = null
-    private val anchorVisuals: ConcurrentHashMap<String, AnchorVisualAsset> = ConcurrentHashMap()
+    private val anchorVisuals: ConcurrentHashMap<String, AnchorVisual> = ConcurrentHashMap()
+    private val nearbyAssets: ConcurrentHashMap<String, AnchorInfo> = ConcurrentHashMap()
+    private val nearbyTickets: ConcurrentHashMap<String, AnchorInfo> = ConcurrentHashMap()
+    private var pendingAnchorVisual: AnchorVisual? = null
+    private val hideAssetTickets: ConcurrentHashMap<String, Boolean> = ConcurrentHashMap()
+    private var hideTickets = false
+    private var enableTapToAdd = false
 
-    // Assets
-    private var nearbyAssets: ArrayList<Asset> = ArrayList()
 
     private var sceneUpdateListener: Scene.OnUpdateListener
 
 
     // Method channel handlers
-    private val onSessionMethodCall = object : MethodChannel.MethodCallHandler {
-        override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+    private val onSessionMethodCall =
+        MethodChannel.MethodCallHandler { call, result ->
+            Log.d(TAG, call.method + "called in sessionmanager")
             when (call.method) {
                 "dispose" -> {
-                    Log.d(TAG, call.method + "called in sessionmanager")
-                    dispose()
+                    onDestroy()
                     result.success(null)
                 }
                 "pause" -> {
-                    Log.d(TAG, call.method + "called in sessionmanager")
                     onPause()
                     result.success(null)
                 }
                 "resume" -> {
-                    Log.d(TAG, call.method + "called in sessionmanager")
                     onResume()
+                    result.success(null)
+                }
+                "updateNearbyObjects" -> {
+                    val assetsDict: List<Map<String, Any>>? = call.argument("assets")
+                    val ticketsDict: List<Map<String, Any>>? = call.argument("tickets")
+                    val assets = assetsDict?.map { map -> AnchorInfo(map) }
+                    val tickets = ticketsDict?.map { map -> AnchorInfo(map) }
+                    updateNearbyObjects(assets, tickets)
                     result.success(null)
                 }
                 else -> {
@@ -99,69 +92,232 @@ internal class AndroidARView(
                 }
             }
         }
-    }
-    private val onAnchorMethodCall = object : MethodChannel.MethodCallHandler {
-        override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+
+    private val onAnchorMethodCall =
+        MethodChannel.MethodCallHandler { call, result ->
             when (call.method) {
-                "addAnchor" -> {
-                    val dictAsset: HashMap<String, Any>? = call.argument("asset")
-                    val dictAnchor: HashMap<String, Any>? = call.argument("anchor")
-                    if (dictAsset != null && dictAnchor != null) {
-                        val transform: ArrayList<Double> =
-                            dictAnchor["transformation"] as ArrayList<Double>
-                        val name: String = dictAnchor["name"] as String
-                        val asset = Asset(dictAsset)
-                        result.success(addAnchor(transform, name, asset))
-                    } else {
-                        result.success(false)
-                    }
+                "startPositioning" -> {
+                    val toHide: List<String>? = call.argument("toHideIds")
+                    startPositioning(toHide)
+                    result.success(null)
                 }
-                "removeAnchor" -> {
-                    val anchorName: String? = call.argument("name")
-                    if (anchorName != null) {
-                        result.success(removeAnchor(anchorName))
-                    } else {
-                        result.success(false)
-                    }
+                "createAnchor" -> {
+                    val dictInfo = call.argument("info") as HashMap<String, Any>?
+                    val transform = call.argument("transformation") as ArrayList<Double>?
+                    createAnchor(transform!!, AnchorInfo(dictInfo!!))
+                    result.success(null)
                 }
                 "uploadAnchor" -> {
-                    val anchorName: String? = call.argument("name")
-                    if (anchorName != null) {
-                        uploadAnchor(anchorName, result)
-                    } else {
-                        result.success(false)
-                    }
+                    uploadAnchor(result)
                 }
-                "removeCloudAnchor" -> {
-                    val anchorName: String? = call.argument("name")
-                    if (anchorName != null) {
-                        removeCloudAnchor(anchorName, result)
-                    } else {
-                        result.success(false)
+                "successPositioning" -> {
+                    val toShow: List<String>? = call.argument("toShowIds")
+                    successPositioning(toShow)
+                    result.success(null)
+                }
+                "abortPositioning" -> {
+                    val toShow: List<String>? = call.argument("toShowIds")
+                    abortPositioning(toShow)
+                    result.success(null)
+                }
+                "deleteAnchor" -> {
+                    val infoId = call.argument("id") as String?
+                    deleteAnchor(infoId!!)
+                    result.success(null)
+                }
+                "deleteCloudAnchor" -> {
+                    val infoId = call.argument("id") as String?
+                    deleteCloudAnchor(infoId!!, result)
+                }
+                "showAssetTicketsAnchors" -> {
+                    val assetId = call.argument("assetId") as String?
+                    val nA = nearbyAssets[assetId]
+                    val naT = nearbyAssets[assetId]?.tickets
+                    if (nA != null && naT?.isNotEmpty() == true) {
+                        showAnchors(naT.map { t -> t.id })
+                        hideAssetTickets[assetId!!] = false
                     }
+                    result.success(null)
+                }
+                "hideAssetTicketsAnchors" -> {
+                    val assetId = call.argument("assetId") as String?
+                    val nA = nearbyAssets[assetId]
+                    val naT = nearbyAssets[assetId]?.tickets
+                    if (nA != null && naT?.isNotEmpty() == true) {
+                        hideAnchors(naT.map { t -> t.id })
+                        hideAssetTickets[assetId!!] = true
+                    }
+                    result.success(null)
+                }
+                "showTicketsAnchors" -> {
+                    val toShow = call.argument("toShowIds") as List<String>?
+                    showAnchors(toShow!!)
+                    hideTickets = false
+                    result.success(null)
+                }
+                "hideTicketsAnchors" -> {
+                    val toHide = call.argument("toHideIds") as List<String>?
+                    hideAnchors(toHide!!)
+                    hideTickets = true
+                    result.success(null)
                 }
                 else -> {
                     Log.d(TAG, call.method + "not supported on anchorManager")
                 }
             }
         }
+
+    private fun showAnchors(ids: List<String>) {
+        ids.forEach { id -> anchorVisuals[id]?.show() }
+    }
+
+    private fun hideAnchors(ids: List<String>) {
+        ids.forEach { id -> anchorVisuals[id]?.hide() }
+    }
+
+    private fun abortPositioning(toShowIds: List<String>?) {
+        if (toShowIds != null) {
+            showAnchors(toShowIds)
+        }
+        enableTapToAdd = false
+        if (pendingAnchorVisual != null) {
+            activity.runOnUiThread {
+                pendingAnchorVisual!!.dispose()
+            }
+            pendingAnchorVisual = null
+        }
+    }
+
+    private fun successPositioning(toShowIds: List<String>?) {
+        if (toShowIds != null) {
+            showAnchors(toShowIds)
+        }
+        enableTapToAdd = false
+        if (pendingAnchorVisual != null) {
+            val id = pendingAnchorVisual!!.id
+            if (anchorVisuals[id] != null) {
+                azureSpatialAnchorsManager?.deleteAnchorAsync(anchorVisuals[id]!!.cloudAnchor!!)
+                anchorVisuals[id]!!.dispose()
+            }
+            val newArAnchorId = pendingAnchorVisual!!.cloudAnchor!!.identifier
+            if (nearbyAssets[id] != null) {
+                nearbyAssets[id]!!.ARanchorId = newArAnchorId
+            } else if (nearbyTickets[id] != null) {
+                nearbyTickets[id]!!.ARanchorId = newArAnchorId
+            } else {
+                val assetTicket = nearbyAssets.values.mapNotNull { a -> a.tickets }.flatten()
+                    .firstOrNull { t -> t.id == id }
+                if (assetTicket != null) {
+                    assetTicket.ARanchorId = newArAnchorId
+                }
+            }
+            anchorVisuals[id] = pendingAnchorVisual!!
+            pendingAnchorVisual = null
+        }
+    }
+
+    private fun startPositioning(toHideIds: List<String>?) {
+        if (toHideIds != null) {
+            hideAnchors(toHideIds)
+        }
+        enableTapToAdd = true
+    }
+
+    private fun updateNearbyObjects(newAssets: List<AnchorInfo>?, newTickets: List<AnchorInfo>?) {
+        if (newTickets?.isNotEmpty() == true) {
+            for (nt in newTickets) {
+                nearbyTickets[nt.id] = nt
+                if (anchorVisuals[nt.id] != null) {
+                    if (nt.ARanchorId != null) {
+                        anchorVisuals[nt.id]!!.info = nt
+                    } else {
+                        deleteAnchor(nt.id)
+                    }
+                }
+            }
+            if (newTickets.size < nearbyTickets.size) {
+                for (ot in nearbyTickets.values) {
+                    if (newTickets.none { nt -> nt.id == ot.id }) {
+                        val id = ot.id
+                        nearbyTickets.remove(id)
+                        deleteAnchor(id)
+                    }
+                }
+            }
+        }
+        if (newAssets?.isNotEmpty() == true) {
+            //ho dei nuovi ticket
+            for (na in newAssets) {
+                if (anchorVisuals[na.id] != null) {
+                    if (na.ARanchorId != null) {
+                        anchorVisuals[na.id]!!.info = na
+                    } else {
+                        deleteAnchor(na.id)
+                    }
+                }
+                val nats = na.tickets
+                val oa = nearbyAssets[na.id]
+                val oats = oa?.tickets
+                if (nats != null) {
+                    for (nat in nats) {
+                        if (anchorVisuals[nat.id] != null) {
+                            if (nat.ARanchorId != null) {
+                                anchorVisuals[nat.id]!!.info = nat
+                            } else {
+                                deleteAnchor(nat.id)
+                            }
+                        }
+                    }
+                    if (oa != null && oats != null && nats.size < oats.size) {
+                        for (oat in oats) {
+                            if (nats.none { nat -> nat.id == oat.id }) {
+                                val id = oat.id
+                                oa.tickets!!.removeIf { t -> t.id != id }
+                                deleteAnchor(id)
+                            }
+                        }
+                    }
+                }
+                nearbyAssets[na.id] = na
+            }
+            if (newAssets.size < nearbyAssets.size) {
+                for (oa in nearbyAssets.values) {
+                    if (newAssets.none { na -> na.id == oa.id }) {
+                        val id = oa.id
+                        oa.tickets?.forEach { t -> deleteAnchor(t.id) }
+                        nearbyAssets.remove(id)
+                        deleteAnchor(id)
+                    }
+                }
+            }
+        }
+        lookForNearbyAnchors()
     }
 
     init {
         //costruttore
         //queste operazioni vengono eseguite solo alla costruzione della view
         Log.d(TAG, "Initializing AndroidARView")
-        val assets: List<Map<String, Any>> = creationParams!!["assets"] as List<Map<String, Any>>
-        for (map in assets.toTypedArray()) {
-            nearbyAssets.add(Asset(map))
+        val assets = creationParams!!["assets"] as? List<Map<String, Any>>
+        val tickets = creationParams["tickets"] as? List<Map<String, Any>>
+        if (assets != null && assets.isNotEmpty()) {
+            for (map in assets.toTypedArray()) {
+                nearbyAssets[map["id"].toString()] = AnchorInfo(map)
+            }
         }
+        if (tickets != null && tickets.isNotEmpty()) {
+            for (map in tickets.toTypedArray()) {
+                nearbyTickets[map["id"].toString()] = AnchorInfo(map)
+            }
+        }
+
         viewContext = context
         //creo la scena
         arSceneView = ArSceneView(context)
 
         //setup lifecycle per gestire gli eventi della main activity(flutter activity)
         //ossia cosa deve fare il plugin se pauso/chiudo/riapro l'app
-        setupLifeCycle(context)
+        //setupLifeCycle(context)
 
         sessionManagerChannel.setMethodCallHandler(onSessionMethodCall)
         anchorManagerChannel.setMethodCallHandler(onAnchorMethodCall)
@@ -182,7 +338,7 @@ internal class AndroidARView(
             Scene.OnUpdateListener { frameTime: FrameTime ->
                 val frame = arSceneView.arFrame
                 if (frame != null) {
-                    if (azureSpatialAnchorsManager!=null) {
+                    if (azureSpatialAnchorsManager != null) {
                         //se ASA session è inizializzata propago l'update
                         azureSpatialAnchorsManager!!.update(frame)
                     }
@@ -190,8 +346,9 @@ internal class AndroidARView(
                     if (showAnimatedGuide && arSceneView.arFrame != null) {
                         for (plane in arSceneView.arFrame!!.getUpdatedTrackables(Plane::class.java)) {
                             if (plane.trackingState === TrackingState.TRACKING) {
-                                val view = activity.findViewById(android.R.id.content) as ViewGroup
-                                view.removeView(animatedGuide)
+                                val contentView =
+                                    activity.findViewById(android.R.id.content) as ViewGroup
+                                contentView.removeView(animatedGuide)
                                 showAnimatedGuide = false
                                 break
                             }
@@ -205,7 +362,7 @@ internal class AndroidARView(
         arSceneView.scene?.addOnUpdateListener(sceneUpdateListener)
 
         // Configure whether or not detected planes should be shown
-        arSceneView.planeRenderer.isVisible = true
+        arSceneView.planeRenderer.isVisible = false
 
         //lancio onResume a mano
         onResume()
@@ -218,55 +375,11 @@ internal class AndroidARView(
     override fun dispose() {
         // Destroy AR session
         Log.d(TAG, "dispose called")
-        try {
+        /*try {
             onDestroy()
         } catch (e: Exception) {
             e.printStackTrace()
-        }
-    }
-
-    private fun setupLifeCycle(context: Context) {
-        Log.d(TAG, "setupLifeCycle")
-        activityLifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
-            override fun onActivityCreated(
-                activity: Activity, savedInstanceState: Bundle?
-            ) {
-                Log.d(TAG, "onActivityCreated")
-            }
-
-            override fun onActivityStarted(activity: Activity) {
-                Log.d(TAG, "onActivityStarted")
-            }
-
-            override fun onActivityResumed(activity: Activity) {
-                Log.d(TAG, "onActivityResumed")
-                onResume()
-            }
-
-            override fun onActivityPaused(activity: Activity) {
-                Log.d(TAG, "onActivityPaused")
-                //onPause()
-            }
-
-            override fun onActivityStopped(activity: Activity) {
-                Log.d(TAG, "onActivityStopped")
-                onPause()
-            }
-
-            override fun onActivitySaveInstanceState(
-                activity: Activity, outState: Bundle
-            ) {
-            }
-
-            override fun onActivityDestroyed(activity: Activity) {
-                Log.d(TAG, "onActivityDestroyed")
-                onDestroy()
-                //premi il tasto home l'app va in pausa, elimini dallo stack delle app
-                //aperte viene chiamato on destroy
-            }
-        }
-
-        activity.application.registerActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
+        }*/
     }
 
     fun onResume() {
@@ -276,7 +389,7 @@ internal class AndroidARView(
         if (arSceneView.session == null) {
             Log.d(TAG, "ARSceneView session is null. Trying to initialize")
             try {
-                var session: Session?
+                val session: Session?
                 if (ArCoreApk.getInstance().requestInstall(
                         activity, mUserRequestedInstall
                     ) == ArCoreApk.InstallStatus.INSTALL_REQUESTED
@@ -357,12 +470,6 @@ internal class AndroidARView(
             view.removeView(animatedGuide)
             showAnimatedGuide = false
         }
-
-        if (showScanProgress) {
-            val view = activity.findViewById(android.R.id.content) as ViewGroup
-            view.removeView(scanProgress)
-            showScanProgress = false
-        }
     }
 
     private fun destroyASASession() {
@@ -372,9 +479,10 @@ internal class AndroidARView(
             azureSpatialAnchorsManager!!.close()
             azureSpatialAnchorsManager = null
         }
-        for (visual: AnchorVisualAsset in anchorVisuals.values) {
-            visual.dispose()
-            //chiama il destroy
+        for (visual: AnchorVisual in anchorVisuals.values) {
+            activity.runOnUiThread {
+                visual.dispose()
+            }
         }
         anchorVisuals.clear()
     }
@@ -383,37 +491,34 @@ internal class AndroidARView(
         Log.d(TAG, "startNewSession")
         destroyASASession()
         azureSpatialAnchorsManager = AzureSpatialAnchorsManager(arSceneView.session, apiKey, apiId)
-        azureSpatialAnchorsManager!!.addSessionUpdatedListener(SessionUpdatedListener { event ->
+        azureSpatialAnchorsManager!!.addSessionUpdatedListener { event ->
             onSessionUpdate(event)
-        })
+        }
 
-        azureSpatialAnchorsManager!!.addAnchorLocatedListener(AnchorLocatedListener { event ->
+        azureSpatialAnchorsManager!!.addAnchorLocatedListener { event ->
             onAnchorLocated(event)
-        })
+        }
         azureSpatialAnchorsManager!!.start()
-        startLocatingNearbyAssets()
+        lookForNearbyAnchors()
     }
 
     //non entra mai qua
-    fun onPause() {// in realtà va in stop e non in pause
-        //o andando nella home, phone block, o chiamandola manualmente
-        //se apri e fai "indietro" viene fatto on destroy
+    private fun onPause() {// in realtà va in stop e non in pause
         Log.d(TAG, "onPause") //facciamo pause, facciamo direttamente destroy
         stopArCoreSession()
     }
 
-    fun onDestroy() {
+    private fun onDestroy() {
         Log.d(TAG, "onDestroy")
         try {
             stopArCoreSession()
             destroyASASession()
-            arSceneView?.renderer?.dispose()
+            arSceneView.renderer?.dispose()
             arSceneView.destroy()
             arSceneView.scene?.removeOnUpdateListener(sceneUpdateListener)
-            activity.application.unregisterActivityLifecycleCallbacks(this.activityLifecycleCallbacks)
 
         } catch (e: Exception) {
-            e.printStackTrace();
+            e.printStackTrace()
         }
     }
 
@@ -421,10 +526,20 @@ internal class AndroidARView(
         val frame = arSceneView.arFrame
         if (hitTestResult.node != null && motionEvent?.action == MotionEvent.ACTION_DOWN) {
             Log.d(TAG, "onTapNode")
-            anchorManagerChannel.invokeMethod("onNodeTap", hitTestResult.node!!.name)
+            val nodeName = hitTestResult.node!!.name
+            val visual = anchorVisuals[nodeName]
+            Log.d(TAG, nodeName)
+            Log.d(TAG, anchorVisuals.keys.toString())
+            if (visual != null) {
+                if (visual.info.type == "asset") {
+                    anchorManagerChannel.invokeMethod("onAssetTap", nodeName)
+                } else if (visual.info.type == "ticket") {
+                    anchorManagerChannel.invokeMethod("onTicketTap", nodeName)
+                }
+            }
             return true
         }
-        if (motionEvent != null && motionEvent.action == MotionEvent.ACTION_DOWN) {
+        if (enableTapToAdd && motionEvent != null && motionEvent.action == MotionEvent.ACTION_DOWN) {
             Log.d(TAG, "onTapSurface")
             val allHitResults = frame?.hitTest(motionEvent) ?: listOf<HitResult>()
             val planeAndPointHitResults =
@@ -439,172 +554,173 @@ internal class AndroidARView(
         return false
     }
 
-    private fun addAnchor(transform: ArrayList<Double>, anchorName: String, asset: Asset): Boolean {
-        Log.d(TAG, "addAnchor $anchorName")
-        return try {
-            val position = floatArrayOf(
-                deserializeMatrix4(transform).second.x,
-                deserializeMatrix4(transform).second.y,
-                deserializeMatrix4(transform).second.z
-            )
-            val rotation = floatArrayOf(
-                deserializeMatrix4(transform).third.x,
-                deserializeMatrix4(transform).third.y,
-                deserializeMatrix4(transform).third.z,
-                deserializeMatrix4(transform).third.w
-            )
-            var anchor = arSceneView.session!!.createAnchor(Pose(position, rotation))
-            val visual = AnchorVisualAsset(anchor, asset, anchorName)
-            visual.render(viewContext, arSceneView.scene)
-            anchorVisuals[visual.name] = visual
-            activity.runOnUiThread {
-                showScanProgress = true
-                val view = activity.findViewById(android.R.id.content) as ViewGroup
-                scanProgress = activity.layoutInflater.inflate(
-                    R.layout.environment_scan, null
-                )
-                view.addView(scanProgress)
-            }
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    private fun removeAnchor(name: String): Boolean {
-        Log.d(TAG, "removeAnchor $name")
-        return try {
-            val visual: AnchorVisualAsset = anchorVisuals[name] as AnchorVisualAsset
-            visual.dispose()
-            anchorVisuals.remove(name)
-            if (showScanProgress) {
-                activity.runOnUiThread {
-                    val view = activity.findViewById(android.R.id.content) as ViewGroup
-                    view.removeView(scanProgress)
-                    showScanProgress = false
-                }
-            }
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    private fun uploadAnchor(name: String, result: MethodChannel.Result) {
-        Log.d(TAG, "uploadAnchor $name")
-        val visual: AnchorVisualAsset = anchorVisuals[name] as AnchorVisualAsset
-        val cloudAnchor = CloudSpatialAnchor()
-        cloudAnchor.localAnchor = visual.localAnchor
-        visual.cloudAnchor = cloudAnchor
-
-        // In this sample app we delete the cloud anchor explicitly, but you can also set it to expire automatically
-        val now = Date()
-        val cal = Calendar.getInstance()
-        cal.time = now
-        cal.add(Calendar.DATE, 7)
-        val oneWeekFromNow = cal.time
-        cloudAnchor.expiration = oneWeekFromNow
-
-        //here we use ASA's tools
-        azureSpatialAnchorsManager!!.createAnchorAsync(visual.cloudAnchor!!)
-            ?.exceptionally { thrown ->
-                thrown.printStackTrace()
-                result.success(null)
-                null
-            }?.thenAccept { csa ->
-                if (csa != null) {
-                    if (showScanProgress) {
-                        activity.runOnUiThread {
-                            val view = activity.findViewById(android.R.id.content) as ViewGroup
-                            view.removeView(scanProgress)
-                            showScanProgress = false
-                        }
-                    }
-                    result.success(csa.identifier);
-                } else {
-                    result.success(null)
-                }
-
-            }
+    private fun createAnchor(transform: ArrayList<Double>, info: AnchorInfo) {
+        Log.d(TAG, "addAnchor ${info.id}")
+        val position = floatArrayOf(
+            deserializeMatrix4(transform).second.x,
+            deserializeMatrix4(transform).second.y,
+            deserializeMatrix4(transform).second.z
+        )
+        val rotation = floatArrayOf(
+            deserializeMatrix4(transform).third.x,
+            deserializeMatrix4(transform).third.y,
+            deserializeMatrix4(transform).third.z,
+            deserializeMatrix4(transform).third.w
+        )
+        val anchor = arSceneView.session!!.createAnchor(Pose(position, rotation))
+        pendingAnchorVisual = AnchorVisual(anchor, info)
+        pendingAnchorVisual!!.render(viewContext, arSceneView.scene, false)
 
     }
 
-    private fun removeCloudAnchor(name: String, result: MethodChannel.Result) {
-        Log.d(TAG, "removeCloudAnchor $name")
-        val visual: AnchorVisualAsset = anchorVisuals[name] as AnchorVisualAsset
-
-        azureSpatialAnchorsManager!!.deleteAnchorAsync(visual.cloudAnchor!!).exceptionally { thrown ->
-            thrown.printStackTrace()
-            result.success(false)
-            null
-        }.thenAccept { _ ->
+    private fun deleteAnchor(infoId: String) {
+        val visual = anchorVisuals[infoId]
+        if (visual != null) {
             activity.runOnUiThread {
                 visual.dispose()
             }
-            anchorVisuals.remove(name)
-            result.success(true)
+            anchorVisuals.remove(infoId)
         }
     }
 
-    private fun startLocatingNearbyAssets() {
-        Log.d(TAG, "startLocatingNearbyAssets")
-        var ids: ArrayList<String> = ArrayList()
-        for (a: Asset in nearbyAssets) {
-            if (a.anchorId != "" && a.anchorId != null) {
-                ids.add(a.anchorId!!)
+    private fun uploadAnchor(result: MethodChannel.Result) {
+        Log.d(TAG, "uploadAnchor")
+        if (pendingAnchorVisual != null) {
+            val cloudAnchor = CloudSpatialAnchor()
+            cloudAnchor.localAnchor = pendingAnchorVisual!!.localAnchor
+            val now = Date()
+            val cal = Calendar.getInstance()
+            cal.time = now
+            cal.add(Calendar.DATE, 7)
+            val oneWeekFromNow = cal.time
+            cloudAnchor.expiration = oneWeekFromNow
+            //here we use ASA's tools
+            azureSpatialAnchorsManager!!.createAnchorAsync(cloudAnchor)
+                ?.exceptionally { thrown ->
+                    thrown.printStackTrace()
+                    result.success(null) as Nothing?
+                }?.thenAccept { csa ->
+                    this.pendingAnchorVisual!!.cloudAnchor = csa
+                    result.success(csa.identifier)
+                }
+        } else {
+            result.success(null)
+        }
+    }
+
+    private fun deleteCloudAnchor(infoId: String, result: MethodChannel.Result) {
+        Log.d(TAG, "removeCloudAnchor $infoId")
+        val visual = anchorVisuals[infoId]
+        if (visual?.cloudAnchor != null) {
+            azureSpatialAnchorsManager!!.deleteAnchorAsync(visual.cloudAnchor!!)
+                .exceptionally { thrown ->
+                    thrown.printStackTrace()
+                    result.success(false) as Nothing?
+                }.thenAccept { _ ->
+                    activity.runOnUiThread {
+                        visual.dispose()
+                    }
+                    anchorVisuals.remove(infoId)
+                    if (nearbyAssets[infoId] != null) {
+                        nearbyAssets[infoId]!!.ARanchorId = null
+                    } else if (nearbyTickets[infoId] != null) {
+                        nearbyTickets[infoId]!!.ARanchorId = null
+                    } else {
+                        val assetTicket =
+                            nearbyAssets.values.mapNotNull { a -> a.tickets }.flatten()
+                                .firstOrNull { t -> t.id == infoId }
+                        if (assetTicket != null) {
+                            assetTicket.ARanchorId = null
+                        }
+                    }
+                    result.success(true)
+                }
+        }
+    }
+
+    private fun lookForNearbyAnchors() {
+        Log.d(TAG, "lookForNearbyAnchors")
+        if ((nearbyAssets.isEmpty() && nearbyTickets.isEmpty()) || azureSpatialAnchorsManager == null) {
+            return
+        }
+        val ids: ArrayList<String> = ArrayList()
+        Log.d(TAG, nearbyAssets.values.toString())
+        for (a in nearbyAssets.values) {
+            if (a.ARanchorId != null && a.ARanchorId != "") {
+                ids.add(a.ARanchorId!!)
+            }
+            if (a.tickets?.isNotEmpty() == true) {
+                ids.addAll(a.tickets!!.mapNotNull { t -> t.ARanchorId })
+            }
+        }
+        for (t in nearbyTickets.values) {
+            if (t.ARanchorId != null && t.ARanchorId != "") {
+                ids.add(t.ARanchorId!!)
             }
         }
         val criteria = AnchorLocateCriteria()
+        Log.d(TAG, ids.toString())
         criteria.identifiers = ids.toTypedArray()
-        try {
-            if (azureSpatialAnchorsManager!=null) {
-                azureSpatialAnchorsManager!!.stopLocating()
-                azureSpatialAnchorsManager!!.startLocating(criteria)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        azureSpatialAnchorsManager!!.startLocating(criteria)
+
     }
 
     private fun onAnchorLocated(event: AnchorLocatedEvent) {
         val status = event.status
-        if (status == LocateAnchorStatus.Located) {
+        if (status == LocateAnchorStatus.Located || status == LocateAnchorStatus.AlreadyTracked) {
             Log.d(TAG, "onAnchorLocated" + event.anchor.identifier)
-            var cloudAnchor = event.anchor
-            var theAsset = Asset(
-                "Unknown", "Unknown", cloudAnchor.identifier, null, null, ArrayList(0), ArrayList(0)
-            )
-            for (asset in nearbyAssets) {
-                if (asset.anchorId == cloudAnchor.identifier) {
-                    theAsset = asset
-                    break
+            val cloudAnchor = event.anchor
+            val asset =
+                nearbyAssets.values.firstOrNull { a -> a.ARanchorId == cloudAnchor.identifier }
+            val ticket =
+                nearbyTickets.values.firstOrNull { a -> a.ARanchorId == cloudAnchor.identifier }
+            if (asset != null) {
+                if (anchorVisuals[asset.id] == null) {
+                    activity.runOnUiThread {
+                        val visual = AnchorVisual(cloudAnchor.localAnchor, asset)
+                        visual.cloudAnchor = cloudAnchor
+                        anchorVisuals[asset.id] = visual
+                        visual.render(viewContext, arSceneView.scene, false)
+                    }
+                }
+            } else if (ticket != null) {
+                if (anchorVisuals[ticket.id] == null) {
+                    activity.runOnUiThread {
+                        val visual = AnchorVisual(cloudAnchor.localAnchor, ticket)
+                        visual.cloudAnchor = cloudAnchor
+                        anchorVisuals[ticket.id] = visual
+                        visual.render(viewContext, arSceneView.scene, hideTickets)
+                    }
+                }
+            } else {
+                val assetTicket = nearbyAssets.values.mapNotNull { a -> a.tickets }.flatten()
+                    .firstOrNull { t -> t.ARanchorId == cloudAnchor.identifier }
+                val asset =
+                    nearbyAssets.values.firstOrNull { a -> a.tickets != null && a.tickets!!.any { t -> t.ARanchorId == cloudAnchor.identifier } }
+                if (assetTicket != null && asset != null) {
+                    activity.runOnUiThread {
+                        val visual = AnchorVisual(cloudAnchor.localAnchor, assetTicket)
+                        visual.cloudAnchor = cloudAnchor
+                        anchorVisuals[assetTicket.id] = visual
+                        visual.render(
+                            viewContext,
+                            arSceneView.scene,
+                            hideAssetTickets[asset.id] ?: true
+                        )
+                    }
                 }
             }
-            activity.runOnUiThread {
-                val foundVisual = AnchorVisualAsset(cloudAnchor.localAnchor, theAsset, theAsset.id)
-                foundVisual.cloudAnchor = cloudAnchor
-                foundVisual.render(viewContext, arSceneView.scene)
-                anchorVisuals[foundVisual.name] = foundVisual
-            }
-
         }
     }
 
     //makes sure there are enough frames
     //SessionUpdatedEvent is from ASA cloud
     private fun onSessionUpdate(event: SessionUpdatedEvent?) {
-        if (event != null && showScanProgress) {
-            var recommendedForCreateProgress = event.status.recommendedForCreateProgress;
-            var requiredForCreateProgress = event.status.readyForCreateProgress;
-
-            activity.runOnUiThread {
-                var recommendedProgress =
-                    scanProgress.findViewById(R.id.recommended_scan_progress) as ProgressBar
-                var requiredProgress =
-                    scanProgress.findViewById(R.id.required_scan_progress) as ProgressBar
-                requiredProgress.progress = (100 * requiredForCreateProgress).toInt()
-                recommendedProgress.progress = (100 * recommendedForCreateProgress).toInt()
-                if (requiredForCreateProgress >= 1.0f) {
+        if (event != null) {
+            val recommendedForCreateProgress = event.status.recommendedForCreateProgress
+            //var requiredForCreateProgress = event.status.readyForCreateProgress;
+            if (recommendedForCreateProgress >= 1.0f) {
+                activity.runOnUiThread {
                     sessionManagerChannel.invokeMethod("readyToUpload", null)
                 }
             }

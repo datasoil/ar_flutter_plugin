@@ -1,5 +1,8 @@
 import 'package:ar_flutter_plugin/managers/ar_anchor_manager.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ar_flutter_plugin/managers/ar_session_manager.dart';
@@ -73,13 +76,39 @@ class AndroidARView implements PlatformARView {
     creationParams['apiId'] = apiId;
     creationParams['assets'] = assets;
     creationParams['tickets'] = tickets;
-    return AndroidView(
+    return PlatformViewLink(
+      viewType: viewType,
+      surfaceFactory: (context, controller) {
+        return AndroidViewSurface(
+          controller: controller as AndroidViewController,
+          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+          hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+        );
+      },
+      onCreatePlatformView: (params) {
+        print('onCreatePlatformView');
+        return PlatformViewsService.initSurfaceAndroidView(
+          id: params.id,
+          viewType: viewType,
+          layoutDirection: TextDirection.ltr,
+          creationParams: creationParams,
+          creationParamsCodec: const StandardMessageCodec(),
+          onFocus: () {
+            params.onFocusChanged(true);
+          },
+        )
+          ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+          ..addOnPlatformViewCreatedListener(onPlatformViewCreated)
+          ..create();
+      },
+    );
+    /*return AndroidView(
         viewType: viewType,
         layoutDirection: TextDirection.ltr,
         creationParams: creationParams,
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: onPlatformViewCreated //onPlatformViewCreated,
-        );
+        );*/
   }
 }
 
