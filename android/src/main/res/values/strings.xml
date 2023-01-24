@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">SynAR</string>
+    <string name="ticket_img_desc">Ticket image</string>
+    <string name="asset_img_desc">Asset image</string>
+    <plurals name="n_ticket">
+        <item quantity="one">%d ticket</item>
+        <item quantity="other">%d tickets</item>
+    </plurals>
+</resources>

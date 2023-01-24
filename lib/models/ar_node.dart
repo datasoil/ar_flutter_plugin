@@ -5,15 +5,12 @@ import 'package:flutter/widgets.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'dart:math' as math;
-import 'package:ar_flutter_plugin/datatypes/node_types.dart';
 
 /// ARNode is the model class for node-tree objects.
 /// It encapsulates the position, rotations, and other transforms of a node, which define a coordinate system.
 /// The coordinate systems of all the sub-nodes are relative to the one of their parent node.
 class ARNode {
   ARNode({
-    required this.type,
-    required this.uri,
     String? name,
     Vector3? position,
     Vector3? scale,
@@ -21,16 +18,15 @@ class ARNode {
     Vector3? eulerAngles,
     Matrix4? transformation,
     Map<String, dynamic>? data,
+    Map<String, dynamic>? asset,
   })  : name = name ?? UniqueKey().toString(),
         transformNotifier = ValueNotifier(createTransformMatrix(
             transformation, position, scale, rotation, eulerAngles)),
+        asset = asset ?? null,
         data = data ?? null;
 
-  /// Specifies the receiver's [NodeType]
-  NodeType type;
-
   /// Specifies the path to the 3D model used for the [ARNode]. Depending on the [type], this is either a relative path or an URL to an online asset
-  String uri;
+  String? uri;
 
   /// Determines the receiver's transform.
   /// The transform is the combination of the position, rotation and scale defined below.
@@ -93,24 +89,24 @@ class ARNode {
 
   /// Holds any data attached to the node, especially useful when uploading serialized nodes to the cloud. This data is not shared with the underlying platform
   Map<String, dynamic>? data;
+  Map<String, dynamic>? asset;
 
   static const _matrixValueNotifierConverter = MatrixValueNotifierConverter();
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-        'type': type.index,
         'uri': uri,
         'transformation':
             _matrixValueNotifierConverter.toJson(transformNotifier),
         'name': name,
         'data': data,
+        'asset': asset,
       }..removeWhere((String k, dynamic v) => v == null);
 
   static ARNode fromMap(Map<String, dynamic> map) {
     return ARNode(
-        type: NodeType.values[map["type"]],
-        uri: map["uri"] as String,
         name: map["name"] as String,
         transformation: MatrixConverter().fromJson(map["transformation"]),
+        asset: Map<String, dynamic>.from(map["asset"]),
         data: Map<String, dynamic>.from(map["data"]));
   }
 }

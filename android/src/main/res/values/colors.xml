@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#DCADB4E1</color>
+    <color name="colorAccent">#B8D8D8</color>
+    <color name="colorHint">#03A9F4</color>
+    <color name="red">#D7FF0000</color>
+    <color name="events_red">#FFFF0000</color>
+    <color name="tickets_orange">#ffff6600</color>
+    <color name="black">#333333</color>
+</resources>

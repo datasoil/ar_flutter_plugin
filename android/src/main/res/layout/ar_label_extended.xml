@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="100dp"
+    android:layout_height="wrap_content"
+    android:background="#00000000"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/cod_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="6dp"
+        android:background="#DD222222"
+        android:textAlignment="center"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/tickets_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#DD555555"
+            android:orientation="horizontal"
+            android:padding="6dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/tickets_icon"
+                android:layout_width="16dp"
+                android:layout_height="match_parent"
+                android:adjustViewBounds="true"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                app:srcCompat="@drawable/maint_orange"
+                android:contentDescription="@string/ticket_img_desc" />
+
+            <TextView
+                android:id="@+id/tickets_title"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="3dp"
+                android:gravity="center_vertical"
+                android:textColor="#ffffff"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+    <ImageView
+        android:id="@+id/main_icon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="#00000000"
+        app:srcCompat="@drawable/ar_icon"
+        android:contentDescription="@string/asset_img_desc" />
+
+</LinearLayout>

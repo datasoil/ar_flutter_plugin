@@ -1,18 +1,16 @@
 import 'package:ar_flutter_plugin/managers/ar_anchor_manager.dart';
-import 'package:ar_flutter_plugin/managers/ar_location_manager.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ar_flutter_plugin/managers/ar_session_manager.dart';
-import 'package:ar_flutter_plugin/managers/ar_object_manager.dart';
-import 'package:ar_flutter_plugin/datatypes/config_planedetection.dart';
 
 // Type definitions to enforce a consistent use of the API
+//inglobatore di mangers per passarli in giro?
 typedef ARViewCreatedCallback = void Function(
-    ARSessionManager arSessionManager,
-    ARObjectManager arObjectManager,
-    ARAnchorManager arAnchorManager,
-    ARLocationManager arLocationManager);
+    ARSessionManager arSessionManager, ARAnchorManager arAnchorManager);
 
 /// Factory method for creating a platform-dependent AR view
 abstract class PlatformARView {
@@ -30,25 +28,23 @@ abstract class PlatformARView {
   Widget build(
       {@required BuildContext context,
       @required ARViewCreatedCallback arViewCreatedCallback,
-      @required PlaneDetectionConfig planeDetectionConfig});
+      @required String apiKey,
+      @required String apiId,
+      @required List<Map<String, dynamic>>? assets,
+      @required List<Map<String, dynamic>>? tickets});
 
   /// Callback function that is executed once the view is established
   void onPlatformViewCreated(int id);
 }
 
+//funzione implicitamente void?
 /// Instantiates [ARSessionManager], [ARObjectManager] and returns them to the widget instantiating the [ARView] using the [arViewCreatedCallback]
-createManagers(
-    int id,
-    BuildContext? context,
-    ARViewCreatedCallback? arViewCreatedCallback,
-    PlaneDetectionConfig? planeDetectionConfig) {
-  if (context == null ||
-      arViewCreatedCallback == null ||
-      planeDetectionConfig == null) {
+createManagers(int id, BuildContext? context,
+    ARViewCreatedCallback? arViewCreatedCallback) {
+  if (context == null || arViewCreatedCallback == null) {
     return;
   }
-  arViewCreatedCallback(ARSessionManager(id, context, planeDetectionConfig),
-      ARObjectManager(id), ARAnchorManager(id), ARLocationManager());
+  arViewCreatedCallback(ARSessionManager(id, context), ARAnchorManager(id));
 }
 
 /// Android-specific implementation of [PlatformARView]
@@ -56,34 +52,63 @@ createManagers(
 class AndroidARView implements PlatformARView {
   late BuildContext? _context;
   late ARViewCreatedCallback? _arViewCreatedCallback;
-  late PlaneDetectionConfig? _planeDetectionConfig;
 
   @override
   void onPlatformViewCreated(int id) {
     print("Android platform view created!");
-    createManagers(id, _context, _arViewCreatedCallback, _planeDetectionConfig);
+    createManagers(id, _context, _arViewCreatedCallback);
   }
 
   @override
   Widget build(
       {BuildContext? context,
       ARViewCreatedCallback? arViewCreatedCallback,
-      PlaneDetectionConfig? planeDetectionConfig}) {
+      String? apiKey,
+      String? apiId,
+      List<Map<String, dynamic>>? assets,
+      List<Map<String, dynamic>>? tickets}) {
     _context = context;
     _arViewCreatedCallback = arViewCreatedCallback;
-    _planeDetectionConfig = planeDetectionConfig;
     // This is used in the platform side to register the view.
-    final String viewType = 'ar_flutter_plugin';
-    // Pass parameters to the platform side.
+    final String viewType = 'ar_flutter_plugin_view';
     final Map<String, dynamic> creationParams = <String, dynamic>{};
-
-    return AndroidView(
+    creationParams['apiKey'] = apiKey;
+    creationParams['apiId'] = apiId;
+    creationParams['assets'] = assets;
+    creationParams['tickets'] = tickets;
+    return PlatformViewLink(
       viewType: viewType,
-      layoutDirection: TextDirection.ltr,
-      creationParams: creationParams,
-      creationParamsCodec: const StandardMessageCodec(),
-      onPlatformViewCreated: onPlatformViewCreated,
+      surfaceFactory: (context, controller) {
+        return AndroidViewSurface(
+          controller: controller as AndroidViewController,
+          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+          hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+        );
+      },
+      onCreatePlatformView: (params) {
+        print('onCreatePlatformView');
+        return PlatformViewsService.initSurfaceAndroidView(
+          id: params.id,
+          viewType: viewType,
+          layoutDirection: TextDirection.ltr,
+          creationParams: creationParams,
+          creationParamsCodec: const StandardMessageCodec(),
+          onFocus: () {
+            params.onFocusChanged(true);
+          },
+        )
+          ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+          ..addOnPlatformViewCreatedListener(onPlatformViewCreated)
+          ..create();
+      },
     );
+    /*return AndroidView(
+        viewType: viewType,
+        layoutDirection: TextDirection.ltr,
+        creationParams: creationParams,
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: onPlatformViewCreated //onPlatformViewCreated,
+        );*/
   }
 }
 
@@ -91,27 +116,30 @@ class AndroidARView implements PlatformARView {
 class IosARView implements PlatformARView {
   BuildContext? _context;
   ARViewCreatedCallback? _arViewCreatedCallback;
-  PlaneDetectionConfig? _planeDetectionConfig;
 
   @override
   void onPlatformViewCreated(int id) {
     print("iOS platform view created!");
-    createManagers(id, _context, _arViewCreatedCallback, _planeDetectionConfig);
+    createManagers(id, _context, _arViewCreatedCallback);
   }
 
   @override
   Widget build(
       {BuildContext? context,
       ARViewCreatedCallback? arViewCreatedCallback,
-      PlaneDetectionConfig? planeDetectionConfig}) {
+      String? apiKey,
+      String? apiId,
+      List<Map<String, dynamic>>? assets,
+      List<Map<String, dynamic>>? tickets}) {
     _context = context;
     _arViewCreatedCallback = arViewCreatedCallback;
-    _planeDetectionConfig = planeDetectionConfig;
     // This is used in the platform side to register the view.
     final String viewType = 'ar_flutter_plugin';
-    // Pass parameters to the platform side.
     final Map<String, dynamic> creationParams = <String, dynamic>{};
-
+    creationParams['apiKey'] = apiKey;
+    creationParams['apiId'] = apiId;
+    creationParams['assets'] = assets;
+    creationParams['tickets'] = tickets;
     return UiKitView(
       viewType: viewType,
       layoutDirection: TextDirection.ltr,
@@ -132,30 +160,30 @@ class ARView extends StatefulWidget {
   final String permissionPromptDescription;
   final String permissionPromptButtonText;
   final String permissionPromptParentalRestriction;
+  final String apiKey;
+  final String apiId;
+  final List<Map<String, dynamic>>? assets;
+  final List<Map<String, dynamic>>? tickets;
 
   /// Function to be called when the AR View is created
   final ARViewCreatedCallback onARViewCreated;
 
-  /// Configures the type of planes ARCore and ARKit should track. defaults to none
-  final PlaneDetectionConfig planeDetectionConfig;
-
-  /// Configures whether or not to display the device's platform type above the AR view. Defaults to false
-  final bool showPlatformType;
-
   ARView(
       {Key? key,
       required this.onARViewCreated,
-      this.planeDetectionConfig = PlaneDetectionConfig.none,
-      this.showPlatformType = false,
+      required this.apiId,
+      required this.apiKey,
+      this.assets,
+      this.tickets,
       this.permissionPromptDescription =
           "Camera permission must be given to the app for AR functions to work",
       this.permissionPromptButtonText = "Grant Permission",
       this.permissionPromptParentalRestriction =
           "Camera permission is restriced by the OS, please check parental control settings"})
       : super(key: key);
+
   @override
   _ARViewState createState() => _ARViewState(
-      showPlatformType: this.showPlatformType,
       permissionPromptDescription: this.permissionPromptDescription,
       permissionPromptButtonText: this.permissionPromptButtonText,
       permissionPromptParentalRestriction:
@@ -164,14 +192,12 @@ class ARView extends StatefulWidget {
 
 class _ARViewState extends State<ARView> {
   PermissionStatus _cameraPermission = PermissionStatus.denied;
-  bool showPlatformType;
   String permissionPromptDescription;
   String permissionPromptButtonText;
   String permissionPromptParentalRestriction;
 
   _ARViewState(
-      {required this.showPlatformType,
-      required this.permissionPromptDescription,
+      {required this.permissionPromptDescription,
       required this.permissionPromptButtonText,
       required this.permissionPromptParentalRestriction});
 
@@ -209,14 +235,13 @@ class _ARViewState extends State<ARView> {
           .limited): //iOS-specific: permissions granted for this specific application
       case (PermissionStatus.granted):
         {
-          return Column(children: [
-            if (showPlatformType) Text(Theme.of(context).platform.toString()),
-            Expanded(
-                child: PlatformARView(Theme.of(context).platform).build(
-                    context: context,
-                    arViewCreatedCallback: widget.onARViewCreated,
-                    planeDetectionConfig: widget.planeDetectionConfig)),
-          ]);
+          return PlatformARView(Theme.of(context).platform).build(
+              context: context,
+              arViewCreatedCallback: widget.onARViewCreated,
+              apiKey: widget.apiKey,
+              apiId: widget.apiId,
+              assets: widget.assets,
+              tickets: widget.tickets);
         }
       case (PermissionStatus.denied):
         {
