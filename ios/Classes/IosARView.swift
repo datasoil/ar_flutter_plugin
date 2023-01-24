@@ -5,7 +5,7 @@ import Flutter
 import Foundation
 import UIKit
 
-class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureRecognizerDelegate, ASACloudSpatialAnchorSessionDelegate {
+class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureRecognizerDelegate, ASACloudSpatialAnchorSessionDelegate, ARSessionDelegate {
     let sceneView: ARSCNView
     let coachingView: ARCoachingOverlayView
     let sessionManagerChannel: FlutterMethodChannel
@@ -24,6 +24,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     private var nearbyTickets = [String: AnchorInfo]()
     var hideAssetTickets = [String: Bool]()
     var hideTickets = false
+    var sessionRunning = false
 
     init(
         frame: CGRect,
@@ -57,6 +58,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
 
         sceneView.delegate = self
         coachingView.delegate = self
+        sceneView.session.delegate = self
 
         sessionManagerChannel.setMethodCallHandler(onSessionMethodCalled)
         anchorManagerChannel.setMethodCallHandler(onAnchorMethodCalled)
@@ -77,6 +79,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         configuration.environmentTexturing = .automatic
         configuration.planeDetection = [.horizontal, .vertical]
         sceneView.session.run(configuration)
+        self.sessionRunning = true
 
         startSession()
     }
@@ -89,6 +92,10 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         NSLog("IosARView: onDispose")
         stopSession()
         sceneView.session.pause()
+        sceneView.session.delegate = nil
+        sceneView.removeFromSuperview()
+        sceneView.window?.resignKey()
+        sessionRunning = false
         sessionManagerChannel.setMethodCallHandler(nil)
         anchorManagerChannel.setMethodCallHandler(nil)
     }
@@ -96,6 +103,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     func onPause() {
         NSLog("IosARView: onPause")
         sceneView.session.pause()
+        sessionRunning = false
     }
 
     func onResume() {
@@ -106,6 +114,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             configuration.planeDetection = [.horizontal, .vertical]
         }
         sceneView.session.run(configuration)
+        sessionRunning = true
     }
 
     func onSessionMethodCalled(_ call: FlutterMethodCall, _ result: FlutterResult) {
@@ -217,6 +226,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                     // aggiorno la visual con il nuovo ticket
                     if nt.ARanchorID != nil {
                         anchorVisuals[nt.id]!.info = nt
+                        anchorVisuals[nt.id]?.updateVisual()
                     } else {
                         deleteAnchor(infoId: nt.id)
                     }
@@ -245,6 +255,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                     // aggiorno la visual con il nuovo asset
                     if na.ARanchorID != nil {
                         anchorVisuals[na.id]!.info = na
+                        anchorVisuals[na.id]?.updateVisual()
                     } else {
                         deleteAnchor(infoId: na.id)
                     }
@@ -256,6 +267,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                         // aggiorno la visual con il nuovo asset
                         if $0.ARanchorID != nil {
                             anchorVisuals[$0.id]!.info = $0
+                            anchorVisuals[$0.id]?.updateVisual()
                         } else {
                             deleteAnchor(infoId: $0.id)
                         }
@@ -349,12 +361,12 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
 
     func stopSession() {
         NSLog("IosARView: stopSession")
+
         if let cloudSession = cloudSession {
             cloudSession.stop()
             cloudSession.dispose()
         }
         cloudSession = nil
-
         for visual in anchorVisuals.values {
             visual.node?.removeFromParentNode()
             sceneView.session.remove(anchor: visual.localAnchor)
@@ -425,7 +437,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     }
 
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        NSLog("IosARView: renderer didAdd")
+        // NSLog("IosARView: renderer didAdd")
         if anchor as? ARPlaneAnchor != nil {
             // se è un anchor plane ignoro
             return
@@ -453,15 +465,22 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         }
     }
 
-    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
-        NSLog("IosARView: updateAtTime")
-        if let cloudSession = cloudSession, sceneView.session.currentFrame != nil {
-            cloudSession.processFrame(sceneView.session.currentFrame!)
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        // NSLog("IosARView: didUpdate \(sessionRunning)")
+        if let cloudSession = cloudSession, sessionRunning == true {
+            cloudSession.processFrame(frame)
         }
-        /* if cloudSession != nil && sceneView.session.currentFrame != nil {
-             cloudSession!.processFrame(sceneView.session.currentFrame)
-         } */
     }
+
+    /* func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+         NSLog("IosARView: updateAtTime")
+         if let cloudSession = cloudSession, sceneView.session.currentFrame != nil {
+             cloudSession.processFrame(sceneView.session.currentFrame!)
+         }
+         /* if cloudSession != nil && sceneView.session.currentFrame != nil {
+              cloudSession!.processFrame(sceneView.session.currentFrame)
+          } */
+     } */
 
     internal func sessionUpdated(_ cloudSpatialAnchorSession: ASACloudSpatialAnchorSession!, _ args: ASASessionUpdatedEventArgs!) {
         let status = args.status!
@@ -586,7 +605,6 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         let allHitResults = sceneView.hitTest(touchLocation, options: [SCNHitTestOption.searchMode: SCNHitTestSearchMode.closest.rawValue])
 
         if let nodeHitResultName = allHitResults.first?.node.name {
-            NSLog(nodeHitResultName)
             if let visual = anchorVisuals[nodeHitResultName] {
                 switch visual.info.type {
                     case "asset":
