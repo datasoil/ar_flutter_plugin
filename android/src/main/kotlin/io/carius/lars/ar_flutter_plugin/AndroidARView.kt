@@ -299,6 +299,7 @@ internal class AndroidARView(
                 if (anchorVisuals[nt.id] != null) {
                     if (nt.ARanchorId != null) {
                         anchorVisuals[nt.id]!!.info = nt
+                        anchorVisuals[nt.id]!!.updateVisual(viewContext)
                     } else {
                         deleteAnchor(nt.id)
                     }
@@ -320,6 +321,7 @@ internal class AndroidARView(
                 if (anchorVisuals[na.id] != null) {
                     if (na.ARanchorId != null) {
                         anchorVisuals[na.id]!!.info = na
+                        anchorVisuals[na.id]!!.updateVisual(viewContext)
                     } else {
                         deleteAnchor(na.id)
                     }
@@ -332,6 +334,7 @@ internal class AndroidARView(
                         if (anchorVisuals[nat.id] != null) {
                             if (nat.ARanchorId != null) {
                                 anchorVisuals[nat.id]!!.info = nat
+                                anchorVisuals[nat.id]!!.updateVisual(viewContext)
                             } else {
                                 deleteAnchor(nat.id)
                             }
@@ -343,6 +346,7 @@ internal class AndroidARView(
                                 val id = oat.id
                                 oa.tickets!!.removeIf { t -> t.id != id }
                                 deleteAnchor(id)
+
                             }
                         }
                     }
@@ -655,8 +659,9 @@ internal class AndroidARView(
 
     private fun onAnchorLocated(event: AnchorLocatedEvent) {
         val status = event.status
+        Log.d(TAG, "VISUAL: ${anchorVisuals.values.map { v -> v.cloudAnchor?.identifier }}")
         if (status == LocateAnchorStatus.Located || status == LocateAnchorStatus.AlreadyTracked) {
-            Log.d(TAG, "onAnchorLocated" + event.anchor.identifier)
+            Log.d(TAG, "onAnchorLocated ${ event.anchor.identifier} STATUS: ${event.status}")
             val cloudAnchor = event.anchor
             val asset =
                 nearbyAssets.values.firstOrNull { a -> a.ARanchorId == cloudAnchor.identifier }
@@ -698,6 +703,9 @@ internal class AndroidARView(
                     }
                 }
             }
+        }
+        else{
+            Log.d(TAG, "onAnchorLocated NULL STATUS: ${event.status}")
         }
     }
 

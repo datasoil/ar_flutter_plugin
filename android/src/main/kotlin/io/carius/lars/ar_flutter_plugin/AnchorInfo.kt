@@ -1,7 +1,5 @@
 package io.carius.lars.ar_flutter_plugin
 
-import java.time.ZonedDateTime
-import java.time.LocalDateTime
 import kotlin.collections.ArrayList
 
 
@@ -24,7 +22,7 @@ internal class AnchorInfo(
         if (map["tickets"] != null) ArrayList() else null
     ){
         if (map["tickets"] != null){
-            val array = map["tickets"] as ArrayList<Map<String, Any>>;
+            val array = map["tickets"] as ArrayList<Map<String, Any>>
             for (t in array){
                 tickets!!.add(AnchorInfo(t))
             }

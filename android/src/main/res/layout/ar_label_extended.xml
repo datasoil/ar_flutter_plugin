@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="120dp"
+    android:layout_width="100dp"
     android:layout_height="wrap_content"
     android:background="#00000000"
     android:orientation="vertical">
@@ -15,11 +15,10 @@
         android:gravity="center"
         android:orientation="vertical"
         android:padding="6dp"
-        android:text="Asset Code"
         android:background="#DD222222"
         android:textAlignment="center"
         android:textColor="#FFFFFF"
-        android:textSize="9dp"
+        android:textSize="13sp"
         android:textStyle="bold" />
 
         <LinearLayout
@@ -37,23 +36,20 @@
                 android:id="@+id/tickets_icon"
                 android:layout_width="16dp"
                 android:layout_height="match_parent"
-                android:layout_alignParentLeft="true"
-                android:layout_centerVertical="true"
                 android:adjustViewBounds="true"
                 android:background="#00000000"
                 android:scaleType="fitCenter"
-                app:srcCompat="@drawable/ar_maint_icon" />
+                app:srcCompat="@drawable/maint_orange"
+                android:contentDescription="@string/ticket_img_desc" />
 
             <TextView
                 android:id="@+id/tickets_title"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginLeft="3dp"
+                android:layout_marginStart="3dp"
                 android:gravity="center_vertical"
-                android:text="Tickets"
                 android:textColor="#ffffff"
-                android:textSize="9dp"
-                android:textStyle="bold" />
+                android:textSize="11sp" />
         </LinearLayout>
 
     <ImageView
@@ -62,6 +58,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="#00000000"
-        app:srcCompat="@drawable/ar_icon" />
+        app:srcCompat="@drawable/ar_icon"
+        android:contentDescription="@string/asset_img_desc" />
 
 </LinearLayout>

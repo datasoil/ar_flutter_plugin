@@ -27,7 +27,7 @@ internal class AnchorVisual(val localAnchor: Anchor, var info: AnchorInfo): Anch
     fun render(context: Context, scene: Scene, hidden: Boolean) {
         ViewRenderable.builder().setView(context, R.layout.ar_label_extended).build()
             .thenAccept { renderable: ViewRenderable ->
-                //Log.d("RENDER NODE", "${info.type} ${info.name} hidden: $hidden")
+                Log.d("RENDER NODE", "${info.type} ${info.name} hidden: $hidden")
                 val tickets_row: View = renderable.view.findViewById(R.id.tickets_row)
                 val parent: View = renderable.view
                 val title_lbl: TextView = renderable.view.findViewById(R.id.cod_label)
@@ -39,10 +39,10 @@ internal class AnchorVisual(val localAnchor: Anchor, var info: AnchorInfo): Anch
                     if (info.tickets != null && info.tickets!!.size > 0) {
                         tickets_row.visibility = View.VISIBLE
                         (tickets_row.findViewById<View>(R.id.tickets_icon) as ImageView).setImageResource(
-                            R.drawable.ar_maint_icon
+                            R.drawable.maint_orange
                         )
-                        (tickets_row.findViewById<View>(R.id.tickets_title) as TextView).text =
-                            "${info.tickets!!.size} tickets"
+                        val ticketText = context.resources.getQuantityString(R.plurals.n_ticket, info.tickets!!.size, info.tickets!!.size)
+                        (tickets_row.findViewById<View>(R.id.tickets_title) as TextView).text = ticketText
                     }
                 } else if (info.type == "ticket") {
                     tickets_row.visibility = View.GONE
@@ -54,6 +54,30 @@ internal class AnchorVisual(val localAnchor: Anchor, var info: AnchorInfo): Anch
                 this.visual.parent=this
                 this.parent = scene
             }
+    }
+
+    fun updateVisual(context: Context){
+        if(this.visual.renderable != null){
+            val newR = this.visual.renderable as ViewRenderable
+            val tickets_row: View = newR.view.findViewById(R.id.tickets_row)
+            val parent: View = newR.view
+            val title_lbl: TextView = newR.view.findViewById(R.id.cod_label)
+            title_lbl.text = info.name
+            if (info.type == "asset") {
+                (parent.findViewById<View>(R.id.main_icon) as ImageView).setImageResource(R.drawable.ar_icon)
+                if (info.tickets != null && info.tickets!!.size > 0) {
+                    tickets_row.visibility = View.VISIBLE
+                    (tickets_row.findViewById<View>(R.id.tickets_icon) as ImageView).setImageResource(
+                        R.drawable.maint_orange
+                    )
+                    val ticketText = context.resources.getQuantityString(R.plurals.n_ticket, info.tickets!!.size, info.tickets!!.size)
+                    (tickets_row.findViewById<View>(R.id.tickets_title) as TextView).text = ticketText
+                }
+            } else if (info.type == "ticket") {
+                tickets_row.visibility = View.GONE
+                (parent.findViewById<View>(R.id.main_icon) as ImageView).setImageResource(R.drawable.ar_maint_icon)
+            }
+        }
     }
 
     override fun onUpdate(frameTime: FrameTime?) {
