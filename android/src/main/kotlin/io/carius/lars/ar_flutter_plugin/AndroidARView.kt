@@ -22,7 +22,7 @@ import kotlin.collections.set
 
 
 internal class AndroidARView(
-    val activity: Activity,
+    private val activity: Activity,
     context: Context,
     messenger: BinaryMessenger,
     id: Int,
@@ -47,6 +47,7 @@ internal class AndroidARView(
     private var isStarted: Boolean = false
     private var showAnimatedGuide: Boolean = false
     private var animatedGuide: View
+    private var contentView: ViewGroup
 
 
     private var azureSpatialAnchorsManager: AzureSpatialAnchorsManager? = null
@@ -60,7 +61,6 @@ internal class AndroidARView(
 
 
     private var sceneUpdateListener: Scene.OnUpdateListener
-
 
     // Method channel handlers
     private val onSessionMethodCall =
@@ -166,6 +166,75 @@ internal class AndroidARView(
                 }
             }
         }
+
+    init {
+        Log.d(TAG, "Initializing AndroidARView")
+        val assets = creationParams!!["assets"] as? List<Map<String, Any>>
+        val tickets = creationParams["tickets"] as? List<Map<String, Any>>
+        if (assets != null && assets.isNotEmpty()) {
+            for (map in assets.toTypedArray()) {
+                nearbyAssets[map["id"].toString()] = AnchorInfo(map)
+            }
+        }
+        if (tickets != null && tickets.isNotEmpty()) {
+            for (map in tickets.toTypedArray()) {
+                nearbyTickets[map["id"].toString()] = AnchorInfo(map)
+            }
+        }
+
+        viewContext = context
+        //creo la scena
+        arSceneView = ArSceneView(context)
+
+        sessionManagerChannel.setMethodCallHandler(onSessionMethodCall)
+        anchorManagerChannel.setMethodCallHandler(onAnchorMethodCall)
+        //aggiungo ontouch listener sulla scena (tap sui plane, tap sul nodo)
+        arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
+            onTap(hitTestResult, motionEvent)
+        }
+        //mostra sempre la mano che si muove fin che cerco i plane
+        showAnimatedGuide = true
+        contentView = activity.findViewById(android.R.id.content) as ViewGroup
+        animatedGuide = activity.layoutInflater.inflate(
+            com.google.ar.sceneform.ux.R.layout.sceneform_instructions_plane_discovery, null
+        )
+        contentView.addView(animatedGuide)
+
+        //inizializzo il listener sull'aggiornamento della scena
+        sceneUpdateListener =
+            Scene.OnUpdateListener {
+                val frame = arSceneView.arFrame
+                if (frame != null) {
+                    if (azureSpatialAnchorsManager != null) {
+                        //se ASA session è inizializzata propago l'update
+                        azureSpatialAnchorsManager!!.update(frame)
+                    }
+                    //tolgo la mano che si muove se ho trovato i plane
+                    if (showAnimatedGuide && arSceneView.arFrame != null) {
+                        for (plane in arSceneView.arFrame!!.getUpdatedTrackables(Plane::class.java)) {
+                            if (plane.trackingState === TrackingState.TRACKING) {
+                                contentView.removeView(animatedGuide)
+                                showAnimatedGuide = false
+                                break
+                            }
+                        }
+                    }
+                } else {
+                    Log.d(TAG, "OnUpdateListener proke e frame null")
+                }
+            }
+
+        arSceneView.scene?.addOnUpdateListener(sceneUpdateListener)
+
+        // Configure whether or not detected planes should be shown
+        arSceneView.planeRenderer.isVisible = false
+
+        //lancio onResume a mano
+        onResume()
+    }
+
+
+
 
     private fun showAnchors(ids: List<String>) {
         ids.forEach { id -> anchorVisuals[id]?.show() }
@@ -294,92 +363,13 @@ internal class AndroidARView(
         lookForNearbyAnchors()
     }
 
-    init {
-        //costruttore
-        //queste operazioni vengono eseguite solo alla costruzione della view
-        Log.d(TAG, "Initializing AndroidARView")
-        val assets = creationParams!!["assets"] as? List<Map<String, Any>>
-        val tickets = creationParams["tickets"] as? List<Map<String, Any>>
-        if (assets != null && assets.isNotEmpty()) {
-            for (map in assets.toTypedArray()) {
-                nearbyAssets[map["id"].toString()] = AnchorInfo(map)
-            }
-        }
-        if (tickets != null && tickets.isNotEmpty()) {
-            for (map in tickets.toTypedArray()) {
-                nearbyTickets[map["id"].toString()] = AnchorInfo(map)
-            }
-        }
 
-        viewContext = context
-        //creo la scena
-        arSceneView = ArSceneView(context)
-
-        //setup lifecycle per gestire gli eventi della main activity(flutter activity)
-        //ossia cosa deve fare il plugin se pauso/chiudo/riapro l'app
-        //setupLifeCycle(context)
-
-        sessionManagerChannel.setMethodCallHandler(onSessionMethodCall)
-        anchorManagerChannel.setMethodCallHandler(onAnchorMethodCall)
-        //aggiungo ontouch listener sulla scena (tap sui plane, tap sul nodo)
-        arSceneView.scene.setOnTouchListener { hitTestResult: HitTestResult, motionEvent: MotionEvent? ->
-            onTap(hitTestResult, motionEvent)
-        }
-        //mostra sempre la mano che si muove fin che cerco i plane
-        showAnimatedGuide = true
-        val view = activity.findViewById(android.R.id.content) as ViewGroup
-        animatedGuide = activity.layoutInflater.inflate(
-            com.google.ar.sceneform.ux.R.layout.sceneform_instructions_plane_discovery, null
-        )
-        view.addView(animatedGuide)
-
-        //inizializzo il listener sull'aggiornamento della scena
-        sceneUpdateListener =
-            Scene.OnUpdateListener { frameTime: FrameTime ->
-                val frame = arSceneView.arFrame
-                if (frame != null) {
-                    if (azureSpatialAnchorsManager != null) {
-                        //se ASA session è inizializzata propago l'update
-                        azureSpatialAnchorsManager!!.update(frame)
-                    }
-                    //tolgo la mano che si muove se ho trovato i plane
-                    if (showAnimatedGuide && arSceneView.arFrame != null) {
-                        for (plane in arSceneView.arFrame!!.getUpdatedTrackables(Plane::class.java)) {
-                            if (plane.trackingState === TrackingState.TRACKING) {
-                                val contentView =
-                                    activity.findViewById(android.R.id.content) as ViewGroup
-                                contentView.removeView(animatedGuide)
-                                showAnimatedGuide = false
-                                break
-                            }
-                        }
-                    }
-                } else {
-                    Log.d(TAG, "OnUpdateListener proke e frame null")
-                }
-            }
-
-        arSceneView.scene?.addOnUpdateListener(sceneUpdateListener)
-
-        // Configure whether or not detected planes should be shown
-        arSceneView.planeRenderer.isVisible = false
-
-        //lancio onResume a mano
-        onResume()
-    }
 
     override fun getView(): View {
         return arSceneView
     }
 
     override fun dispose() {
-        // Destroy AR session
-        Log.d(TAG, "dispose called")
-        /*try {
-            onDestroy()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }*/
     }
 
     fun onResume() {
@@ -466,8 +456,7 @@ internal class AndroidARView(
             isStarted = false
         }
         if (showAnimatedGuide) {
-            val view = activity.findViewById(android.R.id.content) as ViewGroup
-            view.removeView(animatedGuide)
+            contentView.removeView(animatedGuide)
             showAnimatedGuide = false
         }
     }
@@ -524,6 +513,7 @@ internal class AndroidARView(
 
     private fun onTap(hitTestResult: HitTestResult, motionEvent: MotionEvent?): Boolean {
         val frame = arSceneView.arFrame
+
         if (hitTestResult.node != null && motionEvent?.action == MotionEvent.ACTION_DOWN) {
             Log.d(TAG, "onTapNode")
             val nodeName = hitTestResult.node!!.name
@@ -639,12 +629,10 @@ internal class AndroidARView(
     }
 
     private fun lookForNearbyAnchors() {
-        Log.d(TAG, "lookForNearbyAnchors")
         if ((nearbyAssets.isEmpty() && nearbyTickets.isEmpty()) || azureSpatialAnchorsManager == null) {
             return
         }
         val ids: ArrayList<String> = ArrayList()
-        Log.d(TAG, nearbyAssets.values.toString())
         for (a in nearbyAssets.values) {
             if (a.ARanchorId != null && a.ARanchorId != "") {
                 ids.add(a.ARanchorId!!)
@@ -659,7 +647,7 @@ internal class AndroidARView(
             }
         }
         val criteria = AnchorLocateCriteria()
-        Log.d(TAG, ids.toString())
+        Log.d(TAG, "lookForNearbyAnchors ${ids.toString()}")
         criteria.identifiers = ids.toTypedArray()
         azureSpatialAnchorsManager!!.startLocating(criteria)
 
@@ -695,9 +683,9 @@ internal class AndroidARView(
             } else {
                 val assetTicket = nearbyAssets.values.mapNotNull { a -> a.tickets }.flatten()
                     .firstOrNull { t -> t.ARanchorId == cloudAnchor.identifier }
-                val asset =
+                val parentAsset =
                     nearbyAssets.values.firstOrNull { a -> a.tickets != null && a.tickets!!.any { t -> t.ARanchorId == cloudAnchor.identifier } }
-                if (assetTicket != null && asset != null) {
+                if (assetTicket != null && parentAsset != null) {
                     activity.runOnUiThread {
                         val visual = AnchorVisual(cloudAnchor.localAnchor, assetTicket)
                         visual.cloudAnchor = cloudAnchor
@@ -705,7 +693,7 @@ internal class AndroidARView(
                         visual.render(
                             viewContext,
                             arSceneView.scene,
-                            hideAssetTickets[asset.id] ?: true
+                            hideAssetTickets[parentAsset.id] ?: true
                         )
                     }
                 }
