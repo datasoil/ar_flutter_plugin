@@ -3,22 +3,26 @@
 package io.carius.lars.ar_flutter_plugin
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import com.google.ar.core.Anchor
 import com.google.ar.sceneform.AnchorNode
+import com.google.ar.sceneform.FrameTime
+import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.Scene
+import com.google.ar.sceneform.math.Quaternion
+import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.ViewRenderable
-import com.google.ar.sceneform.ux.TransformableNode
 import com.microsoft.azure.spatialanchors.CloudSpatialAnchor
 
 
-internal class AnchorVisual(val localAnchor: Anchor, var info: AnchorInfo) {
+internal class AnchorVisual(val localAnchor: Anchor, var info: AnchorInfo): AnchorNode(localAnchor) {
     val id = info.id
     var cloudAnchor: CloudSpatialAnchor? = null
-    private val node = AnchorNode(localAnchor)
-    var hidden = false
+    //private val node = AnchorNode(localAnchor)
+    private val visual = Node()
 
     fun render(context: Context, scene: Scene, hidden: Boolean) {
         ViewRenderable.builder().setView(context, R.layout.ar_label_extended).build()
@@ -44,30 +48,46 @@ internal class AnchorVisual(val localAnchor: Anchor, var info: AnchorInfo) {
                     tickets_row.visibility = View.GONE
                     (parent.findViewById<View>(R.id.main_icon) as ImageView).setImageResource(R.drawable.ar_maint_icon)
                 }
-                this.node.isEnabled = !hidden
-                this.node.renderable = renderable
-                this.node.name = this.id
-                this.node.parent = scene
+                this.visual.renderable=renderable
+                this.visual.isEnabled = !hidden
+                this.visual.name = this.id
+                this.visual.parent=this
+                this.parent = scene
             }
     }
 
+    override fun onUpdate(frameTime: FrameTime?) {
+        super.onUpdate(frameTime)
+        if(scene == null){
+            return
+        }
+
+        val cameraPosition = scene!!.camera.worldPosition
+        val cardPosition: Vector3 = visual.worldPosition
+        val direction = Vector3.subtract(cameraPosition, cardPosition)
+        val lookRotation: Quaternion = Quaternion.lookRotation(direction, Vector3.up())
+        visual.worldRotation = lookRotation
+
+    }
+
     fun dispose() {
-        this.node.renderable = null
-        this.node.parent = null
-        this.node.anchor = null
+        this.visual.renderable = null
+        this.visual.parent = null
+        this.parent=null
+        this.anchor=null
         this.localAnchor.detach()
 
     }
 
     fun show() {
-        this.node.isEnabled = true
+        this.visual.isEnabled = true
     }
 
     fun hide() {
-        this.node.isEnabled = false
+        this.visual.isEnabled = false
     }
 
     override fun toString(): String {
-        return "AnchorVisualAsset(id: $id, info: ${info}, cloudAnchor: ${cloudAnchor.toString()}, node: ${node.toString()}, localAnchor: ${localAnchor.toString()})"
+        return "AnchorVisualAsset(id: $id, info: ${info}, cloudAnchor: ${cloudAnchor.toString()}, node: ${this.toString()}, localAnchor: ${localAnchor.toString()})"
     }
 }
