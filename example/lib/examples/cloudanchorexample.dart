@@ -51,14 +51,17 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
         body: Container(
             child: Stack(children: [
           //init della vista AR su assi xy e z
-          ARView(onARViewCreated: onARViewCreated
-              //planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical, //removed bc default xyz
-              /*creationParams: {
+          ARView(
+            onARViewCreated: onARViewCreated,
+            apiId: "9112a285-e29a-4acf-a703-32df2770edc0",
+            apiKey: "7CLQd5s3RMM0Hhp/Q2c36k8UBdnlNUQnyopAclvJOQI=",
+            //planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical, //removed bc default xyz
+            /*creationParams: {
               "assets": [
                 {"id": "1234", "cod": "Codice", "ar_anchor": ""}
               ]
             },*/
-              ),
+          ),
           Align(
             alignment: FractionalOffset.bottomCenter,
             child: Row(
@@ -114,11 +117,6 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
     this.arAnchorManager = arAnchorManager;
     //this.arLocationManager = arLocationManager;
 
-    this.arSessionManager!.onInitialize(
-          showPlanes: true,
-          //showAnimatedGuide: true,
-          customPlaneTexturePath: "Images/triangle.png",
-        );
     //this.arObjectManager!.onInitialize();
     //aggiunta: default usa Google Cloud Anchors
     //this.arAnchorManager!.initAzureCloudAnchorMode(); //ASA mode is only mode
@@ -185,9 +183,9 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
   }
 
   Future<void> onRemoveEverything() async {
-    anchors.forEach((anchor) {
-      this.arAnchorManager!.removeAnchor(anchor.name);
-    });
+    // anchors.forEach((anchor) {
+    //   this.arAnchorManager!.removeAnchor(anchor.name);
+    // });
     anchors = [];
     //in og code then e do some minor stuff
   }
@@ -208,8 +206,8 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
       var newAnchor = ARAnchor(
           transformation: singleHitTestResult.worldTransform,
           name: asset["id"].toString());
-      bool? didAddAnchor =
-          await this.arAnchorManager!.addAnchor(newAnchor, asset);
+      bool? didAddAnchor = false;
+      //= await this.arAnchorManager!.addAnchor(newAnchor, asset);
       if (didAddAnchor ?? false) {
         this.anchors.add(newAnchor);
         print("didAddAnchor == true");
@@ -223,8 +221,8 @@ class _CloudAnchorWidgetState extends State<CloudAnchorWidget> {
   }
 
   Future<void> onUploadButtonPressed() async {
-    String? uploaded =
-        await this.arAnchorManager!.uploadAnchor(this.anchors.first.name);
+    String? uploaded = null;
+    //await this.arAnchorManager!.uploadAnchor(this.anchors.first.name);
     if (uploaded != null) {
       print('caricato');
       // Show a text message

@@ -8,12 +8,12 @@ import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 import android.util.Log
 
-class AndroidARViewFactory(val activity: Activity, val messenger: BinaryMessenger) :
+class AndroidARViewFactory(private val activity: Activity, private val messenger: BinaryMessenger) :
         PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     private var TAG: String = "AndroidARViewFactory"
-    override fun create(context: Context?, viewId: Int, args: Any?): PlatformView {
+    override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         Log.d(TAG, "create AndroidARView")
         val creationParams = args as Map<String?, Any?>?
-        return AndroidARView(activity, context!!, messenger, viewId, creationParams)
+        return AndroidARView(activity, context, messenger, viewId, creationParams)
     }
 }

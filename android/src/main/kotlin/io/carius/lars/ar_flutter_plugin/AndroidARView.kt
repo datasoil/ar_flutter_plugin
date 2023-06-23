@@ -202,8 +202,10 @@ internal class AndroidARView(
 
         //inizializzo il listener sull'aggiornamento della scena
         sceneUpdateListener =
-            Scene.OnUpdateListener {
+            Scene.OnUpdateListener { receivedFrame ->
+                //Log.d("UPDATE", receivedFrame.hashCode().toString())
                 val frame = arSceneView.arFrame
+                //Log.d("UPDATE2", frame.hashCode().toString())
                 if (frame != null) {
                     if (azureSpatialAnchorsManager != null) {
                         //se ASA session è inizializzata propago l'update
@@ -227,7 +229,7 @@ internal class AndroidARView(
         arSceneView.scene?.addOnUpdateListener(sceneUpdateListener)
 
         // Configure whether or not detected planes should be shown
-        arSceneView.planeRenderer.isVisible = false
+        arSceneView.planeRenderer.isVisible = true
 
         //lancio onResume a mano
         onResume()
@@ -392,6 +394,7 @@ internal class AndroidARView(
                     session = null
                 } else {
                     session = Session(activity)
+                    Log.d(TAG, "Session initialized")
                 }
 
                 if (session == null) {
@@ -406,7 +409,9 @@ internal class AndroidARView(
                     config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
                     config.focusMode = Config.FocusMode.AUTO
                     session.configure(config)
+
                     arSceneView.session = session
+                    Log.d(TAG, "Session configured and linked")
                 }
             } catch (ex: UnavailableUserDeclinedInstallationException) {
                 // Display an appropriate message to the user zand return gracefully.
@@ -440,6 +445,7 @@ internal class AndroidARView(
             if (!isStarted) {
                 isStarted = true
                 arSceneView.resume() //questo è uno start
+                Log.d(TAG, "arsceneview resumed")
             }
             startASASession()
 

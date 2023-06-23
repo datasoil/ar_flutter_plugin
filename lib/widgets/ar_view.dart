@@ -76,39 +76,14 @@ class AndroidARView implements PlatformARView {
     creationParams['apiId'] = apiId;
     creationParams['assets'] = assets;
     creationParams['tickets'] = tickets;
-    return PlatformViewLink(
-      viewType: viewType,
-      surfaceFactory: (context, controller) {
-        return AndroidViewSurface(
-          controller: controller as AndroidViewController,
-          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
-          hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-        );
-      },
-      onCreatePlatformView: (params) {
-        print('onCreatePlatformView');
-        return PlatformViewsService.initSurfaceAndroidView(
-          id: params.id,
-          viewType: viewType,
-          layoutDirection: TextDirection.ltr,
-          creationParams: creationParams,
-          creationParamsCodec: const StandardMessageCodec(),
-          onFocus: () {
-            params.onFocusChanged(true);
-          },
-        )
-          ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
-          ..addOnPlatformViewCreatedListener(onPlatformViewCreated)
-          ..create();
-      },
-    );
-    /*return AndroidView(
+    return AndroidView(
         viewType: viewType,
         layoutDirection: TextDirection.ltr,
         creationParams: creationParams,
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: onPlatformViewCreated //onPlatformViewCreated,
-        );*/
+        );
+    /*return */
   }
 }
 
@@ -190,7 +165,7 @@ class ARView extends StatefulWidget {
           this.permissionPromptParentalRestriction);
 }
 
-class _ARViewState extends State<ARView> {
+class _ARViewState extends State<ARView> with WidgetsBindingObserver {
   PermissionStatus _cameraPermission = PermissionStatus.denied;
   String permissionPromptDescription;
   String permissionPromptButtonText;
@@ -204,6 +179,7 @@ class _ARViewState extends State<ARView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     initCameraPermission();
   }
 
@@ -232,7 +208,7 @@ class _ARViewState extends State<ARView> {
   build(BuildContext context) {
     switch (_cameraPermission) {
       case (PermissionStatus
-          .limited): //iOS-specific: permissions granted for this specific application
+            .limited): //iOS-specific: permissions granted for this specific application
       case (PermissionStatus.granted):
         {
           return PlatformARView(Theme.of(context).platform).build(
@@ -256,7 +232,7 @@ class _ARViewState extends State<ARView> {
           ));
         }
       case (PermissionStatus
-          .permanentlyDenied): //Android-specific: User needs to open Settings to give permissions
+            .permanentlyDenied): //Android-specific: User needs to open Settings to give permissions
         {
           return Center(
               child: Column(
@@ -277,5 +253,11 @@ class _ARViewState extends State<ARView> {
       default:
         return Text('something went wrong');
     }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 }
