@@ -8,20 +8,6 @@
 
 import Foundation
 
-class Ticket {
-    var id: String
-    var title: String
-    var ts: String
-    var ARanchorID: String?
-    
-    init(val: [String: Any]) {
-        id = val["id"] as! String
-        title = val["title"] as! String
-        ARanchorID = val["ar_anchor"] as? String
-        ts = val["ts"] as! String
-    }
-}
-
 class AnchorInfo: Hashable {
     var id: String
     //name: cod for Asset, title for Ticket
