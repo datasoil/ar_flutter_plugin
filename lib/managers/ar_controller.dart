@@ -1,35 +1,34 @@
 import 'package:flutter/services.dart';
 
+import '../models/ar_hittest_result.dart';
 import '../utils/json_converters.dart';
 
 // Type definitions to enforce a consistent use of the API
 typedef NodeTapResultHandler = void Function(String node);
+typedef ARHitResultHandler = void Function(List<ARHitTestResult> hits);
+typedef ARReadyToUpload = void Function();
 
 /// Handles all anchor-related functionality of an [ARView], including configuration and usage of collaborative sessions
-class ARAnchorManager {
+class ArController {
   /// Platform channel used for communication from and to [ARAnchorManager]
   late MethodChannel _channel;
-
-  /// Debugging status flag. If true, all platform calls are printed. Defaults to false.
-  final bool debug;
 
   /// Callback function that is invoked when the platform detects a tap on a node
   NodeTapResultHandler? onAssetTap;
 
   NodeTapResultHandler? onTicketTap;
 
-  ARAnchorManager(int id, {this.debug = false}) {
-    _channel = MethodChannel('aranchors_$id');
+  /// Receives hit results from user taps with tracked planes or feature points
+  ARHitResultHandler? onPlaneOrPointTap;
+
+  ARReadyToUpload? onReadyToUpload;
+
+  ArController(int id) {
+    _channel = MethodChannel('archannel_$id');
     _channel.setMethodCallHandler(_platformCallHandler);
-    if (debug) {
-      print("ARAnchorManager initialized");
-    }
   }
 
   Future<dynamic> _platformCallHandler(MethodCall call) async {
-    if (debug) {
-      print('_platformCallHandler call ${call.method} ${call.arguments}');
-    }
     try {
       switch (call.method) {
         case 'onError':
@@ -47,10 +46,24 @@ class ARAnchorManager {
             onTicketTap!(tappedNode);
           }
           break;
+        case 'onPlaneOrPointTap':
+          final rawHitTestResults = call.arguments as List<dynamic>;
+          final serializedHitTestResults = rawHitTestResults
+              .map((hitTestResult) => Map<String, dynamic>.from(hitTestResult))
+              .toList();
+          final hitTestResults = serializedHitTestResults.map((e) {
+            return ARHitTestResult.fromJson(e);
+          }).toList();
+          if (onPlaneOrPointTap != null) onPlaneOrPointTap!(hitTestResults);
+          break;
+        case 'readyToUpload':
+          if (onReadyToUpload != null) onReadyToUpload!();
+          break;
+        case 'dispose':
+          _channel.invokeMethod<void>("dispose");
+          break;
         default:
-          if (debug) {
-            print('Unimplemented method ${call.method} ');
-          }
+          print('Unimplemented method ${call.method} ');
       }
     } catch (e) {
       print('Error caught: ' + e.toString());
@@ -131,6 +144,41 @@ class ARAnchorManager {
           .invokeMethod<bool?>('deleteCloudAnchor', {'id': anchorId});
     } on PlatformException catch (_) {
       return null;
+    }
+  }
+
+  void dispose() async {
+    try {
+      await _channel.invokeMethod<void>("dispose");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void pause() async {
+    try {
+      await _channel.invokeMethod<void>("pause");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void resume() async {
+    try {
+      await _channel.invokeMethod<void>("resume");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> syncData(
+      {List<Map<String, dynamic>>? assets,
+      List<Map<String, dynamic>>? tickets}) async {
+    try {
+      return await _channel.invokeMethod<void>(
+          "updateNearbyObjects", {"assets": assets, "tickets": tickets});
+    } catch (e) {
+      print(e);
     }
   }
 }

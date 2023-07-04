@@ -14,7 +14,7 @@ class ArFlutterPlugin : FlutterPlugin, ActivityAware {
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
-  private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
+  private var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding? = null
 
   override fun onAttachedToEngine(
       flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
@@ -23,11 +23,12 @@ class ArFlutterPlugin : FlutterPlugin, ActivityAware {
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+    this.flutterPluginBinding = null
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-    this.flutterPluginBinding.platformViewRegistry.registerViewFactory(
-        "ar_flutter_plugin_view", AndroidARViewFactory(binding.activity, flutterPluginBinding.binaryMessenger))
+    this.flutterPluginBinding?.platformViewRegistry?.registerViewFactory(
+        "ar_flutter_plugin_view", AndroidARViewFactory(binding.activity, flutterPluginBinding?.binaryMessenger!!))
     CloudServices.initialize(binding.activity)
   }
 
