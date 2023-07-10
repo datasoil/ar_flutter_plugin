@@ -117,14 +117,14 @@ class _ARViewState extends State<ARView> with WidgetsBindingObserver {
           creationParamsCodec: const StandardMessageCodec(),
           onPlatformViewCreated: onPlatformViewCreated,
         );
-      if (Platform.isAndroid)
-        return AndroidView(
-          viewType: 'ar_flutter_plugin',
-          layoutDirection: TextDirection.ltr,
-          creationParams: creationParams,
-          creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: onPlatformViewCreated,
-        );
+      // if (Platform.isAndroid)
+      //   return AndroidView(
+      //     viewType: 'ar_flutter_plugin',
+      //     layoutDirection: TextDirection.ltr,
+      //     creationParams: creationParams,
+      //     creationParamsCodec: const StandardMessageCodec(),
+      //     onPlatformViewCreated: onPlatformViewCreated,
+      //   );
       return Text('Platform not supported');
     }
 

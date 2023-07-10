@@ -28,8 +28,8 @@ flutter:
   # adding or updating assets for this project.
   plugin:
     platforms:
-      android:
-        package: io.carius.lars.ar_flutter_plugin
-        pluginClass: ArFlutterPlugin
+      # android:
+      #   package: io.carius.lars.ar_flutter_plugin
+      #   pluginClass: ArFlutterPlugin
       ios:
         pluginClass: ArFlutterPlugin
